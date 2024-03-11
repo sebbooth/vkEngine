@@ -76,13 +76,13 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\sebbo\source\repos\vkEngine\vkEngine\vkClasses;C:\Users\sebbo\source\repos\vkEngine\vkEngine\vendor\tinyobjloader;C:\Users\sebbo\source\repos\vkEngine\vkEngine\vendor\stb;C:\Users\sebbo\source\repos\vkEngine\vkEngine\vendor\glfw-3.4.bin.WIN64\include;C:\Users\sebbo\source\repos\vkEngine\vkEngine\vendor\glm-1.0.1;C:\VulkanSDK\1.3.275.0\Include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)vkEngine\vkUtils;$(SolutionDir)vkEngine\vkClasses;$(SolutionDir)vkEngine\vendor\tinyobjloader;$(SolutionDir)vkEngine\vendor\stb;$(SolutionDir)vkEngine\vendor\glfw-3.4.bin.WIN64\include;$(SolutionDir)vkEngine\vendor\glm-1.0.1;C:\VulkanSDK\1.3.275.0\Include</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\VulkanSDK\1.3.275.0\Lib;C:\Users\sebbo\source\repos\vkEngine\vkEngine\vendor\glfw-3.4.bin.WIN64\lib-vc2022</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\VulkanSDK\1.3.275.0\Lib;$(SolutionDir)vkEngine\vendor\glfw-3.4.bin.WIN64\lib-vc2022</AdditionalLibraryDirectories>
       <AdditionalDependencies>vulkan-1.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -94,7 +94,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\sebbo\source\repos\vkEngine\vkEngine\vkClasses;C:\Users\sebbo\source\repos\vkEngine\vkEngine\vendor\tinyobjloader;C:\Users\sebbo\source\repos\vkEngine\vkEngine\vendor\stb;C:\Users\sebbo\source\repos\vkEngine\vkEngine\vendor\glfw-3.4.bin.WIN64\include;C:\Users\sebbo\source\repos\vkEngine\vkEngine\vendor\glm-1.0.1;C:\VulkanSDK\1.3.275.0\Include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)vkEngine\vkUtils;$(SolutionDir)vkEngine\vkClasses;$(SolutionDir)vkEngine\vendor\tinyobjloader;$(SolutionDir)vkEngine\vendor\stb;$(SolutionDir)vkEngine\vendor\glfw-3.4.bin.WIN64\include;$(SolutionDir)vkEngine\vendor\glm-1.0.1;C:\VulkanSDK\1.3.275.0\Include</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -102,7 +102,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\VulkanSDK\1.3.275.0\Lib;C:\Users\sebbo\source\repos\vkEngine\vkEngine\vendor\glfw-3.4.bin.WIN64\lib-vc2022</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\VulkanSDK\1.3.275.0\Lib;$(SolutionDir)vkEngine\vendor\glfw-3.4.bin.WIN64\lib-vc2022</AdditionalLibraryDirectories>
       <AdditionalDependencies>vulkan-1.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -112,13 +112,13 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\sebbo\source\repos\vkEngine\vkEngine\vkClasses;C:\Users\sebbo\source\repos\vkEngine\vkEngine\vendor\tinyobjloader;C:\Users\sebbo\source\repos\vkEngine\vkEngine\vendor\stb;C:\Users\sebbo\source\repos\vkEngine\vkEngine\vendor\glfw-3.4.bin.WIN64\include;C:\Users\sebbo\source\repos\vkEngine\vkEngine\vendor\glm-1.0.1;C:\VulkanSDK\1.3.275.0\Include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)vkEngine\vkUtils;$(SolutionDir)vkEngine\vkClasses;$(SolutionDir)vkEngine\vendor\tinyobjloader;$(SolutionDir)vkEngine\vendor\stb;$(SolutionDir)vkEngine\vendor\glfw-3.4.bin.WIN64\include;$(SolutionDir)vkEngine\vendor\glm-1.0.1;C:\VulkanSDK\1.3.275.0\Include</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\VulkanSDK\1.3.275.0\Lib;C:\Users\sebbo\source\repos\vkEngine\vkEngine\vendor\glfw-3.4.bin.WIN64\lib-vc2022</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\VulkanSDK\1.3.275.0\Lib;$(SolutionDir)vkEngine\vendor\glfw-3.4.bin.WIN64\lib-vc2022</AdditionalLibraryDirectories>
       <AdditionalDependencies>vulkan-1.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -130,7 +130,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\sebbo\source\repos\vkEngine\vkEngine\vkClasses;C:\Users\sebbo\source\repos\vkEngine\vkEngine\vendor\tinyobjloader;C:\Users\sebbo\source\repos\vkEngine\vkEngine\vendor\stb;C:\Users\sebbo\source\repos\vkEngine\vkEngine\vendor\glfw-3.4.bin.WIN64\include;C:\Users\sebbo\source\repos\vkEngine\vkEngine\vendor\glm-1.0.1;C:\VulkanSDK\1.3.275.0\Include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)vkEngine\vkUtils;$(SolutionDir)vkEngine\vkClasses;$(SolutionDir)vkEngine\vendor\tinyobjloader;$(SolutionDir)vkEngine\vendor\stb;$(SolutionDir)vkEngine\vendor\glfw-3.4.bin.WIN64\include;$(SolutionDir)vkEngine\vendor\glm-1.0.1;C:\VulkanSDK\1.3.275.0\Include</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -138,12 +138,24 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\VulkanSDK\1.3.275.0\Lib;C:\Users\sebbo\source\repos\vkEngine\vkEngine\vendor\glfw-3.4.bin.WIN64\lib-vc2022</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\VulkanSDK\1.3.275.0\Lib;$(SolutionDir)vkEngine\vendor\glfw-3.4.bin.WIN64\lib-vc2022</AdditionalLibraryDirectories>
       <AdditionalDependencies>vulkan-1.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="oldmain.cpp" />
+    <ClCompile Include="vkClasses\DepthResources.cpp" />
+    <ClCompile Include="vkClasses\CommandPool.cpp" />
+    <ClCompile Include="vkClasses\GraphicsPipeline.cpp" />
+    <ClCompile Include="vkClasses\DescriptorSetLayout.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="vkClasses\RenderPass.cpp" />
+    <ClCompile Include="vkClasses\ImageViews.cpp" />
+    <ClCompile Include="vkClasses\SwapChain.cpp" />
+    <ClCompile Include="vkClasses\LogicalDevice.cpp" />
+    <ClCompile Include="vkClasses\PhysicalDevice.cpp" />
+    <ClCompile Include="vkClasses\Surface.cpp" />
+    <ClCompile Include="vkClasses\DebugMessenger.cpp" />
+    <ClCompile Include="vkClasses\Instance.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\compile.bat" />
@@ -151,7 +163,24 @@
     <None Include="shaders\HelloTriangle.vert" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="vkClasses\DepthResources.h" />
+    <ClInclude Include="vkClasses\CommandPool.h" />
+    <ClInclude Include="vkClasses\GraphicsPipeline.h" />
+    <ClInclude Include="vkClasses\DescriptorSetLayout.h" />
+    <ClInclude Include="vkClasses\RenderPass.h" />
+    <ClInclude Include="vkClasses\ImageViews.h" />
+    <ClInclude Include="vkClasses\SwapChain.h" />
+    <ClInclude Include="vkClasses\LogicalDevice.h" />
+    <ClInclude Include="vkUtils\DebugUtils.h" />
+    <ClInclude Include="vkClasses\PhysicalDevice.h" />
+    <ClInclude Include="vkClasses\Surface.h" />
     <ClInclude Include="vendor\stb\stb_image.h" />
+    <ClInclude Include="vkClasses\DebugMessenger.h" />
+    <ClInclude Include="vkClasses\Instance.h" />
+    <ClInclude Include="vkUtils\SwapChainUtils.h" />
+    <ClInclude Include="vkClasses\VkClasses.h" />
+    <ClInclude Include="vkUtils\VkStructs.h" />
+    <ClInclude Include="vkUtils\FileUtils.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
