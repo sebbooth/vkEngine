@@ -4,6 +4,7 @@
 #include <memory>
 
 #include "GraphicsPipeline.h"
+#include "LogicalDevice.h"
 
 class CommandPool
 {
@@ -13,5 +14,12 @@ public:
 	VkCommandPool commandPool{};
 
 	CommandPool(std::shared_ptr<GraphicsPipeline> graphicsPipelineObj);
+
+	VkCommandBuffer beginSingleTimeCommands();
+
+	void endSingleTimeCommands(VkCommandBuffer commandBuffer);
+
+private:
+	std::shared_ptr<LogicalDevice> logicalDeviceObj;
 };
 

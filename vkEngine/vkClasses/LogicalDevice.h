@@ -14,6 +14,7 @@ public:
 	std::shared_ptr<PhysicalDevice> physicalDeviceObj;
 
 	LogicalDevice(std::shared_ptr<PhysicalDevice> physicalDeviceObj);
+
     void createImage(
         uint32_t width,
         uint32_t height,
@@ -24,5 +25,13 @@ public:
         VkImage& image,
         VkDeviceMemory& imageMemory
         );
+
+    void createBuffer(
+        VkDeviceSize size, 
+        VkBufferUsageFlags usage, 
+        VkMemoryPropertyFlags properties, 
+        VkBuffer& buffer, 
+        VkDeviceMemory& bufferMemory
+    );
 };
 

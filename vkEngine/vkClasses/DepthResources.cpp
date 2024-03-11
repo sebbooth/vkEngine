@@ -2,12 +2,15 @@
 
 DepthResources::DepthResources(std::shared_ptr<CommandPool> commandPoolObj)
 {
-    this->renderPassObj = commandPoolObj->graphicsPipelineObj->descriptorSetLayoutObj->renderPassObj;
+    this->commandPoolObj = commandPoolObj;
+
     create();
 }
 
 void DepthResources::create()
 {
+    std::shared_ptr<RenderPass> renderPassObj = commandPoolObj->graphicsPipelineObj->descriptorSetLayoutObj->renderPassObj;
+
     VkFormat depthFormat = renderPassObj->findDepthFormat();
 
     VkExtent2D swapChainExtent = renderPassObj->imageViewsObj->swapChainObj->swapChainExtent;

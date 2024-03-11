@@ -54,6 +54,12 @@
     <ClCompile Include="vkClasses\DepthResources.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="vkClasses\FrameBuffers.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vkClasses\TextureImage.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\HelloTriangle.vert">
@@ -119,6 +125,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="vkClasses\DepthResources.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vkClasses\FrameBuffers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vkClasses\TextureImage.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

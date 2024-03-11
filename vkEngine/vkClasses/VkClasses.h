@@ -12,3 +12,5 @@
 #include "GraphicsPipeline.h"
 #include "CommandPool.h"
 #include "DepthResources.h"
+#include "FrameBuffers.h"
+#include "TextureImage.h"

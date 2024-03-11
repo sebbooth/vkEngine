@@ -143,6 +143,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="vkClasses\TextureImage.cpp" />
+    <ClCompile Include="vkClasses\FrameBuffers.cpp" />
     <ClCompile Include="vkClasses\DepthResources.cpp" />
     <ClCompile Include="vkClasses\CommandPool.cpp" />
     <ClCompile Include="vkClasses\GraphicsPipeline.cpp" />
@@ -163,6 +165,8 @@
     <None Include="shaders\HelloTriangle.vert" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="vkClasses\TextureImage.h" />
+    <ClInclude Include="vkClasses\FrameBuffers.h" />
     <ClInclude Include="vkClasses\DepthResources.h" />
     <ClInclude Include="vkClasses\CommandPool.h" />
     <ClInclude Include="vkClasses\GraphicsPipeline.h" />

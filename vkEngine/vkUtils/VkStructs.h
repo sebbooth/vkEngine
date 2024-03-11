@@ -7,6 +7,7 @@
 
 #include <optional>
 #include <array>
+#include <vector>
 
 struct QueueFamilyIndices {
     std::optional<uint32_t> graphicsFamily;
