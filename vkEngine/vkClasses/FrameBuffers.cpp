@@ -10,7 +10,7 @@ void FrameBuffers::create()
 {
     std::shared_ptr<ImageViews> imageViewsObj = depthResourcesObj->commandPoolObj->graphicsPipelineObj->descriptorSetLayoutObj->renderPassObj->imageViewsObj;
 
-    swapChainFramebuffers.resize(imageViewsObj->swapChainImageViews.size());
+    imageViewsObj->swapChainObj->swapChainFramebuffers.resize(imageViewsObj->swapChainImageViews.size());
 
     for (size_t i = 0; i < imageViewsObj->swapChainImageViews.size(); i++) {
         std::array<VkImageView, 2> attachments = {
@@ -27,7 +27,7 @@ void FrameBuffers::create()
         framebufferInfo.height = imageViewsObj->swapChainObj->swapChainExtent.height;
         framebufferInfo.layers = 1;
 
-        if (vkCreateFramebuffer(imageViewsObj->swapChainObj->logicalDeviceObj->device, &framebufferInfo, nullptr, &swapChainFramebuffers[i]) != VK_SUCCESS) {
+        if (vkCreateFramebuffer(imageViewsObj->swapChainObj->logicalDeviceObj->device, &framebufferInfo, nullptr, &imageViewsObj->swapChainObj->swapChainFramebuffers[i]) != VK_SUCCESS) {
             throw std::runtime_error("failed to create framebuffer!");
         }
     }

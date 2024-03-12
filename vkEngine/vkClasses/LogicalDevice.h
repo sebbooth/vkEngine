@@ -33,5 +33,7 @@ public:
         VkBuffer& buffer, 
         VkDeviceMemory& bufferMemory
     );
+
+    void waitIdle();
 };
 

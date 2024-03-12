@@ -13,8 +13,10 @@ public:
 
 	VkImage textureImage{};
 	VkDeviceMemory textureImageMemory{};
+	VkImageView textureImageView{};
 
 	TextureImage(std::shared_ptr<FrameBuffers> frameBuffersObj);
+	void createTextureImageView();
 
 	const std::string MODEL_PATH = "assets/models/viking_room/viking_room.obj";
 	const std::string TEXTURE_PATH = "assets/models/viking_room/viking_room.png";

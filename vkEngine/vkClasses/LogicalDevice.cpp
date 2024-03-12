@@ -108,3 +108,8 @@ void LogicalDevice::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, Vk
 
     vkBindBufferMemory(device, buffer, bufferMemory, 0);
 }
+
+void LogicalDevice::waitIdle()
+{
+    vkDeviceWaitIdle(device);
+}

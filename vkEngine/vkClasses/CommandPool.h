@@ -19,6 +19,9 @@ public:
 
 	void endSingleTimeCommands(VkCommandBuffer commandBuffer);
 
+	void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
+
+
 private:
 	std::shared_ptr<LogicalDevice> logicalDeviceObj;
 };

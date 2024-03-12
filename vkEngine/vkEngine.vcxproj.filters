@@ -60,6 +60,33 @@
     <ClCompile Include="vkClasses\TextureImage.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="vkClasses\TextureSampler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vkClasses\Model.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vkClasses\VertexBuffer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vkClasses\IndexBuffer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vkClasses\UniformBuffers.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vkClasses\DescriptorPool.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vkClasses\DescriptorSets.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vkClasses\CommandBuffers.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vkClasses\SyncObjects.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\HelloTriangle.vert">
@@ -131,6 +158,36 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="vkClasses\TextureImage.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vkClasses\TextureSampler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vkClasses\Model.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vkClasses\VertexBuffer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vkClasses\IndexBuffer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vkClasses\UniformBuffers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vkClasses\DescriptorPool.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vkClasses\DescriptorSets.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vkClasses\CommandBuffers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vkClasses\SyncObjects.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="VkEngine.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

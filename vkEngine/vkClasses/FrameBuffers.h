@@ -11,8 +11,6 @@ class FrameBuffers
 public:
 	std::shared_ptr<DepthResources> depthResourcesObj;
 
-	std::vector<VkFramebuffer> swapChainFramebuffers;
-
 	FrameBuffers(std::shared_ptr<DepthResources> depthResourcesObj);
 	void create();
 };

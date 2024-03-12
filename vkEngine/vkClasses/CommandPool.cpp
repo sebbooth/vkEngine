@@ -51,3 +51,14 @@ void CommandPool::endSingleTimeCommands(VkCommandBuffer commandBuffer)
 
     vkFreeCommandBuffers(logicalDeviceObj->device, commandPool, 1, &commandBuffer);
 }
+
+void CommandPool::copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
+{
+    VkCommandBuffer commandBuffer = beginSingleTimeCommands();
+
+    VkBufferCopy copyRegion{};
+    copyRegion.size = size;
+    vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
+
+    endSingleTimeCommands(commandBuffer);
+}

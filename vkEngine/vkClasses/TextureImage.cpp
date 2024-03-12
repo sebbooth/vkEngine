@@ -33,6 +33,18 @@ TextureImage::TextureImage(std::shared_ptr<FrameBuffers> frameBuffersObj)
 
     vkDestroyBuffer(logicalDeviceObj->device, stagingBuffer, nullptr);
     vkFreeMemory(logicalDeviceObj->device, stagingBufferMemory, nullptr);
+    createTextureImageView();
+}
+
+void TextureImage::createTextureImageView()
+{
+    textureImageView = frameBuffersObj->
+        depthResourcesObj->
+        commandPoolObj->
+        graphicsPipelineObj->
+        descriptorSetLayoutObj->
+        renderPassObj->
+        imageViewsObj->createImageView(textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
 }
 
 void TextureImage::transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout)
