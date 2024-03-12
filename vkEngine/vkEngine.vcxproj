@@ -147,6 +147,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="main.cpp" />
     <ClCompile Include="vkClasses\SyncObjects.cpp" />
     <ClCompile Include="vkClasses\CommandBuffers.cpp" />
     <ClCompile Include="vkClasses\DescriptorSets.cpp" />
@@ -162,7 +163,6 @@
     <ClCompile Include="vkClasses\CommandPool.cpp" />
     <ClCompile Include="vkClasses\GraphicsPipeline.cpp" />
     <ClCompile Include="vkClasses\DescriptorSetLayout.cpp" />
-    <ClCompile Include="main.cpp" />
     <ClCompile Include="vkClasses\RenderPass.cpp" />
     <ClCompile Include="vkClasses\ImageViews.cpp" />
     <ClCompile Include="vkClasses\SwapChain.cpp" />
@@ -197,6 +197,7 @@
     <ClInclude Include="vkClasses\ImageViews.h" />
     <ClInclude Include="vkClasses\SwapChain.h" />
     <ClInclude Include="vkClasses\LogicalDevice.h" />
+    <ClInclude Include="VkEngine.h" />
     <ClInclude Include="vkUtils\DebugUtils.h" />
     <ClInclude Include="vkClasses\PhysicalDevice.h" />
     <ClInclude Include="vkClasses\Surface.h" />
@@ -205,7 +206,6 @@
     <ClInclude Include="vkClasses\Instance.h" />
     <ClInclude Include="vkUtils\SwapChainUtils.h" />
     <ClInclude Include="vkClasses\VkClasses.h" />
-    <ClInclude Include="VkEngine.h" />
     <ClInclude Include="vkUtils\VkStructs.h" />
     <ClInclude Include="vkUtils\FileUtils.h" />
   </ItemGroup>

@@ -23,7 +23,8 @@ public:
         VkImageUsageFlags usage,
         VkMemoryPropertyFlags properties,
         VkImage& image,
-        VkDeviceMemory& imageMemory
+        VkDeviceMemory& imageMemory,
+        uint32_t mipLevels
         );
 
     void createBuffer(

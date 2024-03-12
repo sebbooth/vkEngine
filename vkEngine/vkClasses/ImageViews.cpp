@@ -6,7 +6,7 @@ ImageViews::ImageViews(std::shared_ptr<SwapChain> swapChainObj)
     create();
 }
 
-VkImageView ImageViews::createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags)
+VkImageView ImageViews::createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags, uint32_t mipLevels)
 {
     VkImageViewCreateInfo viewInfo{};
     viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -15,7 +15,7 @@ VkImageView ImageViews::createImageView(VkImage image, VkFormat format, VkImageA
     viewInfo.format = format;
     viewInfo.subresourceRange.aspectMask = aspectFlags;
     viewInfo.subresourceRange.baseMipLevel = 0;
-    viewInfo.subresourceRange.levelCount = 1;
+    viewInfo.subresourceRange.levelCount = mipLevels;
     viewInfo.subresourceRange.baseArrayLayer = 0;
     viewInfo.subresourceRange.layerCount = 1;
 
@@ -32,7 +32,7 @@ void ImageViews::create()
     swapChainImageViews.resize(swapChainObj->swapChainImages.size());
 
     for (uint32_t i = 0; i < swapChainObj->swapChainImages.size(); i++) {
-        swapChainImageViews[i] = createImageView(swapChainObj->swapChainImages[i], swapChainObj->swapChainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT);
+        swapChainImageViews[i] = createImageView(swapChainObj->swapChainImages[i], swapChainObj->swapChainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT, 1);
     }
 }
 

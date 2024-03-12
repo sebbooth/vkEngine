@@ -23,8 +23,9 @@ void DepthResources::create()
         VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
         depthImage,
-        depthImageMemory
+        depthImageMemory,
+        1
     );
 
-    depthImageView = renderPassObj->imageViewsObj->createImageView(depthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
+    depthImageView = renderPassObj->imageViewsObj->createImageView(depthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT, 1);
 }

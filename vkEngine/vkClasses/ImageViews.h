@@ -13,7 +13,7 @@ public:
 	std::vector<VkImageView> swapChainImageViews;
 
 	ImageViews(std::shared_ptr<SwapChain> swapChainObj);
-	VkImageView createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
+	VkImageView createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags, uint32_t mipLevels);
 	void create();
 	void destroyImageViews();
 };
