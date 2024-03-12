@@ -7,18 +7,19 @@ IndexBuffer::IndexBuffer(std::shared_ptr<VertexBuffer> vertexBufferObj)
     VkDeviceSize bufferSize = sizeof(vertexBufferObj->modelObj->indices[0]) * vertexBufferObj->modelObj->indices.size();
     
     std::shared_ptr<LogicalDevice> logicalDeviceObj = vertexBufferObj->
-                                                        modelObj->
-                                                        textureSamplerObj->
-                                                        textureImageObj->
-                                                        frameBuffersObj->
-                                                        depthResourcesObj->
-                                                        commandPoolObj->
-                                                        graphicsPipelineObj->
-                                                        descriptorSetLayoutObj->
-                                                        renderPassObj->
-                                                        imageViewsObj->
-                                                        swapChainObj->
-                                                        logicalDeviceObj;
+        modelObj->
+        textureSamplerObj->
+        textureImageObj->
+        frameBuffersObj->
+        depthResourcesObj->
+        colorResourcesObj->
+        commandPoolObj->
+        graphicsPipelineObj->
+        descriptorSetLayoutObj->
+        renderPassObj->
+        imageViewsObj->
+        swapChainObj->
+        logicalDeviceObj;
 
     VkBuffer stagingBuffer{};
     VkDeviceMemory stagingBufferMemory;
@@ -37,6 +38,7 @@ IndexBuffer::IndexBuffer(std::shared_ptr<VertexBuffer> vertexBufferObj)
         textureImageObj->
         frameBuffersObj->
         depthResourcesObj->
+        colorResourcesObj->
         commandPoolObj->copyBuffer(stagingBuffer, indexBuffer, bufferSize);
 
     vkDestroyBuffer(logicalDeviceObj->device, stagingBuffer, nullptr);

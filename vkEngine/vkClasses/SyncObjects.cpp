@@ -17,6 +17,7 @@ SyncObjects::SyncObjects(std::shared_ptr<CommandBuffers> commandBufferObj)
         textureImageObj->
         frameBuffersObj->
         depthResourcesObj->
+        colorResourcesObj->
         commandPoolObj->
         graphicsPipelineObj->
         descriptorSetLayoutObj->
@@ -59,6 +60,7 @@ void SyncObjects::waitForFences(uint32_t currentFrame, VkBool32 waitAll, uint64_
         textureImageObj->
         frameBuffersObj->
         depthResourcesObj->
+        colorResourcesObj->
         commandPoolObj->
         graphicsPipelineObj->
         descriptorSetLayoutObj->

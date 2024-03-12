@@ -1,9 +1,5 @@
 #pragma once
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
-#include <memory>
 #include <stb_image.h>
-
 #include "FrameBuffers.h"
 
 class TextureImage

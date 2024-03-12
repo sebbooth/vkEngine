@@ -1,6 +1,4 @@
 #pragma once
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
 #include <stdexcept>
 #include <vector>
 #include <set>
@@ -17,6 +15,8 @@ public:
 	std::shared_ptr<Surface> surfaceObj;
 	SwapChainSupportDetails swapChainSupportDetails;
 	QueueFamilyIndices queueFamilies;
+		
+	VkSampleCountFlagBits msaaSamples = VK_SAMPLE_COUNT_1_BIT;
 
 	PhysicalDevice(std::shared_ptr<Surface> surfaceObj);
 
@@ -28,5 +28,6 @@ private:
 	bool checkDeviceExtensionSupport(VkPhysicalDevice device);
 	SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device);
 	bool isDeviceSuitable(VkPhysicalDevice device);
+	VkSampleCountFlagBits getMaxUsableSampleCount();
 
 };

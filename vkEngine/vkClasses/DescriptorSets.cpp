@@ -5,25 +5,26 @@ DescriptorSets::DescriptorSets(std::shared_ptr<DescriptorPool> descriptorPoolObj
     this->descriptorPoolObj = descriptorPoolObj;
 
     std::shared_ptr<TextureSampler> textureSamplerObj = descriptorPoolObj->
-                                                            uniformBuffersObj->
-                                                            indexBufferObj->
-                                                            vertexBufferObj->
-                                                            modelObj->
-                                                            textureSamplerObj;
+        uniformBuffersObj->
+        indexBufferObj->
+        vertexBufferObj->
+        modelObj->
+        textureSamplerObj;
 
     std::shared_ptr<DescriptorSetLayout> descriptorSetLayoutObj = textureSamplerObj->
-                                                                    textureImageObj->
-                                                                    frameBuffersObj->
-                                                                    depthResourcesObj->
-                                                                    commandPoolObj->
-                                                                    graphicsPipelineObj->
-                                                                    descriptorSetLayoutObj;
+        textureImageObj->
+        frameBuffersObj->
+        depthResourcesObj->
+        colorResourcesObj->
+        commandPoolObj->
+        graphicsPipelineObj->
+        descriptorSetLayoutObj;
 
     std::shared_ptr<LogicalDevice> logicalDeviceObj = descriptorSetLayoutObj->
-                                                        renderPassObj->
-                                                        imageViewsObj->
-                                                        swapChainObj->
-                                                        logicalDeviceObj;
+        renderPassObj->
+        imageViewsObj->
+        swapChainObj->
+        logicalDeviceObj;
 
     std::vector<VkDescriptorSetLayout> layouts(descriptorPoolObj->uniformBuffersObj->MAX_FRAMES_IN_FLIGHT, descriptorSetLayoutObj->descriptorSetLayout);
     VkDescriptorSetAllocateInfo allocInfo{};

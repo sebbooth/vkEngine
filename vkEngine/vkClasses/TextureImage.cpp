@@ -6,6 +6,7 @@ TextureImage::TextureImage(std::shared_ptr<FrameBuffers> frameBuffersObj)
 
     std::shared_ptr<LogicalDevice> logicalDeviceObj = frameBuffersObj->
         depthResourcesObj->
+        colorResourcesObj->
         commandPoolObj->
         graphicsPipelineObj->
         descriptorSetLayoutObj->
@@ -52,7 +53,8 @@ TextureImage::TextureImage(std::shared_ptr<FrameBuffers> frameBuffersObj)
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, 
         textureImage, 
         textureImageMemory, 
-        mipLevels
+        mipLevels,
+        VK_SAMPLE_COUNT_1_BIT
     );
 
     transitionImageLayout(textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
@@ -73,6 +75,7 @@ void TextureImage::createTextureImageView()
 {
     textureImageView = frameBuffersObj->
         depthResourcesObj->
+        colorResourcesObj->
         commandPoolObj->
         graphicsPipelineObj->
         descriptorSetLayoutObj->
@@ -82,7 +85,7 @@ void TextureImage::createTextureImageView()
 
 void TextureImage::transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout)
 {
-    VkCommandBuffer commandBuffer = frameBuffersObj->depthResourcesObj->commandPoolObj->beginSingleTimeCommands();
+    VkCommandBuffer commandBuffer = frameBuffersObj->depthResourcesObj->colorResourcesObj->commandPoolObj->beginSingleTimeCommands();
 
     VkImageMemoryBarrier barrier{};
     barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -127,12 +130,12 @@ void TextureImage::transitionImageLayout(VkImage image, VkFormat format, VkImage
         1, &barrier
     );
 
-    frameBuffersObj->depthResourcesObj->commandPoolObj->endSingleTimeCommands(commandBuffer);
+    frameBuffersObj->depthResourcesObj->colorResourcesObj->commandPoolObj->endSingleTimeCommands(commandBuffer);
 }
 
 void TextureImage::copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height)
 {
-    VkCommandBuffer commandBuffer = frameBuffersObj->depthResourcesObj->commandPoolObj->beginSingleTimeCommands();
+    VkCommandBuffer commandBuffer = frameBuffersObj->depthResourcesObj->colorResourcesObj->commandPoolObj->beginSingleTimeCommands();
 
     VkBufferImageCopy region{};
     region.bufferOffset = 0;
@@ -160,7 +163,7 @@ void TextureImage::copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t wi
         &region
     );
 
-    frameBuffersObj->depthResourcesObj->commandPoolObj->endSingleTimeCommands(commandBuffer);
+    frameBuffersObj->depthResourcesObj->colorResourcesObj->commandPoolObj->endSingleTimeCommands(commandBuffer);
 }
 
 void TextureImage::generateMipmaps(VkImage image, VkFormat imageFormat, int32_t texWidth, int32_t texHeight, uint32_t mipLevels)
@@ -169,6 +172,7 @@ void TextureImage::generateMipmaps(VkImage image, VkFormat imageFormat, int32_t 
     vkGetPhysicalDeviceFormatProperties(
         frameBuffersObj->
             depthResourcesObj->
+            colorResourcesObj->
             commandPoolObj->
             graphicsPipelineObj->
             descriptorSetLayoutObj->
@@ -186,7 +190,7 @@ void TextureImage::generateMipmaps(VkImage image, VkFormat imageFormat, int32_t 
         throw std::runtime_error("texture image format does not support linear blitting!");
     }
 
-    VkCommandBuffer commandBuffer = frameBuffersObj->depthResourcesObj->commandPoolObj->beginSingleTimeCommands();
+    VkCommandBuffer commandBuffer = frameBuffersObj->depthResourcesObj->colorResourcesObj->commandPoolObj->beginSingleTimeCommands();
 
     VkImageMemoryBarrier barrier{};
     barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -261,5 +265,5 @@ void TextureImage::generateMipmaps(VkImage image, VkFormat imageFormat, int32_t 
         0, nullptr,
         1, &barrier);
 
-    frameBuffersObj->depthResourcesObj->commandPoolObj->endSingleTimeCommands(commandBuffer);
+    frameBuffersObj->depthResourcesObj->colorResourcesObj->commandPoolObj->endSingleTimeCommands(commandBuffer);
 }

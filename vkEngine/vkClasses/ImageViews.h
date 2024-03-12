@@ -1,8 +1,4 @@
 #pragma once
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
-#include <memory>
-
 #include "SwapChain.h"
 
 class ImageViews
@@ -10,6 +6,9 @@ class ImageViews
 public:
 	std::shared_ptr<SwapChain> swapChainObj;
 
+	VkImage colorImage;
+	VkDeviceMemory colorImageMemory;
+	VkImageView colorImageView;
 	std::vector<VkImageView> swapChainImageViews;
 
 	ImageViews(std::shared_ptr<SwapChain> swapChainObj);

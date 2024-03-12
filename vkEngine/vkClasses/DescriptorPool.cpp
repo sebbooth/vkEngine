@@ -5,20 +5,21 @@ DescriptorPool::DescriptorPool(std::shared_ptr<UniformBuffers> uniformBuffersObj
     this->uniformBuffersObj = uniformBuffersObj;
 
     std::shared_ptr<LogicalDevice> logicalDeviceObj = uniformBuffersObj->
-                                                        indexBufferObj->
-                                                        vertexBufferObj->
-                                                        modelObj->
-                                                        textureSamplerObj->
-                                                        textureImageObj->
-                                                        frameBuffersObj->
-                                                        depthResourcesObj->
-                                                        commandPoolObj->
-                                                        graphicsPipelineObj->
-                                                        descriptorSetLayoutObj->
-                                                        renderPassObj->
-                                                        imageViewsObj->
-                                                        swapChainObj->
-                                                        logicalDeviceObj;
+        indexBufferObj->
+        vertexBufferObj->
+        modelObj->
+        textureSamplerObj->
+        textureImageObj->
+        frameBuffersObj->
+        depthResourcesObj->
+        colorResourcesObj->
+        commandPoolObj->
+        graphicsPipelineObj->
+        descriptorSetLayoutObj->
+        renderPassObj->
+        imageViewsObj->
+        swapChainObj->
+        logicalDeviceObj;
 
 
     std::array<VkDescriptorPoolSize, 2> poolSizes{};

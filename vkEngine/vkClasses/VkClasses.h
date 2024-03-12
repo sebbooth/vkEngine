@@ -11,6 +11,7 @@
 #include "DescriptorSetLayout.h"
 #include "GraphicsPipeline.h"
 #include "CommandPool.h"
+#include "ColorResources.h"
 #include "DepthResources.h"
 #include "FrameBuffers.h"
 #include "TextureImage.h"

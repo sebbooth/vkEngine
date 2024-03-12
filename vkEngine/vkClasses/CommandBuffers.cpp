@@ -15,6 +15,7 @@ CommandBuffers::CommandBuffers(std::shared_ptr<DescriptorSets> descriptorSetsObj
         textureImageObj->
         frameBuffersObj->
         depthResourcesObj->
+        colorResourcesObj->
         commandPoolObj;
 
     std::shared_ptr<LogicalDevice> logicalDeviceObj = commandPoolObj->
@@ -52,6 +53,7 @@ void CommandBuffers::recordBuffer(uint32_t currentFrame, uint32_t imageIndex)
         textureImageObj->
         frameBuffersObj->
         depthResourcesObj->
+        colorResourcesObj->
         commandPoolObj->
         graphicsPipelineObj;
 

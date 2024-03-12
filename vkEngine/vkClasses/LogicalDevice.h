@@ -1,8 +1,4 @@
 #pragma once
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
-#include <memory>
-
 #include "PhysicalDevice.h"
 
 class LogicalDevice
@@ -24,7 +20,8 @@ public:
         VkMemoryPropertyFlags properties,
         VkImage& image,
         VkDeviceMemory& imageMemory,
-        uint32_t mipLevels
+        uint32_t mipLevels,
+        VkSampleCountFlagBits numSamples
         );
 
     void createBuffer(

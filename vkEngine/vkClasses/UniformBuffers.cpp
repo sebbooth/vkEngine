@@ -7,19 +7,20 @@ UniformBuffers::UniformBuffers(std::shared_ptr<IndexBuffer> indexBufferObj)
     VkDeviceSize bufferSize = sizeof(UniformBufferObject);
 
     std::shared_ptr<LogicalDevice> logicalDeviceObj = indexBufferObj->
-                                                        vertexBufferObj->
-                                                        modelObj->
-                                                        textureSamplerObj->
-                                                        textureImageObj->
-                                                        frameBuffersObj->
-                                                        depthResourcesObj->
-                                                        commandPoolObj->
-                                                        graphicsPipelineObj->
-                                                        descriptorSetLayoutObj->
-                                                        renderPassObj->
-                                                        imageViewsObj->
-                                                        swapChainObj->
-                                                        logicalDeviceObj;
+        vertexBufferObj->
+        modelObj->
+        textureSamplerObj->
+        textureImageObj->
+        frameBuffersObj->
+        depthResourcesObj->
+        colorResourcesObj->
+        commandPoolObj->
+        graphicsPipelineObj->
+        descriptorSetLayoutObj->
+        renderPassObj->
+        imageViewsObj->
+        swapChainObj->
+        logicalDeviceObj;
 
     uniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
     uniformBuffersMemory.resize(MAX_FRAMES_IN_FLIGHT);
@@ -41,6 +42,7 @@ void UniformBuffers::update(uint32_t currentImage)
         textureImageObj->
         frameBuffersObj->
         depthResourcesObj->
+        colorResourcesObj->
         commandPoolObj->
         graphicsPipelineObj->
         descriptorSetLayoutObj->

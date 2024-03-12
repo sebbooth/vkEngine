@@ -62,6 +62,7 @@ private:
     std::shared_ptr<DescriptorSetLayout> descriptorSetLayoutObj;
     std::shared_ptr<GraphicsPipeline> graphicsPipelineObj;
     std::shared_ptr<CommandPool> commandPoolObj;
+    std::shared_ptr<ColorResources> colorResourcesObj;
     std::shared_ptr<DepthResources> depthResourcesObj;
     std::shared_ptr<FrameBuffers> frameBuffersObj;
     std::shared_ptr<TextureImage> textureImageObj;
@@ -103,7 +104,8 @@ private:
         descriptorSetLayoutObj = std::make_shared<DescriptorSetLayout>(renderPassObj);
         graphicsPipelineObj = std::make_shared<GraphicsPipeline>(descriptorSetLayoutObj);
         commandPoolObj = std::make_shared<CommandPool>(graphicsPipelineObj);
-        depthResourcesObj = std::make_shared<DepthResources>(commandPoolObj);
+        colorResourcesObj = std::make_shared<ColorResources>(commandPoolObj);
+        depthResourcesObj = std::make_shared<DepthResources>(colorResourcesObj);
         frameBuffersObj = std::make_shared<FrameBuffers>(depthResourcesObj);
         textureImageObj = std::make_shared<TextureImage>(frameBuffersObj);
         textureSamplerObj = std::make_shared<TextureSampler>(textureImageObj);
@@ -119,7 +121,7 @@ private:
 
     void mainLoop() {
         long long fps;
-        long long microsecPerSec = 1000000.0f;
+        long long microsecPerSec = 1000000;
         std::cout << std::endl;
 
         while (!glfwWindowShouldClose(window)) {
@@ -257,6 +259,11 @@ private:
     }
 
     void cleanupSwapChain() {
+
+        vkDestroyImageView(logicalDeviceObj->device, colorResourcesObj->colorImageView, nullptr);
+        vkDestroyImage(logicalDeviceObj->device, colorResourcesObj->colorImage, nullptr);
+        vkFreeMemory(logicalDeviceObj->device, colorResourcesObj->colorImageMemory, nullptr);
+
         vkDestroyImageView(logicalDeviceObj->device, depthResourcesObj->depthImageView, nullptr);
         vkDestroyImage(logicalDeviceObj->device, depthResourcesObj->depthImage, nullptr);
         vkFreeMemory(logicalDeviceObj->device, depthResourcesObj->depthImageMemory, nullptr);
@@ -279,6 +286,7 @@ private:
 
         swapChainObj->create();
         imageViewsObj->create();
+        colorResourcesObj->create();
         depthResourcesObj->create();
         frameBuffersObj->create();
     }

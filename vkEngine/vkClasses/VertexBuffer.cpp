@@ -4,17 +4,18 @@ VertexBuffer::VertexBuffer(std::shared_ptr<Model> modelObj)
 {
     this->modelObj = modelObj;
     std::shared_ptr<LogicalDevice> logicalDeviceObj = modelObj->
-                                                        textureSamplerObj->
-                                                        textureImageObj->
-                                                        frameBuffersObj->
-                                                        depthResourcesObj->
-                                                        commandPoolObj->
-                                                        graphicsPipelineObj->
-                                                        descriptorSetLayoutObj->
-                                                        renderPassObj->
-                                                        imageViewsObj->
-                                                        swapChainObj->
-                                                        logicalDeviceObj;
+        textureSamplerObj->
+        textureImageObj->
+        frameBuffersObj->
+        depthResourcesObj->
+        colorResourcesObj->
+        commandPoolObj->
+        graphicsPipelineObj->
+        descriptorSetLayoutObj->
+        renderPassObj->
+        imageViewsObj->
+        swapChainObj->
+        logicalDeviceObj;
 
     VkDeviceSize bufferSize = sizeof(modelObj->vertices[0]) * modelObj->vertices.size();
 
@@ -34,6 +35,7 @@ VertexBuffer::VertexBuffer(std::shared_ptr<Model> modelObj)
         textureImageObj->
         frameBuffersObj->
         depthResourcesObj->
+        colorResourcesObj->
         commandPoolObj->copyBuffer(stagingBuffer, vertexBuffer, bufferSize);
 
     vkDestroyBuffer(logicalDeviceObj->device, stagingBuffer, nullptr);

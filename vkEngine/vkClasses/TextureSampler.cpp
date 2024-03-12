@@ -5,15 +5,16 @@ TextureSampler::TextureSampler(std::shared_ptr<TextureImage> textureImageObj)
     this->textureImageObj = textureImageObj;
 
     std::shared_ptr<LogicalDevice> logicalDeviceObj = textureImageObj->
-                                                        frameBuffersObj->
-                                                        depthResourcesObj->
-                                                        commandPoolObj->
-                                                        graphicsPipelineObj->
-                                                        descriptorSetLayoutObj->
-                                                        renderPassObj->
-                                                        imageViewsObj->
-                                                        swapChainObj->
-                                                        logicalDeviceObj;
+        frameBuffersObj->
+        depthResourcesObj->
+        colorResourcesObj->
+        commandPoolObj->
+        graphicsPipelineObj->
+        descriptorSetLayoutObj->
+        renderPassObj->
+        imageViewsObj->
+        swapChainObj->
+        logicalDeviceObj;
 
 
     VkPhysicalDeviceProperties  properties{};
