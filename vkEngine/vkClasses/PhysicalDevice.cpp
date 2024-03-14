@@ -74,7 +74,7 @@ QueueFamilyIndices PhysicalDevice::findQueueFamilies(VkPhysicalDevice device)
         }
 
         if (indices.isComplete()) {
-            break;
+            //break;
         }
 
         i++;
@@ -90,6 +90,7 @@ bool PhysicalDevice::checkDeviceExtensionSupport(VkPhysicalDevice device)
 
     std::vector<VkExtensionProperties> availableExtensions(extensionCount);
     vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, availableExtensions.data());
+    
 
     std::set<std::string> requiredExtensions(surfaceObj->instanceObj->deviceExtensions.begin(), surfaceObj->instanceObj->deviceExtensions.end());
 
