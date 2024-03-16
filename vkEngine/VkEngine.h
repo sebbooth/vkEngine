@@ -31,12 +31,14 @@ const std::vector<const char*> deviceExtensions = {
     VK_KHR_SWAPCHAIN_EXTENSION_NAME
 };
 
+const bool enableValidationLayers = true;
+/*
 #ifdef NDEBUG
 const bool enableValidationLayers = false;
 #else
 const bool enableValidationLayers = true;
 #endif
-
+*/
 class VkEngine {
 public:
     void run() {
@@ -51,30 +53,30 @@ private:
     uint32_t currentFrame = 0;
     bool framebufferResized = false;
 
-    std::shared_ptr<Instance> instanceObj;
-    std::shared_ptr<DebugMessenger> debugMessengerObj;
-    std::shared_ptr<Surface> surfaceObj;
-    std::shared_ptr<PhysicalDevice> physicalDeviceObj;
-    std::shared_ptr<LogicalDevice> logicalDeviceObj;
-    std::shared_ptr<SwapChain> swapChainObj;
-    std::shared_ptr<ImageViews> imageViewsObj;
-    std::shared_ptr<RenderPass> renderPassObj;
-    std::shared_ptr<DescriptorSetLayout> descriptorSetLayoutObj;
-    std::shared_ptr<GraphicsPipeline> graphicsPipelineObj;
-    std::shared_ptr<CommandPool> commandPoolObj;
-    std::shared_ptr<ColorResources> colorResourcesObj;
-    std::shared_ptr<DepthResources> depthResourcesObj;
-    std::shared_ptr<FrameBuffers> frameBuffersObj;
-    std::shared_ptr<TextureImage> textureImageObj;
-    std::shared_ptr<TextureSampler> textureSamplerObj;
-    std::shared_ptr<Model> modelObj;
-    std::shared_ptr<VertexBuffer> vertexBufferObj;
-    std::shared_ptr<IndexBuffer> indexBufferObj;
-    std::shared_ptr<UniformBuffers> uniformBuffersObj;
-    std::shared_ptr<DescriptorPool> descriptorPoolObj;
-    std::shared_ptr<DescriptorSets> descriptorSetsObj;
-    std::shared_ptr<CommandBuffers> commandBufferObj;
-    std::shared_ptr<SyncObjects> syncObjectsObj;
+    std::shared_ptr<Instance> p_Instance;
+        //std::shared_ptr<DebugMessenger> p_DebugMessenger;
+    std::shared_ptr<Surface> p_Surface;
+    std::shared_ptr<PhysicalDevice> p_PhysicalDevice;
+    std::shared_ptr<LogicalDevice> p_LogicalDevice;
+    std::shared_ptr<SwapChain> p_SwapChain;
+    std::shared_ptr<ImageViews> p_ImageViews;
+    std::shared_ptr<RenderPass> p_RenderPass;
+    std::shared_ptr<DescriptorSetLayout> p_DescriptorSetLayout;
+    std::shared_ptr<GraphicsPipeline> p_GraphicsPipeline;
+    std::shared_ptr<CommandPool> p_CommandPool;
+        //std::shared_ptr<ColorResources> p_ColorResources;
+        //std::shared_ptr<DepthResources> p_DepthResources;
+    std::shared_ptr<FrameBuffers> p_FrameBuffers;
+    std::shared_ptr<TextureImage> p_TextureImage;
+    std::shared_ptr<TextureSampler> p_TextureSampler;
+    std::shared_ptr<Model> p_Model;
+    std::shared_ptr<VertexBuffer> p_VertexBuffer;
+    std::shared_ptr<IndexBuffer> p_IndexBuffer;
+    std::shared_ptr<UniformBuffers> p_UniformBuffers;
+    std::shared_ptr<DescriptorPool> p_DescriptorPool;
+    std::shared_ptr<DescriptorSets> p_DescriptorSets;
+    std::shared_ptr<CommandBuffers> p_CommandBuffer;
+    std::shared_ptr<SyncObjects> p_SyncObjects;
 
 
     void initWindow() {
@@ -93,30 +95,65 @@ private:
     }
 
     void initVulkan() {
-        instanceObj = std::make_shared<Instance>(enableValidationLayers, validationLayers, deviceExtensions);
-        debugMessengerObj = std::make_shared<DebugMessenger>(instanceObj);
-        surfaceObj = std::make_shared<Surface>(instanceObj, window);
-        physicalDeviceObj = std::make_shared<PhysicalDevice>(surfaceObj);
-        logicalDeviceObj = std::make_shared<LogicalDevice>(physicalDeviceObj);
-        swapChainObj = std::make_shared<SwapChain>(logicalDeviceObj);
-        imageViewsObj = std::make_shared<ImageViews>(swapChainObj);
-        renderPassObj = std::make_shared<RenderPass>(imageViewsObj);
-        descriptorSetLayoutObj = std::make_shared<DescriptorSetLayout>(renderPassObj);
-        graphicsPipelineObj = std::make_shared<GraphicsPipeline>(descriptorSetLayoutObj);
-        commandPoolObj = std::make_shared<CommandPool>(graphicsPipelineObj);
-        colorResourcesObj = std::make_shared<ColorResources>(commandPoolObj);
-        depthResourcesObj = std::make_shared<DepthResources>(colorResourcesObj);
-        frameBuffersObj = std::make_shared<FrameBuffers>(depthResourcesObj);
-        textureImageObj = std::make_shared<TextureImage>(frameBuffersObj);
-        textureSamplerObj = std::make_shared<TextureSampler>(textureImageObj);
-        modelObj = std::make_shared<Model>(textureSamplerObj);
-        vertexBufferObj = std::make_shared<VertexBuffer>(modelObj);
-        indexBufferObj = std::make_shared<IndexBuffer>(vertexBufferObj);
-        uniformBuffersObj = std::make_shared<UniformBuffers>(indexBufferObj);
-        descriptorPoolObj = std::make_shared<DescriptorPool>(uniformBuffersObj);
-        descriptorSetsObj = std::make_shared<DescriptorSets>(descriptorPoolObj);
-        commandBufferObj = std::make_shared<CommandBuffers>(descriptorSetsObj);
-        syncObjectsObj = std::make_shared<SyncObjects>(commandBufferObj);
+        p_Instance = std::make_shared<Instance>(enableValidationLayers, validationLayers, deviceExtensions);
+        p_Instance->create();
+        //p_DebugMessenger = std::make_shared<DebugMessenger>(p_Instance);
+
+        p_Surface = std::make_shared<Surface>(p_Instance, window);
+
+        p_PhysicalDevice = std::make_shared<PhysicalDevice>(p_Surface);
+        p_PhysicalDevice->msaaEnabled = true;
+        p_PhysicalDevice->create();
+
+        p_LogicalDevice = std::make_shared<LogicalDevice>(p_PhysicalDevice);
+        p_LogicalDevice->wireFrameEnabled = false;
+        p_LogicalDevice->create();
+
+        p_SwapChain = std::make_shared<SwapChain>(p_LogicalDevice);
+        p_SwapChain->create();
+
+        p_ImageViews = std::make_shared<ImageViews>(p_SwapChain);
+        p_ImageViews->create();
+
+        p_RenderPass = std::make_shared<RenderPass>(p_ImageViews);
+        p_RenderPass->depthEnabled = true;
+        p_RenderPass->create();
+
+        p_DescriptorSetLayout = std::make_shared<DescriptorSetLayout>(p_RenderPass);
+        p_DescriptorSetLayout->uboEnabled = true;
+        p_DescriptorSetLayout->samplerEnabled = true;
+        p_DescriptorSetLayout->create();
+
+        p_GraphicsPipeline = std::make_shared<GraphicsPipeline>(p_DescriptorSetLayout);
+        p_GraphicsPipeline->create();
+
+        p_CommandPool = std::make_shared<CommandPool>(p_GraphicsPipeline);
+        p_CommandPool->create();
+
+        p_FrameBuffers = std::make_shared<FrameBuffers>(p_CommandPool);
+        p_FrameBuffers->create();
+
+        p_Model = std::make_shared<Model>();
+
+        p_VertexBuffer = std::make_shared<VertexBuffer>(p_FrameBuffers);
+        p_VertexBuffer->create(p_Model->vertices);
+
+        p_IndexBuffer = std::make_shared<IndexBuffer>(p_VertexBuffer);
+        p_IndexBuffer->create(p_Model->indices);
+        
+        p_DescriptorPool = std::make_shared<DescriptorPool>(p_FrameBuffers);
+        p_DescriptorPool->create();
+
+        p_DescriptorSets = std::make_shared<DescriptorSets>(p_DescriptorPool);
+        p_DescriptorSets->create();
+
+        p_CommandBuffer = std::make_shared<CommandBuffers>(p_DescriptorSets);
+        p_CommandBuffer->attachVertexBuffer(p_VertexBuffer);
+        p_CommandBuffer->attachIndexBuffer(p_IndexBuffer);
+        p_CommandBuffer->create();
+        
+        p_SyncObjects = std::make_shared<SyncObjects>(p_CommandBuffer);
+        p_SyncObjects->create();
     }
 
     void mainLoop() {
@@ -135,14 +172,21 @@ private:
             std::cout << "\r" << "FPS: " << std::setw(10) << fps << std::flush;
         }
         std::cout << std::endl;
-        logicalDeviceObj->waitIdle();
+        p_LogicalDevice->waitIdle();
     }
 
     void drawFrame() {
-        syncObjectsObj->waitForFences(currentFrame, VK_TRUE, UINT64_MAX);
+        p_SyncObjects->waitForFences(currentFrame, VK_TRUE, UINT64_MAX);
 
         uint32_t imageIndex;
-        VkResult result = vkAcquireNextImageKHR(logicalDeviceObj->device, swapChainObj->swapChain, UINT64_MAX, syncObjectsObj->imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
+        VkResult result = vkAcquireNextImageKHR(
+            p_LogicalDevice->device, 
+            p_SwapChain->swapChain, 
+            UINT64_MAX, 
+            p_SyncObjects->imageAvailableSemaphores[currentFrame], 
+            VK_NULL_HANDLE, 
+            &imageIndex
+        );
 
         if (result == VK_ERROR_OUT_OF_DATE_KHR) {
             recreateSwapChain();
@@ -152,30 +196,30 @@ private:
             throw std::runtime_error("failed to acquire swap chain image!");
         }
 
-        uniformBuffersObj->update(currentFrame);
+        p_DescriptorPool->update(currentFrame);
 
-        vkResetFences(logicalDeviceObj->device, 1, &syncObjectsObj->inFlightFences[currentFrame]);
+        vkResetFences(p_LogicalDevice->device, 1, &p_SyncObjects->inFlightFences[currentFrame]);
 
-        commandBufferObj->resetBuffer(currentFrame);
-        commandBufferObj->recordBuffer(currentFrame, imageIndex);
+        p_CommandBuffer->resetBuffer(currentFrame);
+        p_CommandBuffer->recordBuffer(currentFrame, imageIndex);
 
         VkSubmitInfo submitInfo{};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
-        VkSemaphore waitSemaphores[] = { syncObjectsObj->imageAvailableSemaphores[currentFrame] };
+        VkSemaphore waitSemaphores[] = { p_SyncObjects->imageAvailableSemaphores[currentFrame] };
         VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
         submitInfo.waitSemaphoreCount = 1;
         submitInfo.pWaitSemaphores = waitSemaphores;
         submitInfo.pWaitDstStageMask = waitStages;
 
         submitInfo.commandBufferCount = 1;
-        submitInfo.pCommandBuffers = &commandBufferObj->commandBuffers[currentFrame];
+        submitInfo.pCommandBuffers = &p_CommandBuffer->commandBuffers[currentFrame];
 
-        VkSemaphore signalSemaphores[] = { syncObjectsObj->renderFinishedSemaphores[currentFrame] };
+        VkSemaphore signalSemaphores[] = { p_SyncObjects->renderFinishedSemaphores[currentFrame] };
         submitInfo.signalSemaphoreCount = 1;
         submitInfo.pSignalSemaphores = signalSemaphores;
 
-        if (vkQueueSubmit(logicalDeviceObj->graphicsQueue, 1, &submitInfo, syncObjectsObj->inFlightFences[currentFrame]) != VK_SUCCESS) {
+        if (vkQueueSubmit(p_LogicalDevice->graphicsQueue, 1, &submitInfo, p_SyncObjects->inFlightFences[currentFrame]) != VK_SUCCESS) {
             throw std::runtime_error("failed to submit draw command buffer!");
         }
 
@@ -185,13 +229,13 @@ private:
         presentInfo.waitSemaphoreCount = 1;
         presentInfo.pWaitSemaphores = signalSemaphores;
 
-        VkSwapchainKHR swapChains[] = { swapChainObj->swapChain };
+        VkSwapchainKHR swapChains[] = { p_SwapChain->swapChain };
         presentInfo.swapchainCount = 1;
         presentInfo.pSwapchains = swapChains;
 
         presentInfo.pImageIndices = &imageIndex;
 
-        result = vkQueuePresentKHR(logicalDeviceObj->presentQueue, &presentInfo);
+        result = vkQueuePresentKHR(p_LogicalDevice->presentQueue, &presentInfo);
 
         if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || framebufferResized) {
             framebufferResized = false;
@@ -207,47 +251,31 @@ private:
     void cleanup() {
         cleanupSwapChain();
 
-        vkDestroyPipeline(logicalDeviceObj->device, graphicsPipelineObj->graphicsPipeline, nullptr);
-        vkDestroyPipelineLayout(logicalDeviceObj->device, graphicsPipelineObj->pipelineLayout, nullptr);
-        vkDestroyRenderPass(logicalDeviceObj->device, renderPassObj->renderPass, nullptr);
+        p_GraphicsPipeline->destroy();
+    
+        p_RenderPass->destroy();
 
-        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-            vkDestroyBuffer(logicalDeviceObj->device, uniformBuffersObj->uniformBuffers[i], nullptr);
-            vkFreeMemory(logicalDeviceObj->device, uniformBuffersObj->uniformBuffersMemory[i], nullptr);
-        }
+        p_DescriptorPool->destroy();
 
-        vkDestroyDescriptorPool(logicalDeviceObj->device, descriptorPoolObj->descriptorPool, nullptr);
+        p_DescriptorSetLayout->destroy();
 
-        vkDestroySampler(logicalDeviceObj->device, textureSamplerObj->textureSampler, nullptr);
-        vkDestroyImageView(logicalDeviceObj->device, textureImageObj->textureImageView, nullptr);
+        p_IndexBuffer->destroy();
 
-        vkDestroyImage(logicalDeviceObj->device, textureImageObj->textureImage, nullptr);
-        vkFreeMemory(logicalDeviceObj->device, textureImageObj->textureImageMemory, nullptr);
+        p_VertexBuffer->destroy();
 
-        vkDestroyDescriptorSetLayout(logicalDeviceObj->device, descriptorSetLayoutObj->descriptorSetLayout, nullptr);
+        p_SyncObjects->destroy();
 
-        vkDestroyBuffer(logicalDeviceObj->device, indexBufferObj->indexBuffer, nullptr);
-        vkFreeMemory(logicalDeviceObj->device, indexBufferObj->indexBufferMemory, nullptr);
+        p_CommandPool->destroy();
 
-        vkDestroyBuffer(logicalDeviceObj->device, vertexBufferObj->vertexBuffer, nullptr);
-        vkFreeMemory(logicalDeviceObj->device, vertexBufferObj->vertexBufferMemory, nullptr);
-
-        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-            vkDestroySemaphore(logicalDeviceObj->device, syncObjectsObj->renderFinishedSemaphores[i], nullptr);
-            vkDestroySemaphore(logicalDeviceObj->device, syncObjectsObj->imageAvailableSemaphores[i], nullptr);
-            vkDestroyFence(logicalDeviceObj->device, syncObjectsObj->inFlightFences[i], nullptr);
-        }
-
-        vkDestroyCommandPool(logicalDeviceObj->device, commandPoolObj->commandPool, nullptr);
-
-        vkDestroyDevice(logicalDeviceObj->device, nullptr);
+        p_LogicalDevice->destroy();
 
         if (enableValidationLayers) {
-            DestroyDebugUtilsMessengerEXT(instanceObj->instance, debugMessengerObj->debugMessenger, nullptr);
+            p_Instance->DestroyDebugUtilsMessengerEXT(nullptr);
         }
 
-        vkDestroySurfaceKHR(instanceObj->instance, surfaceObj->surface, nullptr);
-        vkDestroyInstance(instanceObj->instance, nullptr);
+        p_Surface->destroy();
+
+        p_Instance->destroy();
 
         glfwDestroyWindow(window);
 
@@ -259,18 +287,10 @@ private:
     }
 
     void cleanupSwapChain() {
-
-        vkDestroyImageView(logicalDeviceObj->device, colorResourcesObj->colorImageView, nullptr);
-        vkDestroyImage(logicalDeviceObj->device, colorResourcesObj->colorImage, nullptr);
-        vkFreeMemory(logicalDeviceObj->device, colorResourcesObj->colorImageMemory, nullptr);
-
-        vkDestroyImageView(logicalDeviceObj->device, depthResourcesObj->depthImageView, nullptr);
-        vkDestroyImage(logicalDeviceObj->device, depthResourcesObj->depthImage, nullptr);
-        vkFreeMemory(logicalDeviceObj->device, depthResourcesObj->depthImageMemory, nullptr);
-
-        swapChainObj->destroyFramebuffers();
-        imageViewsObj->destroyImageViews();
-        swapChainObj->destroySwapChain();
+        p_FrameBuffers->destroy();
+        p_SwapChain->destroyFramebuffers();
+        p_ImageViews->destroyImageViews();
+        p_SwapChain->destroySwapChain();
     }
 
     void recreateSwapChain() {
@@ -280,14 +300,12 @@ private:
             glfwWaitEvents();
         }
 
-        logicalDeviceObj->waitIdle();
+        p_LogicalDevice->waitIdle();
 
         cleanupSwapChain();
 
-        swapChainObj->create();
-        imageViewsObj->create();
-        colorResourcesObj->create();
-        depthResourcesObj->create();
-        frameBuffersObj->create();
+        p_SwapChain->create();
+        p_ImageViews->create();
+        p_FrameBuffers->create();
     }
 };

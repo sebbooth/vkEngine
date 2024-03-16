@@ -11,8 +11,10 @@ class Surface
 public:
 	VkSurfaceKHR surface{};
 	GLFWwindow* window;
-	std::shared_ptr<Instance> instanceObj;
+	std::shared_ptr<Instance> p_Instance;
 
-	Surface(std::shared_ptr<Instance> instanceObj, GLFWwindow* window);
+	Surface(std::shared_ptr<Instance> p_Instance, GLFWwindow* window);
+	
+	void destroy();
 };
 

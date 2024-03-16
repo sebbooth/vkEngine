@@ -1,68 +1,49 @@
 #include "CommandBuffers.h"
 
-CommandBuffers::CommandBuffers(std::shared_ptr<DescriptorSets> descriptorSetsObj)
+CommandBuffers::CommandBuffers(std::shared_ptr<DescriptorSets> p_DescriptorSets)
 {
-	this->descriptorSetsObj = descriptorSetsObj;
+	this->p_DescriptorSets = p_DescriptorSets;
+    this->p_DescriptorPool = p_DescriptorSets->p_DescriptorPool;
+    this->p_FrameBuffers = p_DescriptorPool->p_FrameBuffers;
+    this->p_CommandPool = p_FrameBuffers->p_CommandPool;
+    this->p_GraphicsPipeline = p_CommandPool->p_GraphicsPipeline;
+    this->p_DescriptorSetLayout = p_GraphicsPipeline->p_DescriptorSetLayout;
+    this->p_RenderPass = p_DescriptorSetLayout->p_RenderPass;
+    this->p_ImageViews = p_RenderPass->p_ImageViews;
+    this->p_SwapChain = p_ImageViews->p_SwapChain;
+    this->p_LogicalDevice = p_SwapChain->p_LogicalDevice;
+    this->p_PhysicalDevice = p_LogicalDevice->p_PhysicalDevice;
+    this->p_Surface = p_PhysicalDevice->p_Surface;
+    this->p_Instance = p_Surface->p_Instance;
+}
 
-    std::shared_ptr<UniformBuffers> uniformBuffersObj = descriptorSetsObj->
-        descriptorPoolObj->
-        uniformBuffersObj;
-
-    std::shared_ptr<CommandPool> commandPoolObj = uniformBuffersObj->
-        indexBufferObj->
-        vertexBufferObj->
-        modelObj->textureSamplerObj->
-        textureImageObj->
-        frameBuffersObj->
-        depthResourcesObj->
-        colorResourcesObj->
-        commandPoolObj;
-
-    std::shared_ptr<LogicalDevice> logicalDeviceObj = commandPoolObj->
-        graphicsPipelineObj->
-        descriptorSetLayoutObj->
-        renderPassObj->
-        imageViewsObj->
-        swapChainObj->
-        logicalDeviceObj;
-
-    commandBuffers.resize(uniformBuffersObj->MAX_FRAMES_IN_FLIGHT);
+void CommandBuffers::create()
+{
+    commandBuffers.resize(p_FrameBuffers->MAX_FRAMES_IN_FLIGHT);
 
     VkCommandBufferAllocateInfo allocInfo{};
     allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-    allocInfo.commandPool = commandPoolObj->commandPool;
+    allocInfo.commandPool = p_CommandPool->commandPool;
     allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
     allocInfo.commandBufferCount = (uint32_t)commandBuffers.size();
 
-    if (vkAllocateCommandBuffers(logicalDeviceObj->device, &allocInfo, commandBuffers.data()) != VK_SUCCESS) {
+    if (vkAllocateCommandBuffers(p_LogicalDevice->device, &allocInfo, commandBuffers.data()) != VK_SUCCESS) {
         throw std::runtime_error("failed to allocate command buffers!");
     }
 }
 
+void CommandBuffers::attachVertexBuffer(std::shared_ptr<VertexBuffer> p_VertexBuffer)
+{
+    this->p_VertexBuffer = p_VertexBuffer;
+}
+
+void CommandBuffers::attachIndexBuffer(std::shared_ptr<IndexBuffer> p_IndexBuffer)
+{
+    this->p_IndexBuffer = p_IndexBuffer;
+}
+
 void CommandBuffers::recordBuffer(uint32_t currentFrame, uint32_t imageIndex)
 {
-    std::shared_ptr<IndexBuffer> indexBufferObj = descriptorSetsObj->
-        descriptorPoolObj->
-        uniformBuffersObj->
-        indexBufferObj;
-    
-    std::shared_ptr<GraphicsPipeline> graphicsPipelineObj = indexBufferObj->
-        vertexBufferObj->
-        modelObj->
-        textureSamplerObj->
-        textureImageObj->
-        frameBuffersObj->
-        depthResourcesObj->
-        colorResourcesObj->
-        commandPoolObj->
-        graphicsPipelineObj;
-
-    std::shared_ptr<SwapChain> swapChainObj = graphicsPipelineObj->
-        descriptorSetLayoutObj->
-        renderPassObj->
-        imageViewsObj->
-        swapChainObj;
-
     VkCommandBuffer commandBuffer = commandBuffers[currentFrame];
 
     VkCommandBufferBeginInfo beginInfo{};
@@ -74,10 +55,10 @@ void CommandBuffers::recordBuffer(uint32_t currentFrame, uint32_t imageIndex)
 
     VkRenderPassBeginInfo renderPassInfo{};
     renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-    renderPassInfo.renderPass = graphicsPipelineObj->descriptorSetLayoutObj->renderPassObj->renderPass;
-    renderPassInfo.framebuffer = swapChainObj->swapChainFramebuffers[imageIndex];
+    renderPassInfo.renderPass = p_RenderPass->renderPass;
+    renderPassInfo.framebuffer = p_SwapChain->swapChainFramebuffers[imageIndex];
     renderPassInfo.renderArea.offset = { 0, 0 };
-    renderPassInfo.renderArea.extent = swapChainObj->swapChainExtent;
+    renderPassInfo.renderArea.extent = p_SwapChain->swapChainExtent;
 
     std::array<VkClearValue, 2> clearValues{};
     clearValues[0].color = { {0.0f, 0.0f, 0.0f, 1.0f} };
@@ -88,31 +69,31 @@ void CommandBuffers::recordBuffer(uint32_t currentFrame, uint32_t imageIndex)
 
     vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipelineObj->graphicsPipeline);
+    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, p_GraphicsPipeline->graphicsPipeline);
 
     VkViewport viewport{};
     viewport.x = 0.0f;
     viewport.y = 0.0f;
-    viewport.width = (float)swapChainObj->swapChainExtent.width;
-    viewport.height = (float)swapChainObj->swapChainExtent.height;
+    viewport.width = (float)p_SwapChain->swapChainExtent.width;
+    viewport.height = (float)p_SwapChain->swapChainExtent.height;
     viewport.minDepth = 0.0f;
     viewport.maxDepth = 1.0f;
     vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
 
     VkRect2D scissor{};
     scissor.offset = { 0, 0 };
-    scissor.extent = swapChainObj->swapChainExtent;
+    scissor.extent = p_SwapChain->swapChainExtent;
     vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-    VkBuffer vertexBuffers[] = { indexBufferObj->vertexBufferObj->vertexBuffer };
+    VkBuffer vertexBuffers[] = { p_VertexBuffer->vertexBuffer };
     VkDeviceSize offsets[] = { 0 };
     vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
 
-    vkCmdBindIndexBuffer(commandBuffer, indexBufferObj->indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+    vkCmdBindIndexBuffer(commandBuffer, p_IndexBuffer->indexBuffer, 0, VK_INDEX_TYPE_UINT32);
 
-    vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipelineObj->pipelineLayout, 0, 1, &descriptorSetsObj->descriptorSets[currentFrame], 0, nullptr);
+    vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, p_GraphicsPipeline->pipelineLayout, 0, 1, &p_DescriptorSets->descriptorSets[currentFrame], 0, nullptr);
 
-    vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indexBufferObj->vertexBufferObj->modelObj->indices.size()), 1, 0, 0, 0);
+    vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(p_IndexBuffer->indices.size()), 1, 0, 0, 0);
 
     vkCmdEndRenderPass(commandBuffer);
 

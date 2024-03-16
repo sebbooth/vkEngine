@@ -1,9 +1,24 @@
 #include "GraphicsPipeline.h"
 
-GraphicsPipeline::GraphicsPipeline(std::shared_ptr<DescriptorSetLayout> descriptorSetLayoutObj)
+GraphicsPipeline::GraphicsPipeline(std::shared_ptr<DescriptorSetLayout> p_DescriptorSetLayout)
 {
-    this->descriptorSetLayoutObj = descriptorSetLayoutObj;
+    this->p_DescriptorSetLayout = p_DescriptorSetLayout;
+    this->p_RenderPass = p_DescriptorSetLayout->p_RenderPass;
+    this->p_ImageViews = p_RenderPass->p_ImageViews;
+    this->p_SwapChain = p_ImageViews->p_SwapChain;
+    this->p_LogicalDevice = p_SwapChain->p_LogicalDevice;
+    this->p_PhysicalDevice = p_LogicalDevice->p_PhysicalDevice;
+    this->p_Surface = p_PhysicalDevice->p_Surface;
+    this->p_Instance = p_Surface->p_Instance;
+}
 
+void GraphicsPipeline::create()
+{
+    VkGraphicsPipelineCreateInfo pipelineInfo{};
+    pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+
+
+    // shader stages /////////////////////////////////////////////////////////////////////
     auto vertShaderCode = readFile("shaders/vert.spv");
     auto fragShaderCode = readFile("shaders/frag.spv");
 
@@ -24,6 +39,12 @@ GraphicsPipeline::GraphicsPipeline(std::shared_ptr<DescriptorSetLayout> descript
 
     VkPipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageInfo, fragShaderStageInfo };
 
+    pipelineInfo.stageCount = 2;
+    pipelineInfo.pStages = shaderStages;
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+
+    // dynamic states /////////////////////////////////////////////////////////////////////
     std::vector<VkDynamicState> dynamicStates = {
         VK_DYNAMIC_STATE_VIEWPORT,
         VK_DYNAMIC_STATE_SCISSOR
@@ -34,6 +55,11 @@ GraphicsPipeline::GraphicsPipeline(std::shared_ptr<DescriptorSetLayout> descript
     dynamicState.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size());
     dynamicState.pDynamicStates = dynamicStates.data();
 
+    pipelineInfo.pDynamicState = &dynamicState;
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+
+    // vertex input info /////////////////////////////////////////////////////////////////////
     VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
     vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 
@@ -45,24 +71,32 @@ GraphicsPipeline::GraphicsPipeline(std::shared_ptr<DescriptorSetLayout> descript
     vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
     vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
 
+    pipelineInfo.pVertexInputState = &vertexInputInfo;
+    ///////////////////////////////////////////////////////////////////////////////////////
 
 
+    // input assembly info /////////////////////////////////////////////////////////////////////
     VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
     inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
     inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
     inputAssembly.primitiveRestartEnable = VK_FALSE;
 
+    pipelineInfo.pInputAssemblyState = &inputAssembly;
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+
+    // viewport state /////////////////////////////////////////////////////////////////////
     VkViewport viewport{};
     viewport.x = 0.0f;
     viewport.y = 0.0f;
-    viewport.width = (float)descriptorSetLayoutObj->renderPassObj->imageViewsObj->swapChainObj->swapChainExtent.width;
-    viewport.height = (float)descriptorSetLayoutObj->renderPassObj->imageViewsObj->swapChainObj->swapChainExtent.height;
+    viewport.width = (float)p_SwapChain->swapChainExtent.width;
+    viewport.height = (float)p_SwapChain->swapChainExtent.height;
     viewport.minDepth = 0.0f;
     viewport.maxDepth = 1.0f;
 
     VkRect2D scissor{};
     scissor.offset = { 0, 0 };
-    scissor.extent = descriptorSetLayoutObj->renderPassObj->imageViewsObj->swapChainObj->swapChainExtent;
+    scissor.extent = p_SwapChain->swapChainExtent;
 
     VkPipelineViewportStateCreateInfo viewportState{};
     viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
@@ -71,28 +105,46 @@ GraphicsPipeline::GraphicsPipeline(std::shared_ptr<DescriptorSetLayout> descript
     viewportState.scissorCount = 1;
     viewportState.pScissors = &scissor;
 
+    pipelineInfo.pViewportState = &viewportState;
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+
+    // rasterizer state /////////////////////////////////////////////////////////////////////
     VkPipelineRasterizationStateCreateInfo rasterizer{};
     rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
     rasterizer.depthClampEnable = VK_FALSE;
     rasterizer.rasterizerDiscardEnable = VK_FALSE;
-    rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
+    if (p_LogicalDevice->wireFrameEnabled) rasterizer.polygonMode = VK_POLYGON_MODE_LINE;
+    else rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
     rasterizer.lineWidth = 1.0f;
-    rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
+    rasterizer.cullMode = VK_CULL_MODE_NONE;
     rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
     rasterizer.depthBiasEnable = VK_FALSE;
     rasterizer.depthBiasConstantFactor = 0.0f; // Optional
     rasterizer.depthBiasClamp = 0.0f; // Optional
     rasterizer.depthBiasSlopeFactor = 0.0f; // Optional
 
-    VkPipelineMultisampleStateCreateInfo multisampling{};
-    multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-    multisampling.sampleShadingEnable = VK_TRUE; // enable sample shading in the pipeline
-    multisampling.rasterizationSamples = descriptorSetLayoutObj->renderPassObj->imageViewsObj->swapChainObj->logicalDeviceObj->physicalDeviceObj->msaaSamples;
-    multisampling.minSampleShading = .2f; // min fraction for sample shading; closer to one is smoother
-    multisampling.pSampleMask = nullptr; // Optional
-    multisampling.alphaToCoverageEnable = VK_FALSE; // Optional
-    multisampling.alphaToOneEnable = VK_FALSE; // Optional
+    pipelineInfo.pRasterizationState = &rasterizer;
+    ///////////////////////////////////////////////////////////////////////////////////////
 
+
+    // multisampling state /////////////////////////////////////////////////////////////////////
+    if (p_PhysicalDevice->msaaEnabled) {
+        VkPipelineMultisampleStateCreateInfo multisampling{};
+        multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+        multisampling.sampleShadingEnable = VK_TRUE; // enable sample shading in the pipeline
+        multisampling.rasterizationSamples = p_PhysicalDevice->msaaSamples;
+        multisampling.minSampleShading = .2f; // min fraction for sample shading; closer to one is smoother
+        multisampling.pSampleMask = nullptr; // Optional
+        multisampling.alphaToCoverageEnable = VK_FALSE; // Optional
+        multisampling.alphaToOneEnable = VK_FALSE; // Optional
+
+        pipelineInfo.pMultisampleState = &multisampling;
+    }
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+
+    // color blend state /////////////////////////////////////////////////////////////////////
     VkPipelineColorBlendAttachmentState colorBlendAttachment{};
     colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
     colorBlendAttachment.blendEnable = VK_FALSE;
@@ -114,56 +166,60 @@ GraphicsPipeline::GraphicsPipeline(std::shared_ptr<DescriptorSetLayout> descript
     colorBlending.blendConstants[2] = 0.0f; // Optional
     colorBlending.blendConstants[3] = 0.0f; // Optional
 
+    pipelineInfo.pColorBlendState = &colorBlending;
+    ///////////////////////////////////////////////////////////////////////////////////////
 
+
+    // pipeline layout state /////////////////////////////////////////////////////////////////////
     VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
     pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     pipelineLayoutInfo.setLayoutCount = 1;
-    pipelineLayoutInfo.pSetLayouts = &descriptorSetLayoutObj->descriptorSetLayout;
+    pipelineLayoutInfo.pSetLayouts = &p_DescriptorSetLayout->descriptorSetLayout;
     pipelineLayoutInfo.pushConstantRangeCount = 0; // Optional
     pipelineLayoutInfo.pPushConstantRanges = nullptr; // Optional
 
-    if (vkCreatePipelineLayout(descriptorSetLayoutObj->renderPassObj->imageViewsObj->swapChainObj->logicalDeviceObj->device, &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS) {
+    if (vkCreatePipelineLayout(p_LogicalDevice->device, &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS) {
         throw std::runtime_error("failed to create pipeline layout!");
     }
-
-    VkGraphicsPipelineCreateInfo pipelineInfo{};
-    pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-    pipelineInfo.stageCount = 2;
-    pipelineInfo.pStages = shaderStages;
-    pipelineInfo.pVertexInputState = &vertexInputInfo;
-    pipelineInfo.pInputAssemblyState = &inputAssembly;
-    pipelineInfo.pViewportState = &viewportState;
-    pipelineInfo.pRasterizationState = &rasterizer;
-    pipelineInfo.pMultisampleState = &multisampling;
-    pipelineInfo.pDepthStencilState = nullptr; // Optional
-    pipelineInfo.pColorBlendState = &colorBlending;
-    pipelineInfo.pDynamicState = &dynamicState;
     pipelineInfo.layout = pipelineLayout;
-    pipelineInfo.renderPass = descriptorSetLayoutObj->renderPassObj->renderPass;
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+
+    // depth stencil state /////////////////////////////////////////////////////////////////////
+    if (p_RenderPass->depthEnabled) {
+        VkPipelineDepthStencilStateCreateInfo depthStencil{};
+        depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+        depthStencil.depthTestEnable = VK_TRUE;
+        depthStencil.depthWriteEnable = VK_TRUE;
+        depthStencil.depthCompareOp = VK_COMPARE_OP_LESS;
+        depthStencil.depthBoundsTestEnable = VK_FALSE;
+        depthStencil.minDepthBounds = 0.0f; // Optional
+        depthStencil.maxDepthBounds = 1.0f; // Optional
+        depthStencil.stencilTestEnable = VK_FALSE;
+        depthStencil.front = {}; // Optional
+        depthStencil.back = {}; // Optional
+
+        pipelineInfo.pDepthStencilState = &depthStencil;
+    }
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    pipelineInfo.renderPass = p_RenderPass->renderPass;
     pipelineInfo.subpass = 0;
     pipelineInfo.basePipelineHandle = VK_NULL_HANDLE; // Optional
     pipelineInfo.basePipelineIndex = -1; // Optional
 
-    VkPipelineDepthStencilStateCreateInfo depthStencil{};
-    depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-    depthStencil.depthTestEnable = VK_TRUE;
-    depthStencil.depthWriteEnable = VK_TRUE;
-    depthStencil.depthCompareOp = VK_COMPARE_OP_LESS;
-    depthStencil.depthBoundsTestEnable = VK_FALSE;
-    depthStencil.minDepthBounds = 0.0f; // Optional
-    depthStencil.maxDepthBounds = 1.0f; // Optional
-    depthStencil.stencilTestEnable = VK_FALSE;
-    depthStencil.front = {}; // Optional
-    depthStencil.back = {}; // Optional
-
-    pipelineInfo.pDepthStencilState = &depthStencil;
-
-    if (vkCreateGraphicsPipelines(descriptorSetLayoutObj->renderPassObj->imageViewsObj->swapChainObj->logicalDeviceObj->device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &graphicsPipeline) != VK_SUCCESS) {
+    if (vkCreateGraphicsPipelines(p_LogicalDevice->device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &graphicsPipeline) != VK_SUCCESS) {
         throw std::runtime_error("failed to create graphics pipeline!");
     }
 
-    vkDestroyShaderModule(descriptorSetLayoutObj->renderPassObj->imageViewsObj->swapChainObj->logicalDeviceObj->device, fragShaderModule, nullptr);
-    vkDestroyShaderModule(descriptorSetLayoutObj->renderPassObj->imageViewsObj->swapChainObj->logicalDeviceObj->device, vertShaderModule, nullptr);
+    vkDestroyShaderModule(p_LogicalDevice->device, fragShaderModule, nullptr);
+    vkDestroyShaderModule(p_LogicalDevice->device, vertShaderModule, nullptr);
+}
+
+void GraphicsPipeline::destroy()
+{
+    vkDestroyPipeline(p_LogicalDevice->device, graphicsPipeline, nullptr);
+    vkDestroyPipelineLayout(p_LogicalDevice->device, pipelineLayout, nullptr);
 }
 
 VkShaderModule GraphicsPipeline::createShaderModule(const std::vector<char>& code)
@@ -174,7 +230,7 @@ VkShaderModule GraphicsPipeline::createShaderModule(const std::vector<char>& cod
     createInfo.pCode = reinterpret_cast<const uint32_t*>(code.data());
 
     VkShaderModule shaderModule;
-    if (vkCreateShaderModule(descriptorSetLayoutObj->renderPassObj->imageViewsObj->swapChainObj->logicalDeviceObj->device, &createInfo, nullptr, &shaderModule) != VK_SUCCESS) {
+    if (vkCreateShaderModule(p_LogicalDevice->device, &createInfo, nullptr, &shaderModule) != VK_SUCCESS) {
         throw std::runtime_error("failed to create shader module!");
     }
 

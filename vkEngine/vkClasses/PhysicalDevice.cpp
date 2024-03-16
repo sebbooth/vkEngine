@@ -1,33 +1,9 @@
 #include "PhysicalDevice.h"
 
-PhysicalDevice::PhysicalDevice(std::shared_ptr<Surface> surfaceObj)
+PhysicalDevice::PhysicalDevice(std::shared_ptr<Surface> p_Surface)
 {
-    this->surfaceObj = surfaceObj;
-
-    uint32_t deviceCount = 0;
-    vkEnumeratePhysicalDevices(surfaceObj->instanceObj->instance, &deviceCount, nullptr);
-
-    if (deviceCount == 0) {
-        throw std::runtime_error("failed to find GPUs with Vulkan support!");
-    }
-
-    std::vector<VkPhysicalDevice> devices(deviceCount);
-    vkEnumeratePhysicalDevices(surfaceObj->instanceObj->instance, &deviceCount, devices.data());
-
-    for (const auto& device : devices) {
-        if (isDeviceSuitable(device)) {
-            physicalDevice = device;
-            msaaSamples = getMaxUsableSampleCount();
-            break;
-        }
-    }
-
-    if (physicalDevice == VK_NULL_HANDLE) {
-        throw std::runtime_error("failed to find a suitable GPU!");
-    }
-
-    this->swapChainSupportDetails = querySwapChainSupport(physicalDevice);
-    this->queueFamilies = findQueueFamilies(physicalDevice);
+    this->p_Surface = p_Surface;
+    this->p_Instance = p_Surface->p_Instance;
 }
 
 SwapChainSupportDetails PhysicalDevice::getSwapChainSupportDetails()
@@ -50,6 +26,34 @@ uint32_t PhysicalDevice::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFla
     throw std::runtime_error("failed to find suitable memory type!");
 }
 
+void PhysicalDevice::create()
+{
+    uint32_t deviceCount = 0;
+    vkEnumeratePhysicalDevices(p_Instance->instance, &deviceCount, nullptr);
+
+    if (deviceCount == 0) {
+        throw std::runtime_error("failed to find GPUs with Vulkan support!");
+    }
+
+    std::vector<VkPhysicalDevice> devices(deviceCount);
+    vkEnumeratePhysicalDevices(p_Instance->instance, &deviceCount, devices.data());
+
+    for (const auto& device : devices) {
+        if (isDeviceSuitable(device)) {
+            physicalDevice = device;
+            if (msaaEnabled) msaaSamples = getMaxUsableSampleCount();
+            break;
+        }
+    }
+
+    if (physicalDevice == VK_NULL_HANDLE) {
+        throw std::runtime_error("failed to find a suitable GPU!");
+    }
+
+    this->swapChainSupportDetails = querySwapChainSupport(physicalDevice);
+    this->queueFamilies = findQueueFamilies(physicalDevice);
+}
+
 QueueFamilyIndices PhysicalDevice::findQueueFamilies(VkPhysicalDevice device)
 {
     QueueFamilyIndices indices;
@@ -63,7 +67,7 @@ QueueFamilyIndices PhysicalDevice::findQueueFamilies(VkPhysicalDevice device)
     int i = 0;
     for (const auto& queueFamily : queueFamilies) {
         VkBool32 presentSupport = false;
-        vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surfaceObj->surface, &presentSupport);
+        vkGetPhysicalDeviceSurfaceSupportKHR(device, i, p_Surface->surface, &presentSupport);
 
         if (presentSupport) {
             indices.presentFamily = i;
@@ -92,7 +96,7 @@ bool PhysicalDevice::checkDeviceExtensionSupport(VkPhysicalDevice device)
     vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, availableExtensions.data());
     
 
-    std::set<std::string> requiredExtensions(surfaceObj->instanceObj->deviceExtensions.begin(), surfaceObj->instanceObj->deviceExtensions.end());
+    std::set<std::string> requiredExtensions(p_Instance->deviceExtensions.begin(), p_Instance->deviceExtensions.end());
 
     for (const auto& extension : availableExtensions) {
         requiredExtensions.erase(extension.extensionName);
@@ -105,22 +109,22 @@ SwapChainSupportDetails PhysicalDevice::querySwapChainSupport(VkPhysicalDevice d
 {
     SwapChainSupportDetails details;
 
-    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surfaceObj->surface, &details.capabilities);
+    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, p_Surface->surface, &details.capabilities);
 
     uint32_t formatCount;
-    vkGetPhysicalDeviceSurfaceFormatsKHR(device, surfaceObj->surface, &formatCount, nullptr);
+    vkGetPhysicalDeviceSurfaceFormatsKHR(device, p_Surface->surface, &formatCount, nullptr);
 
     if (formatCount != 0) {
         details.formats.resize(formatCount);
-        vkGetPhysicalDeviceSurfaceFormatsKHR(device, surfaceObj->surface, &formatCount, details.formats.data());
+        vkGetPhysicalDeviceSurfaceFormatsKHR(device, p_Surface->surface, &formatCount, details.formats.data());
     }
 
     uint32_t presentModeCount;
-    vkGetPhysicalDeviceSurfacePresentModesKHR(device, surfaceObj->surface, &presentModeCount, nullptr);
+    vkGetPhysicalDeviceSurfacePresentModesKHR(device, p_Surface->surface, &presentModeCount, nullptr);
 
     if (presentModeCount != 0) {
         details.presentModes.resize(presentModeCount);
-        vkGetPhysicalDeviceSurfacePresentModesKHR(device, surfaceObj->surface, &presentModeCount, details.presentModes.data());
+        vkGetPhysicalDeviceSurfacePresentModesKHR(device, p_Surface->surface, &presentModeCount, details.presentModes.data());
     }
 
     return details;

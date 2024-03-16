@@ -1,20 +1,33 @@
 #include "CommandPool.h"
 
-CommandPool::CommandPool(std::shared_ptr<GraphicsPipeline> graphicsPipelineObj)
+CommandPool::CommandPool(std::shared_ptr<GraphicsPipeline> p_GraphicsPipeline)
 {
-    this->graphicsPipelineObj = graphicsPipelineObj;
-    this->logicalDeviceObj = graphicsPipelineObj->descriptorSetLayoutObj->renderPassObj->imageViewsObj->swapChainObj->logicalDeviceObj;
+    this->p_GraphicsPipeline = p_GraphicsPipeline;
+    this->p_DescriptorSetLayout = p_GraphicsPipeline->p_DescriptorSetLayout;
+    this->p_RenderPass = p_DescriptorSetLayout->p_RenderPass;
+    this->p_ImageViews = p_RenderPass->p_ImageViews;
+    this->p_SwapChain = p_ImageViews->p_SwapChain;
+    this->p_LogicalDevice = p_SwapChain->p_LogicalDevice;
+    this->p_PhysicalDevice = p_LogicalDevice->p_PhysicalDevice;
+    this->p_Surface = p_PhysicalDevice->p_Surface;
+    this->p_Instance = p_Surface->p_Instance;
+}
 
-    QueueFamilyIndices queueFamilyIndices = logicalDeviceObj->physicalDeviceObj->queueFamilies;
-
+void CommandPool::create()
+{
     VkCommandPoolCreateInfo poolInfo{};
     poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
     poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-    poolInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily.value();
+    poolInfo.queueFamilyIndex = p_PhysicalDevice->queueFamilies.graphicsFamily.value();
 
-    if (vkCreateCommandPool(logicalDeviceObj->device, &poolInfo, nullptr, &commandPool) != VK_SUCCESS) {
+    if (vkCreateCommandPool(p_LogicalDevice->device, &poolInfo, nullptr, &commandPool) != VK_SUCCESS) {
         throw std::runtime_error("failed to create command pool!");
     }
+}
+
+void CommandPool::destroy()
+{
+    vkDestroyCommandPool(p_LogicalDevice->device, commandPool, nullptr);
 }
 
 VkCommandBuffer CommandPool::beginSingleTimeCommands()
@@ -26,7 +39,7 @@ VkCommandBuffer CommandPool::beginSingleTimeCommands()
     allocInfo.commandBufferCount = 1;
 
     VkCommandBuffer commandBuffer;
-    vkAllocateCommandBuffers(logicalDeviceObj->device, &allocInfo, &commandBuffer);
+    vkAllocateCommandBuffers(p_LogicalDevice->device, &allocInfo, &commandBuffer);
 
     VkCommandBufferBeginInfo beginInfo{};
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -46,10 +59,10 @@ void CommandPool::endSingleTimeCommands(VkCommandBuffer commandBuffer)
     submitInfo.commandBufferCount = 1;
     submitInfo.pCommandBuffers = &commandBuffer;
 
-    vkQueueSubmit(logicalDeviceObj->graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
-    vkQueueWaitIdle(logicalDeviceObj->graphicsQueue);
+    vkQueueSubmit(p_LogicalDevice->graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
+    vkQueueWaitIdle(p_LogicalDevice->graphicsQueue);
 
-    vkFreeCommandBuffers(logicalDeviceObj->device, commandPool, 1, &commandBuffer);
+    vkFreeCommandBuffers(p_LogicalDevice->device, commandPool, 1, &commandBuffer);
 }
 
 void CommandPool::copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)

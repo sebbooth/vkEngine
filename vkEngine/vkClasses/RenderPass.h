@@ -1,15 +1,24 @@
 #pragma once
 #include "ImageViews.h"
+#include <vector>
 
 class RenderPass
 {
 public:
-	std::shared_ptr<ImageViews> imageViewsObj;
+	std::shared_ptr<Instance> p_Instance;
+	std::shared_ptr<Surface> p_Surface;
+	std::shared_ptr<PhysicalDevice> p_PhysicalDevice;
+	std::shared_ptr<LogicalDevice> p_LogicalDevice;
+	std::shared_ptr<SwapChain> p_SwapChain;
+	std::shared_ptr<ImageViews> p_ImageViews;
 
 	VkRenderPass renderPass{};
 
-	RenderPass(std::shared_ptr<ImageViews> imageViewsObj);
+	bool depthEnabled = true;
 
+	RenderPass(std::shared_ptr<ImageViews> p_ImageViews);
+	void create();
+	void destroy();
 	VkFormat findDepthFormat();
 
 private:

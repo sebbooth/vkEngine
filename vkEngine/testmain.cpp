@@ -177,6 +177,13 @@ private:
 
     double lastTime = 0.0f;
 
+
+    VkImage textureImage;
+    VkDeviceMemory textureImageMemory;
+    VkImageView textureImageView;
+    VkSampler textureSampler;
+
+
     void initWindow() {
         glfwInit();
 
@@ -215,6 +222,62 @@ private:
         createCommandBuffers();
         createComputeCommandBuffers();
         createSyncObjects();
+        createCompImage();
+    }
+
+    /*
+    * 
+    Validation Error: [ VUID-VkImageCreateInfo-imageCreateMaxMipLevels-02251 ] |
+    MessageID = 0xbebcae79 | 
+    vkCreateImage(): pCreateInfo The following parameters -
+    format (VK_FORMAT_R8G8B8A8_SRGB)
+    type (VK_IMAGE_TYPE_2D)
+    tiling (VK_IMAGE_TILING_OPTIMAL)
+    usage (VK_IMAGE_USAGE_SAMPLED_BIT|VK_IMAGE_USAGE_STORAGE_BIT)
+    flags (VkImageCreateFlags(0))
+    returned (VK_ERROR_FORMAT_NOT_SUPPORTED) when calling 
+    vkGetPhysicalDeviceImageFormatProperties2. 
+    The Vulkan spec states: Each of the following values 
+    (as described in Image Creation Limits) must not be undefined : 
+    imageCreateMaxMipLevels, imageCreateMaxArrayLayers, imageCreateMaxExtent,
+    and imageCreateSampleCounts 
+    
+    (https://vulkan.lunarg.com/doc/view/1.3.275.0/windows/1.3-extensions/vkspec.html#VUID-VkImageCreateInfo-imageCreateMaxMipLevels-02251)
+    */
+
+    void createCompImage() {
+        VkImageCreateInfo imageInfo{};
+        imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+        imageInfo.imageType = VK_IMAGE_TYPE_2D;
+        imageInfo.extent.width = WIDTH;
+        imageInfo.extent.height = HEIGHT;
+        imageInfo.extent.depth = 1;
+        imageInfo.mipLevels = 1;
+        imageInfo.arrayLayers = 1;
+        imageInfo.format = VK_FORMAT_R8G8B8A8_SRGB;
+        imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+        imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        imageInfo.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT;
+        imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+        imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+        if (vkCreateImage(device, &imageInfo, nullptr, &textureImage) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create image!");
+        }
+        
+        VkMemoryRequirements memRequirements;
+        vkGetImageMemoryRequirements(device, textureImage, &memRequirements);
+
+        VkMemoryAllocateInfo allocInfo{};
+        allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+        allocInfo.allocationSize = memRequirements.size;
+        allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+
+        if (vkAllocateMemory(device, &allocInfo, nullptr, &textureImageMemory) != VK_SUCCESS) {
+            throw std::runtime_error("failed to allocate image memory!");
+        }
+
+        vkBindImageMemory(device, textureImage, textureImageMemory, 0);
     }
 
     void mainLoop() {
@@ -244,6 +307,8 @@ private:
 
     void cleanup() {
         cleanupSwapChain();
+
+        vkDestroyImage(device, textureImage, nullptr);
 
         vkDestroyPipeline(device, graphicsPipeline, nullptr);
         vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
@@ -593,8 +658,8 @@ private:
 
 
     void createGraphicsPipeline() {
-        auto vertShaderCode = readFile("shaders/vert.spv");
-        auto fragShaderCode = readFile("shaders/frag.spv");
+        auto vertShaderCode = readFile("shaders/c_vert.spv");
+        auto fragShaderCode = readFile("shaders/c_frag.spv");
 
         VkShaderModule vertShaderModule = createShaderModule(vertShaderCode);
         VkShaderModule fragShaderModule = createShaderModule(fragShaderCode);

@@ -1,15 +1,13 @@
 #include "Model.h"
 
-Model::Model(std::shared_ptr<TextureSampler> textureSamplerObj)
+Model::Model()
 {
-    this->textureSamplerObj = textureSamplerObj;
-
     tinyobj::attrib_t attrib;
     std::vector<tinyobj::shape_t> shapes;
     std::vector<tinyobj::material_t> materials;
     std::string warn, err;
 
-    if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &err, textureSamplerObj->textureImageObj->MODEL_PATH.c_str())) {
+    if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &err, MODEL_PATH.c_str())) {
         throw std::runtime_error(warn + err);
     }
 

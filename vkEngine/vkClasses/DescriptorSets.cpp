@@ -1,72 +1,85 @@
 #include "DescriptorSets.h"
 
-DescriptorSets::DescriptorSets(std::shared_ptr<DescriptorPool> descriptorPoolObj)
+DescriptorSets::DescriptorSets(std::shared_ptr<DescriptorPool> p_DescriptorPool)
 {
-    this->descriptorPoolObj = descriptorPoolObj;
+    this->p_DescriptorPool = p_DescriptorPool;
+    this->p_FrameBuffers = p_DescriptorPool->p_FrameBuffers;
+    this->p_CommandPool = p_FrameBuffers->p_CommandPool;
+    this->p_GraphicsPipeline = p_CommandPool->p_GraphicsPipeline;
+    this->p_DescriptorSetLayout = p_GraphicsPipeline->p_DescriptorSetLayout;
+    this->p_RenderPass = p_DescriptorSetLayout->p_RenderPass;
+    this->p_ImageViews = p_RenderPass->p_ImageViews;
+    this->p_SwapChain = p_ImageViews->p_SwapChain;
+    this->p_LogicalDevice = p_SwapChain->p_LogicalDevice;
+    this->p_PhysicalDevice = p_LogicalDevice->p_PhysicalDevice;
+    this->p_Surface = p_PhysicalDevice->p_Surface;
+    this->p_Instance = p_Surface->p_Instance;
+}
 
-    std::shared_ptr<TextureSampler> textureSamplerObj = descriptorPoolObj->
-        uniformBuffersObj->
-        indexBufferObj->
-        vertexBufferObj->
-        modelObj->
-        textureSamplerObj;
-
-    std::shared_ptr<DescriptorSetLayout> descriptorSetLayoutObj = textureSamplerObj->
-        textureImageObj->
-        frameBuffersObj->
-        depthResourcesObj->
-        colorResourcesObj->
-        commandPoolObj->
-        graphicsPipelineObj->
-        descriptorSetLayoutObj;
-
-    std::shared_ptr<LogicalDevice> logicalDeviceObj = descriptorSetLayoutObj->
-        renderPassObj->
-        imageViewsObj->
-        swapChainObj->
-        logicalDeviceObj;
-
-    std::vector<VkDescriptorSetLayout> layouts(descriptorPoolObj->uniformBuffersObj->MAX_FRAMES_IN_FLIGHT, descriptorSetLayoutObj->descriptorSetLayout);
+void DescriptorSets::create()
+{
+    std::vector<VkDescriptorSetLayout> layouts(p_FrameBuffers->MAX_FRAMES_IN_FLIGHT, p_DescriptorSetLayout->descriptorSetLayout);
     VkDescriptorSetAllocateInfo allocInfo{};
     allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-    allocInfo.descriptorPool = descriptorPoolObj->descriptorPool;
-    allocInfo.descriptorSetCount = static_cast<uint32_t>(descriptorPoolObj->uniformBuffersObj->MAX_FRAMES_IN_FLIGHT);
+    allocInfo.descriptorPool = p_DescriptorPool->descriptorPool;
+    allocInfo.descriptorSetCount = static_cast<uint32_t>(p_FrameBuffers->MAX_FRAMES_IN_FLIGHT);
     allocInfo.pSetLayouts = layouts.data();
 
-    descriptorSets.resize(descriptorPoolObj->uniformBuffersObj->MAX_FRAMES_IN_FLIGHT);
-    if (vkAllocateDescriptorSets(logicalDeviceObj->device, &allocInfo, descriptorSets.data()) != VK_SUCCESS) {
+    descriptorSets.resize(p_FrameBuffers->MAX_FRAMES_IN_FLIGHT);
+    if (vkAllocateDescriptorSets(p_LogicalDevice->device, &allocInfo, descriptorSets.data()) != VK_SUCCESS) {
         throw std::runtime_error("failed to allocate descriptor sets!");
     }
 
-    for (size_t i = 0; i < descriptorPoolObj->uniformBuffersObj->MAX_FRAMES_IN_FLIGHT; i++) {
-        VkDescriptorBufferInfo bufferInfo{};
-        bufferInfo.buffer = descriptorPoolObj->uniformBuffersObj->uniformBuffers[i];
-        bufferInfo.offset = 0;
-        bufferInfo.range = sizeof(UniformBufferObject);
+    for (size_t i = 0; i < p_FrameBuffers->MAX_FRAMES_IN_FLIGHT; i++) {
 
-        VkDescriptorImageInfo imageInfo{};
-        imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        imageInfo.imageView = textureSamplerObj->textureImageObj->textureImageView;
-        imageInfo.sampler = textureSamplerObj->textureSampler;
+        std::vector<VkWriteDescriptorSet> descriptorWrites{};
 
-        std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
+        if (p_DescriptorSetLayout->uboEnabled) {
+            VkDescriptorBufferInfo bufferInfo{};
+            bufferInfo.buffer = p_DescriptorPool->p_UniformBuffers->uniformBuffers[i];
+            bufferInfo.offset = 0;
+            bufferInfo.range = sizeof(UniformBufferObject);
 
-        descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        descriptorWrites[0].dstSet = descriptorSets[i];
-        descriptorWrites[0].dstBinding = 0;
-        descriptorWrites[0].dstArrayElement = 0;
-        descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        descriptorWrites[0].descriptorCount = 1;
-        descriptorWrites[0].pBufferInfo = &bufferInfo;
+            VkWriteDescriptorSet descriptorWrite{};
+            descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            descriptorWrite.dstSet = descriptorSets[i];
+            descriptorWrite.dstBinding = 0;
+            descriptorWrite.dstArrayElement = 0;
+            descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            descriptorWrite.descriptorCount = 1;
+            descriptorWrite.pBufferInfo = &bufferInfo;
+            
+            descriptorWrites.push_back(descriptorWrite);
+        }
+        
+        if (p_DescriptorSetLayout->samplerEnabled) {
+            VkDescriptorImageInfo imageInfo{};
+            imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            imageInfo.imageView = p_DescriptorPool->p_TextureSampler->p_TextureImage->textureImageView;
+            imageInfo.sampler = p_DescriptorPool->p_TextureSampler->textureSampler;
 
-        descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        descriptorWrites[1].dstSet = descriptorSets[i];
-        descriptorWrites[1].dstBinding = 1;
-        descriptorWrites[1].dstArrayElement = 0;
-        descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        descriptorWrites[1].descriptorCount = 1;
-        descriptorWrites[1].pImageInfo = &imageInfo;
+            VkWriteDescriptorSet descriptorWrite{};
+            descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            descriptorWrite.dstSet = descriptorSets[i];
+            descriptorWrite.dstBinding = 1;
+            descriptorWrite.dstArrayElement = 0;
+            descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            descriptorWrite.descriptorCount = 1;
+            descriptorWrite.pImageInfo = &imageInfo;
 
-        vkUpdateDescriptorSets(logicalDeviceObj->device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+            descriptorWrites.push_back(descriptorWrite);
+        }
+
+        vkUpdateDescriptorSets(p_LogicalDevice->device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+    }
+}
+
+void DescriptorSets::destroy()
+{
+    if (p_DescriptorSetLayout->uboEnabled) {
+    }
+
+    if (p_DescriptorSetLayout->samplerEnabled) {
+
     }
 }

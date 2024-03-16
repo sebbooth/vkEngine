@@ -1,50 +1,37 @@
 #include "DepthResources.h"
 
-DepthResources::DepthResources(std::shared_ptr<ColorResources> colorResourcesObj)
+DepthResources::DepthResources(std::shared_ptr<CommandPool> p_CommandPool)
 {
-    this->colorResourcesObj = colorResourcesObj;
-
-    create();
+    this->p_CommandPool = p_CommandPool;
+    this->p_GraphicsPipeline = p_CommandPool->p_GraphicsPipeline;
+    this->p_DescriptorSetLayout = p_GraphicsPipeline->p_DescriptorSetLayout;
+    this->p_RenderPass = p_DescriptorSetLayout->p_RenderPass;
+    this->p_ImageViews = p_RenderPass->p_ImageViews;
+    this->p_SwapChain = p_ImageViews->p_SwapChain;
+    this->p_LogicalDevice = p_SwapChain->p_LogicalDevice;
+    this->p_PhysicalDevice = p_LogicalDevice->p_PhysicalDevice;
+    this->p_Surface = p_PhysicalDevice->p_Surface;
+    this->p_Instance = p_Surface->p_Instance;
 }
 
-/*
-Validation Error: [ VUID-VkFramebufferCreateInfo-pAttachments-00881 ]
-Object 0: handle = 0xcfef35000000000a,
-type = VK_OBJECT_TYPE_RENDER_PASS; 
-Object 1: handle = 0xd897d90000000016, 
-type = VK_OBJECT_TYPE_IMAGE_VIEW; 
-Object 2: handle = 0x9fde6b0000000014, 
-type = VK_OBJECT_TYPE_IMAGE; 
-| MessageID = 0x2ff52eec | 
-vkCreateFramebuffer(): pCreateInfo->pAttachments[1] has VK_SAMPLE_COUNT_16_BIT 
-samples that do not match the VK_SAMPLE_COUNT_1_BIT samples used by 
-the corresponding attachment for VkRenderPass 0xcfef35000000000a[]. 
-
-The Vulkan spec states: If flags does not include VK_FRAMEBUFFER_CREATE_IMAGELESS_BIT, 
-each element of pAttachments must have been created with a samples value that matches 
-the samples value specified by the corresponding VkAttachmentDescription in renderPass 
-(https://vulkan.lunarg.com/doc/view/1.3.275.0/windows/1.3-extensions/vkspec.html#VUID-VkFramebufferCreateInfo-pAttachments-00881)
-*/
 void DepthResources::create()
 {
-    std::shared_ptr<RenderPass> renderPassObj = colorResourcesObj->commandPoolObj->graphicsPipelineObj->descriptorSetLayoutObj->renderPassObj;
+    if (p_RenderPass->depthEnabled) {
+        VkFormat depthFormat = p_RenderPass->findDepthFormat();
 
-    VkFormat depthFormat = renderPassObj->findDepthFormat();
+        p_SwapChain->p_LogicalDevice->createImage(
+            p_SwapChain->swapChainExtent.width,
+            p_SwapChain->swapChainExtent.height,
+            depthFormat,
+            VK_IMAGE_TILING_OPTIMAL,
+            VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+            depthImage,
+            depthImageMemory,
+            1,
+            p_PhysicalDevice->msaaSamples
+        );
 
-    std::shared_ptr<SwapChain> swapChainObj = renderPassObj->imageViewsObj->swapChainObj;
-
-    swapChainObj->logicalDeviceObj->createImage(
-        swapChainObj->swapChainExtent.width,
-        swapChainObj->swapChainExtent.height,
-        depthFormat,
-        VK_IMAGE_TILING_OPTIMAL,
-        VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
-        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-        depthImage,
-        depthImageMemory,
-        1,
-        swapChainObj->logicalDeviceObj->physicalDeviceObj->msaaSamples
-    );
-
-    depthImageView = renderPassObj->imageViewsObj->createImageView(depthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT, 1);
+        depthImageView = p_ImageViews->createImageView(depthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT, 1);
+    }
 }

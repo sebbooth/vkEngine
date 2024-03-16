@@ -1,14 +1,35 @@
 #pragma once
 #include "DescriptorSets.h"
+#include "IndexBuffer.h"
 
 class CommandBuffers
 {
 public:
-	std::shared_ptr<DescriptorSets> descriptorSetsObj;
+	std::shared_ptr<Instance> p_Instance;
+	std::shared_ptr<Surface> p_Surface;
+	std::shared_ptr<PhysicalDevice> p_PhysicalDevice;
+	std::shared_ptr<LogicalDevice> p_LogicalDevice;
+	std::shared_ptr<SwapChain> p_SwapChain;
+	std::shared_ptr<ImageViews> p_ImageViews;
+	std::shared_ptr<RenderPass> p_RenderPass;
+	std::shared_ptr<DescriptorSetLayout> p_DescriptorSetLayout;
+	std::shared_ptr<GraphicsPipeline> p_GraphicsPipeline;
+	std::shared_ptr<CommandPool> p_CommandPool;
+	std::shared_ptr<FrameBuffers> p_FrameBuffers;
+	std::shared_ptr<DescriptorPool> p_DescriptorPool;
+	std::shared_ptr<DescriptorSets> p_DescriptorSets;
+
+	std::shared_ptr<VertexBuffer> p_VertexBuffer;
+	std::shared_ptr<IndexBuffer> p_IndexBuffer;
+
 
 	std::vector<VkCommandBuffer> commandBuffers;
 
-	CommandBuffers(std::shared_ptr<DescriptorSets> descriptorSetsObj);
+	CommandBuffers(std::shared_ptr<DescriptorSets> p_DescriptorSets);
+	void create();
+
+	void attachVertexBuffer(std::shared_ptr<VertexBuffer> p_VertexBuffer);
+	void attachIndexBuffer(std::shared_ptr<IndexBuffer> p_IndexBuffer);
 
 	void recordBuffer(uint32_t currentFrame, uint32_t imageIndex);
 	void resetBuffer(uint32_t currentFrame);

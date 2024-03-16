@@ -32,9 +32,6 @@
     <ClInclude Include="VkEngine.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="vkUtils\DebugUtils.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="vkUtils\FileUtils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -51,9 +48,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="vkClasses\CommandPool.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vkClasses\DebugMessenger.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="vkClasses\DepthResources.h">
@@ -131,9 +125,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="vkClasses\CommandPool.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="vkClasses\DebugMessenger.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="vkClasses\DepthResources.cpp">

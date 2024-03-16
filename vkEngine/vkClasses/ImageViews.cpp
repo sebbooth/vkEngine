@@ -1,9 +1,12 @@
 #include "ImageViews.h"
 
-ImageViews::ImageViews(std::shared_ptr<SwapChain> swapChainObj)
+ImageViews::ImageViews(std::shared_ptr<SwapChain> p_SwapChain)
 {
-    this->swapChainObj = swapChainObj;
-    create();
+    this->p_SwapChain = p_SwapChain;
+    this->p_LogicalDevice = p_SwapChain->p_LogicalDevice;
+    this->p_PhysicalDevice = p_LogicalDevice->p_PhysicalDevice;
+    this->p_Surface = p_PhysicalDevice->p_Surface;
+    this->p_Instance = p_Surface->p_Instance;
 }
 
 VkImageView ImageViews::createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags, uint32_t mipLevels)
@@ -20,7 +23,7 @@ VkImageView ImageViews::createImageView(VkImage image, VkFormat format, VkImageA
     viewInfo.subresourceRange.layerCount = 1;
 
     VkImageView imageView;
-    if (vkCreateImageView(swapChainObj->logicalDeviceObj->device, &viewInfo, nullptr, &imageView) != VK_SUCCESS) {
+    if (vkCreateImageView(p_LogicalDevice->device, &viewInfo, nullptr, &imageView) != VK_SUCCESS) {
         throw std::runtime_error("failed to create image view!");
     }
 
@@ -29,16 +32,16 @@ VkImageView ImageViews::createImageView(VkImage image, VkFormat format, VkImageA
 
 void ImageViews::create()
 {
-    swapChainImageViews.resize(swapChainObj->swapChainImages.size());
+    swapChainImageViews.resize(p_SwapChain->swapChainImages.size());
 
-    for (uint32_t i = 0; i < swapChainObj->swapChainImages.size(); i++) {
-        swapChainImageViews[i] = createImageView(swapChainObj->swapChainImages[i], swapChainObj->swapChainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT, 1);
+    for (uint32_t i = 0; i < p_SwapChain->swapChainImages.size(); i++) {
+        swapChainImageViews[i] = createImageView(p_SwapChain->swapChainImages[i], p_SwapChain->swapChainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT, 1);
     }
 }
 
 void ImageViews::destroyImageViews()
 {
     for (auto imageView : swapChainImageViews) {
-        vkDestroyImageView(swapChainObj->logicalDeviceObj->device, imageView, nullptr);
+        vkDestroyImageView(p_LogicalDevice->device, imageView, nullptr);
     }
 }

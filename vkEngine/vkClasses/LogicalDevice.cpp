@@ -1,10 +1,15 @@
 #include "LogicalDevice.h"
 
-LogicalDevice::LogicalDevice(std::shared_ptr<PhysicalDevice> physicalDeviceObj)
+LogicalDevice::LogicalDevice(std::shared_ptr<PhysicalDevice> p_PhysicalDevice)
 {
-    this->physicalDeviceObj = physicalDeviceObj;
+    this->p_PhysicalDevice = p_PhysicalDevice;
+    this->p_Surface = p_PhysicalDevice->p_Surface;
+    this->p_Instance = p_Surface->p_Instance;
+}
 
-    QueueFamilyIndices indices = physicalDeviceObj->queueFamilies;
+void LogicalDevice::create()
+{
+    QueueFamilyIndices indices = p_PhysicalDevice->queueFamilies;
 
     std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
     std::set<uint32_t> uniqueQueueFamilies = { indices.graphicsFamily.value(), indices.presentFamily.value() };
@@ -21,30 +26,36 @@ LogicalDevice::LogicalDevice(std::shared_ptr<PhysicalDevice> physicalDeviceObj)
 
     VkPhysicalDeviceFeatures deviceFeatures{};
     deviceFeatures.samplerAnisotropy = VK_TRUE;
-    deviceFeatures.sampleRateShading = VK_TRUE; // enable sample shading feature for the device
+    if (p_PhysicalDevice->msaaEnabled) deviceFeatures.sampleRateShading = VK_TRUE;
+    if (wireFrameEnabled) deviceFeatures.fillModeNonSolid = VK_TRUE;
 
     VkDeviceCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
     createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
     createInfo.pQueueCreateInfos = queueCreateInfos.data();
     createInfo.pEnabledFeatures = &deviceFeatures;
-    createInfo.enabledExtensionCount = static_cast<uint32_t>(physicalDeviceObj->surfaceObj->instanceObj->deviceExtensions.size());
-    createInfo.ppEnabledExtensionNames = physicalDeviceObj->surfaceObj->instanceObj->deviceExtensions.data();
+    createInfo.enabledExtensionCount = static_cast<uint32_t>(p_Instance->deviceExtensions.size());
+    createInfo.ppEnabledExtensionNames = p_Instance->deviceExtensions.data();
 
-    if (physicalDeviceObj->surfaceObj->instanceObj->enableValidationLayers) {
-        createInfo.enabledLayerCount = static_cast<uint32_t>(physicalDeviceObj->surfaceObj->instanceObj->validationLayers.size());
-        createInfo.ppEnabledLayerNames = physicalDeviceObj->surfaceObj->instanceObj->validationLayers.data();
+    if (p_Instance->enableValidationLayers) {
+        createInfo.enabledLayerCount = static_cast<uint32_t>(p_Instance->validationLayers.size());
+        createInfo.ppEnabledLayerNames = p_Instance->validationLayers.data();
     }
     else {
         createInfo.enabledLayerCount = 0;
     }
 
-    if (vkCreateDevice(physicalDeviceObj->physicalDevice, &createInfo, nullptr, &device) != VK_SUCCESS) {
+    if (vkCreateDevice(p_PhysicalDevice->physicalDevice, &createInfo, nullptr, &device) != VK_SUCCESS) {
         throw std::runtime_error("failed to create logical device!");
     }
 
     vkGetDeviceQueue(device, indices.graphicsFamily.value(), 0, &graphicsQueue);
     vkGetDeviceQueue(device, indices.presentFamily.value(), 0, &presentQueue);
+}
+
+void LogicalDevice::destroy()
+{
+    vkDestroyDevice(device, nullptr);
 }
 
 void LogicalDevice::createImage(
@@ -85,7 +96,7 @@ void LogicalDevice::createImage(
     VkMemoryAllocateInfo allocInfo{};
     allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
     allocInfo.allocationSize = memRequirements.size;
-    allocInfo.memoryTypeIndex = physicalDeviceObj->findMemoryType(memRequirements.memoryTypeBits, properties);
+    allocInfo.memoryTypeIndex = p_PhysicalDevice->findMemoryType(memRequirements.memoryTypeBits, properties);
 
     if (vkAllocateMemory(device, &allocInfo, nullptr, &imageMemory) != VK_SUCCESS) {
         throw std::runtime_error("failed to allocate image memory!");
@@ -112,7 +123,7 @@ void LogicalDevice::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, Vk
     VkMemoryAllocateInfo allocInfo{};
     allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
     allocInfo.allocationSize = memRequirements.size;
-    allocInfo.memoryTypeIndex = physicalDeviceObj->findMemoryType(memRequirements.memoryTypeBits, properties);
+    allocInfo.memoryTypeIndex = p_PhysicalDevice->findMemoryType(memRequirements.memoryTypeBits, properties);
 
     if (vkAllocateMemory(device, &allocInfo, nullptr, &bufferMemory) != VK_SUCCESS) {
         throw std::runtime_error("failed to allocate buffer memory!");

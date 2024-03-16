@@ -5,17 +5,30 @@
 class TextureImage
 {
 public:
-	std::shared_ptr<FrameBuffers> frameBuffersObj;
+	std::shared_ptr<Instance> p_Instance;
+	std::shared_ptr<Surface> p_Surface;
+	std::shared_ptr<PhysicalDevice> p_PhysicalDevice;
+	std::shared_ptr<LogicalDevice> p_LogicalDevice;
+	std::shared_ptr<SwapChain> p_SwapChain;
+	std::shared_ptr<ImageViews> p_ImageViews;
+	std::shared_ptr<RenderPass> p_RenderPass;
+	std::shared_ptr<DescriptorSetLayout> p_DescriptorSetLayout;
+	std::shared_ptr<GraphicsPipeline> p_GraphicsPipeline;
+	std::shared_ptr<CommandPool> p_CommandPool;
+	std::shared_ptr<FrameBuffers> p_FrameBuffers;
 
-	uint32_t mipLevels;
+	uint32_t mipLevels = 1;
 	VkImage textureImage{};
 	VkDeviceMemory textureImageMemory{};
 	VkImageView textureImageView{};
 
-	TextureImage(std::shared_ptr<FrameBuffers> frameBuffersObj);
+	bool mipmapsEnabled = true;
+
+	TextureImage(std::shared_ptr<FrameBuffers> p_FrameBuffers);
+	void create();
+
 	void createTextureImageView();
 
-	const std::string MODEL_PATH = "assets/models/viking_room/viking_room.obj";
 	const std::string TEXTURE_PATH = "assets/models/viking_room/viking_room.png";
 
 private:

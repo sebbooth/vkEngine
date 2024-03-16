@@ -156,7 +156,6 @@
     <ClInclude Include="vkClasses\ColorResources.h" />
     <ClInclude Include="vkClasses\CommandBuffers.h" />
     <ClInclude Include="vkClasses\CommandPool.h" />
-    <ClInclude Include="vkClasses\DebugMessenger.h" />
     <ClInclude Include="vkClasses\DepthResources.h" />
     <ClInclude Include="vkClasses\DescriptorPool.h" />
     <ClInclude Include="vkClasses\DescriptorSetLayout.h" />
@@ -179,7 +178,6 @@
     <ClInclude Include="vkClasses\VertexBuffer.h" />
     <ClInclude Include="vkClasses\VkClasses.h" />
     <ClInclude Include="VkEngine.h" />
-    <ClInclude Include="vkUtils\DebugUtils.h" />
     <ClInclude Include="vkUtils\FileUtils.h" />
     <ClInclude Include="vkUtils\SwapChainUtils.h" />
     <ClInclude Include="vkUtils\VkStructs.h" />
@@ -189,7 +187,6 @@
     <ClCompile Include="vkClasses\ColorResources.cpp" />
     <ClCompile Include="vkClasses\CommandBuffers.cpp" />
     <ClCompile Include="vkClasses\CommandPool.cpp" />
-    <ClCompile Include="vkClasses\DebugMessenger.cpp" />
     <ClCompile Include="vkClasses\DepthResources.cpp" />
     <ClCompile Include="vkClasses\DescriptorPool.cpp" />
     <ClCompile Include="vkClasses\DescriptorSetLayout.cpp" />
