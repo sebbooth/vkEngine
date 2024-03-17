@@ -19,7 +19,7 @@ void ColorResources::create()
     if (p_PhysicalDevice->msaaEnabled) {
         VkFormat colorFormat = p_SwapChain->swapChainImageFormat;
 
-        p_LogicalDevice->createImage(
+        p_SwapChain->p_LogicalDevice->createImage(
             p_SwapChain->swapChainExtent.width,
             p_SwapChain->swapChainExtent.height,
             p_SwapChain->swapChainImageFormat,

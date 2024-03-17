@@ -37,6 +37,8 @@ void RenderPass::create()
 
     VkAccessFlags dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 
+    attachmentList.push_back("color");
+
     attachments.push_back(colorAttachment);
 
     if (depthEnabled) {
@@ -57,6 +59,8 @@ void RenderPass::create()
         subpass.pDepthStencilAttachment = &depthAttachmentRef;
 
         dstAccessMask = dstAccessMask | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+        
+        attachmentList.push_back("depth");
 
         attachments.push_back(depthAttachment);
     }
@@ -77,6 +81,8 @@ void RenderPass::create()
         colorAttachmentResolveRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
         subpass.pResolveAttachments = &colorAttachmentResolveRef;
+
+        attachmentList.push_back("colorResolve");
 
         attachments.push_back(colorAttachmentResolve);
     }

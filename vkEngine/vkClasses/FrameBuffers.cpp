@@ -29,9 +29,12 @@ void FrameBuffers::create()
 
     for (size_t i = 0; i < p_ImageViews->swapChainImageViews.size(); i++) {
         std::vector<VkImageView> attachments;
-        if (p_PhysicalDevice->msaaEnabled) attachments.push_back(p_ColorResources->colorImageView);
-        if (p_RenderPass->depthEnabled) attachments.push_back(p_DepthResources->depthImageView);
-        attachments.push_back(p_ImageViews->swapChainImageViews[i]);
+        for (int j = 0; j < p_RenderPass->attachmentList.size(); j++) {
+            if (p_RenderPass->attachmentList[j] == "colorResolve") attachments.push_back(p_ColorResources->colorImageView);
+            if (p_RenderPass->attachmentList[j] == "depth") attachments.push_back(p_DepthResources->depthImageView);
+            if (p_RenderPass->attachmentList[j] == "color") attachments.push_back(p_ImageViews->swapChainImageViews[i]);
+        }
+        
      
         VkFramebufferCreateInfo framebufferInfo{};
         framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;

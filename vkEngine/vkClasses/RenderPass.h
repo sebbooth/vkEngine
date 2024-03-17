@@ -13,6 +13,7 @@ public:
 	std::shared_ptr<ImageViews> p_ImageViews;
 
 	VkRenderPass renderPass{};
+	std::vector<std::string> attachmentList;
 
 	bool depthEnabled = true;
 
