@@ -47,10 +47,10 @@ void FrameBuffers::create()
                 p_ImageViews->swapChainImageViews[i]
             };
         }
-        else {
+        else if (p_RenderPass->depthEnabled) {
             attachments = {
-                p_DepthResources->depthImageView,
-                p_ImageViews->swapChainImageViews[i]
+                p_ImageViews->swapChainImageViews[i],
+                p_DepthResources->depthImageView
             };
         }
      

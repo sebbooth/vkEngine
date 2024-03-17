@@ -32,6 +32,7 @@ const std::vector<const char*> deviceExtensions = {
 };
 
 const bool enableValidationLayers = true;
+
 /*
 #ifdef NDEBUG
 const bool enableValidationLayers = false;
@@ -102,7 +103,7 @@ private:
         p_Surface = std::make_shared<Surface>(p_Instance, window);
 
         p_PhysicalDevice = std::make_shared<PhysicalDevice>(p_Surface);
-        p_PhysicalDevice->msaaEnabled = true;
+        p_PhysicalDevice->msaaEnabled = false;
         p_PhysicalDevice->create();
 
         p_LogicalDevice = std::make_shared<LogicalDevice>(p_PhysicalDevice);

@@ -136,10 +136,7 @@ void GraphicsPipeline::create()
         multisampling.sampleShadingEnable = VK_TRUE; // enable sample shading in the pipeline
         multisampling.rasterizationSamples = p_PhysicalDevice->msaaSamples;
         multisampling.minSampleShading = .2f; // min fraction for sample shading; closer to one is smoother
-        multisampling.pSampleMask = nullptr; // Optional
-        multisampling.alphaToCoverageEnable = VK_FALSE; // Optional
-        multisampling.alphaToOneEnable = VK_FALSE; // Optional
-
+       
         pipelineInfo.pMultisampleState = &multisampling;
     }
     else {
