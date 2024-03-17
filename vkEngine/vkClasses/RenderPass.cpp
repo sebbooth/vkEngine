@@ -37,12 +37,14 @@ void RenderPass::create()
 
     VkAccessFlags dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 
-    attachmentList.push_back("color");
+    //attachmentList.push_back("color");
 
     attachments.push_back(colorAttachment);
 
+    VkAttachmentDescription depthAttachment{};
+    VkAttachmentReference depthAttachmentRef{};
+
     if (depthEnabled) {
-        VkAttachmentDescription depthAttachment{};
         depthAttachment.format = findDepthFormat();
         depthAttachment.samples = p_PhysicalDevice->msaaSamples;
         depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
@@ -52,7 +54,6 @@ void RenderPass::create()
         depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
         depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
-        VkAttachmentReference depthAttachmentRef{};
         depthAttachmentRef.attachment = attachmentCount++;
         depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
@@ -60,13 +61,15 @@ void RenderPass::create()
 
         dstAccessMask = dstAccessMask | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
         
-        attachmentList.push_back("depth");
+        //attachmentList.push_back("depth");
 
         attachments.push_back(depthAttachment);
     }
 
+    VkAttachmentDescription colorAttachmentResolve{};
+    VkAttachmentReference colorAttachmentResolveRef{};
+
     if (p_PhysicalDevice->msaaEnabled) {
-        VkAttachmentDescription colorAttachmentResolve{};
         colorAttachmentResolve.format = p_SwapChain->swapChainImageFormat;
         colorAttachmentResolve.samples = VK_SAMPLE_COUNT_1_BIT;
         colorAttachmentResolve.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
@@ -76,13 +79,12 @@ void RenderPass::create()
         colorAttachmentResolve.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
         colorAttachmentResolve.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
-        VkAttachmentReference colorAttachmentResolveRef{};
         colorAttachmentResolveRef.attachment = attachmentCount++;
         colorAttachmentResolveRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
         subpass.pResolveAttachments = &colorAttachmentResolveRef;
 
-        attachmentList.push_back("colorResolve");
+        //attachmentList.push_back("colorResolve");
 
         attachments.push_back(colorAttachmentResolve);
     }

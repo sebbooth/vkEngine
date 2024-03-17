@@ -28,13 +28,31 @@ void FrameBuffers::create()
     p_SwapChain->swapChainFramebuffers.resize(p_ImageViews->swapChainImageViews.size());
 
     for (size_t i = 0; i < p_ImageViews->swapChainImageViews.size(); i++) {
-        std::vector<VkImageView> attachments;
-        for (int j = 0; j < p_RenderPass->attachmentList.size(); j++) {
-            if (p_RenderPass->attachmentList[j] == "colorResolve") attachments.push_back(p_ColorResources->colorImageView);
-            if (p_RenderPass->attachmentList[j] == "depth") attachments.push_back(p_DepthResources->depthImageView);
-            if (p_RenderPass->attachmentList[j] == "color") attachments.push_back(p_ImageViews->swapChainImageViews[i]);
+
+        // Really don't like this but using push.back kept causing issues - will need to figure out fix if adding more attachments
+        std::vector<VkImageView> attachments = {
+                p_ImageViews->swapChainImageViews[i]
+        };
+
+        if (p_PhysicalDevice->msaaEnabled && p_RenderPass->depthEnabled) {
+            attachments = {
+                p_ColorResources->colorImageView,
+                p_DepthResources->depthImageView,
+                p_ImageViews->swapChainImageViews[i]
+            };
         }
-        
+        else if (p_PhysicalDevice->msaaEnabled) {
+            attachments = {
+                p_ColorResources->colorImageView,
+                p_ImageViews->swapChainImageViews[i]
+            };
+        }
+        else {
+            attachments = {
+                p_DepthResources->depthImageView,
+                p_ImageViews->swapChainImageViews[i]
+            };
+        }
      
         VkFramebufferCreateInfo framebufferInfo{};
         framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;

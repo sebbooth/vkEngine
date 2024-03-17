@@ -11,7 +11,7 @@ SwapChain::SwapChain(std::shared_ptr<LogicalDevice> p_LogicalDevice)
 void SwapChain::create()
 {
     SwapChainSupportDetails swapChainSupport = p_PhysicalDevice->getSwapChainSupportDetails();
-    `
+    
     VkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(swapChainSupport.formats);
     VkPresentModeKHR presentMode = chooseSwapPresentMode(swapChainSupport.presentModes);
     VkExtent2D extent = chooseSwapExtent(swapChainSupport.capabilities, p_Surface->window);

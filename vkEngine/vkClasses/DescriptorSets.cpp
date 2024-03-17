@@ -34,40 +34,42 @@ void DescriptorSets::create()
 
         std::vector<VkWriteDescriptorSet> descriptorWrites{};
 
-        if (p_DescriptorSetLayout->uboEnabled) {
-            VkDescriptorBufferInfo bufferInfo{};
-            bufferInfo.buffer = p_DescriptorPool->p_UniformBuffers->uniformBuffers[i];
-            bufferInfo.offset = 0;
-            bufferInfo.range = sizeof(UniformBufferObject);
+        VkDescriptorBufferInfo uboBufferInfo{};
+        VkWriteDescriptorSet uboDescriptorWrite{};
 
-            VkWriteDescriptorSet descriptorWrite{};
-            descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-            descriptorWrite.dstSet = descriptorSets[i];
-            descriptorWrite.dstBinding = 0;
-            descriptorWrite.dstArrayElement = 0;
-            descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-            descriptorWrite.descriptorCount = 1;
-            descriptorWrite.pBufferInfo = &bufferInfo;
+        if (p_DescriptorSetLayout->uboEnabled) {
+            uboBufferInfo.buffer = p_DescriptorPool->p_UniformBuffers->uniformBuffers[i];
+            uboBufferInfo.offset = 0;
+            uboBufferInfo.range = sizeof(UniformBufferObject);
+
+            uboDescriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            uboDescriptorWrite.dstSet = descriptorSets[i];
+            uboDescriptorWrite.dstBinding = 0;
+            uboDescriptorWrite.dstArrayElement = 0;
+            uboDescriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            uboDescriptorWrite.descriptorCount = 1;
+            uboDescriptorWrite.pBufferInfo = &uboBufferInfo;
             
-            descriptorWrites.push_back(descriptorWrite);
+            descriptorWrites.push_back(uboDescriptorWrite);
         }
         
+        VkDescriptorImageInfo samplerImageInfo{};
+        VkWriteDescriptorSet samplerDescriptorWrite{};
+
         if (p_DescriptorSetLayout->samplerEnabled) {
-            VkDescriptorImageInfo imageInfo{};
-            imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-            imageInfo.imageView = p_DescriptorPool->p_TextureSampler->p_TextureImage->textureImageView;
-            imageInfo.sampler = p_DescriptorPool->p_TextureSampler->textureSampler;
+            samplerImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            samplerImageInfo.imageView = p_DescriptorPool->p_TextureSampler->p_TextureImage->textureImageView;
+            samplerImageInfo.sampler = p_DescriptorPool->p_TextureSampler->textureSampler;
 
-            VkWriteDescriptorSet descriptorWrite{};
-            descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-            descriptorWrite.dstSet = descriptorSets[i];
-            descriptorWrite.dstBinding = 1;
-            descriptorWrite.dstArrayElement = 0;
-            descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            descriptorWrite.descriptorCount = 1;
-            descriptorWrite.pImageInfo = &imageInfo;
+            samplerDescriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            samplerDescriptorWrite.dstSet = descriptorSets[i];
+            samplerDescriptorWrite.dstBinding = 1;
+            samplerDescriptorWrite.dstArrayElement = 0;
+            samplerDescriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            samplerDescriptorWrite.descriptorCount = 1;
+            samplerDescriptorWrite.pImageInfo = &samplerImageInfo;
 
-            descriptorWrites.push_back(descriptorWrite);
+            descriptorWrites.push_back(samplerDescriptorWrite);
         }
 
         vkUpdateDescriptorSets(p_LogicalDevice->device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);

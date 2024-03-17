@@ -32,6 +32,6 @@ void ColorResources::create()
             p_PhysicalDevice->msaaSamples
         );
 
-        colorImageView = p_ImageViews->createImageView(colorImage, p_SwapChain->swapChainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT, 1);
+        colorImageView = p_ImageViews->createImageView(colorImage, colorFormat, VK_IMAGE_ASPECT_COLOR_BIT, 1);
     }
 }
