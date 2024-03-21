@@ -1,4 +1,8 @@
 #pragma once
+
+#ifndef DESCRIPTORSETLAYOUT_H
+#define DESCRIPTORSETLAYOUT_H
+
 #include "RenderPass.h"
 
 class DescriptorSetLayout
@@ -16,9 +20,11 @@ public:
 
 	bool uboEnabled = true;
 	bool samplerEnabled = true;
+	bool guiEnabled = true;
 
 	DescriptorSetLayout(std::shared_ptr<RenderPass> p_RenderPass);
 	void create();
 	void destroy();
 };
 
+#endif

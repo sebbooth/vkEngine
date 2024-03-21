@@ -1,5 +1,10 @@
 C:/VulkanSDK/1.3.275.0/Bin/glslc.exe HelloTriangle.vert -o vert.spv
 C:/VulkanSDK/1.3.275.0/Bin/glslc.exe HelloTriangle.frag -o frag.spv
+C:/VulkanSDK/1.3.275.0/Bin/glslc.exe no_tex.vert -o no_tex_vert.spv
+C:/VulkanSDK/1.3.275.0/Bin/glslc.exe no_tex.frag -o no_tex_frag.spv
+C:/VulkanSDK/1.3.275.0/Bin/glslc.exe normal.vert -o norm_vert.spv
+C:/VulkanSDK/1.3.275.0/Bin/glslc.exe normal.frag -o norm_frag.spv
+
 C:/VulkanSDK/1.3.275.0/Bin/glslc.exe texture.vert -o t_vert.spv
 C:/VulkanSDK/1.3.275.0/Bin/glslc.exe texture.frag -o t_frag.spv
 C:/VulkanSDK/1.3.275.0/Bin/glslc.exe 2.vert -o 2_v.spv

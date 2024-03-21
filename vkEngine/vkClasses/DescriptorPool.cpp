@@ -17,18 +17,24 @@ DescriptorPool::DescriptorPool(std::shared_ptr<FrameBuffers> p_FrameBuffers)
 
 void DescriptorPool::create()
 {
+
+    uint32_t maxSets = 0;
+
+    VkDescriptorPoolSize uboPoolSize{};
+
     if (p_DescriptorSetLayout->uboEnabled) {
         this->p_UniformBuffers = std::make_shared<UniformBuffers>(p_FrameBuffers);
         p_UniformBuffers->create();
 
-        VkDescriptorPoolSize poolSize{};
-        poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        poolSize.descriptorCount = static_cast<uint32_t>(p_FrameBuffers->MAX_FRAMES_IN_FLIGHT);
+        uboPoolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        uboPoolSize.descriptorCount = static_cast<uint32_t>(p_FrameBuffers->MAX_FRAMES_IN_FLIGHT);
 
-        poolSizes.push_back(poolSize);
+        poolSizes.push_back(uboPoolSize);
     }
 
-    if (p_DescriptorSetLayout->samplerEnabled) {
+    VkDescriptorPoolSize texturePoolSize{};
+
+    if (true) {
         this->p_TextureImage = std::make_shared<TextureImage>(p_FrameBuffers);
         p_TextureImage->mipmapsEnabled = true;
         p_TextureImage->create();
@@ -36,18 +42,33 @@ void DescriptorPool::create()
         this->p_TextureSampler = std::make_shared<TextureSampler>(p_TextureImage);
         p_TextureSampler->create();
 
-        VkDescriptorPoolSize poolSize{};
-        poolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        poolSize.descriptorCount = static_cast<uint32_t>(p_FrameBuffers->MAX_FRAMES_IN_FLIGHT);
+        texturePoolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        texturePoolSize.descriptorCount = static_cast<uint32_t>(p_FrameBuffers->MAX_FRAMES_IN_FLIGHT);
 
-        poolSizes.push_back(poolSize);
+        maxSets += static_cast<uint32_t>(p_FrameBuffers->MAX_FRAMES_IN_FLIGHT);
+
+        poolSizes.push_back(texturePoolSize);
     }
+
+    VkDescriptorPoolSize guiPoolSize{};
+
+    guiPoolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    guiPoolSize.descriptorCount = static_cast<uint32_t>(p_FrameBuffers->MAX_FRAMES_IN_FLIGHT);
+    maxSets += static_cast<uint32_t>(p_FrameBuffers->MAX_FRAMES_IN_FLIGHT);
+
+    poolSizes.push_back(guiPoolSize);
+
+
 
     VkDescriptorPoolCreateInfo poolInfo{};
     poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+   
+    // gui
+    poolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+
     poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
     poolInfo.pPoolSizes = poolSizes.data();
-    poolInfo.maxSets = static_cast<uint32_t>(p_FrameBuffers->MAX_FRAMES_IN_FLIGHT);
+    poolInfo.maxSets = maxSets;
 
     if (vkCreateDescriptorPool(p_LogicalDevice->device, &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS) {
         throw std::runtime_error("failed to create descriptor pool!");
@@ -72,7 +93,7 @@ void DescriptorPool::destroy()
 
     vkDestroyDescriptorPool(p_LogicalDevice->device, descriptorPool, nullptr);
 
-    if (p_DescriptorSetLayout->samplerEnabled) {
+    if (p_DescriptorSetLayout->samplerEnabled || p_DescriptorSetLayout->guiEnabled) {
         vkDestroySampler(p_LogicalDevice->device, p_TextureSampler->textureSampler, nullptr);
         vkDestroyImageView(p_LogicalDevice->device, p_TextureImage->textureImageView, nullptr);
 

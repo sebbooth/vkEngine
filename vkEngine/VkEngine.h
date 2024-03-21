@@ -1,5 +1,8 @@
+#pragma once
+
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
+
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -40,6 +43,9 @@ const bool enableValidationLayers = false;
 const bool enableValidationLayers = true;
 #endif
 */
+
+
+
 class VkEngine {
 public:
     void run() {
@@ -76,9 +82,14 @@ private:
     std::shared_ptr<UniformBuffers> p_UniformBuffers;
     std::shared_ptr<DescriptorPool> p_DescriptorPool;
     std::shared_ptr<DescriptorSets> p_DescriptorSets;
+
+
+    std::shared_ptr<Gui> p_Gui;
+
     std::shared_ptr<CommandBuffers> p_CommandBuffer;
     std::shared_ptr<SyncObjects> p_SyncObjects;
 
+    bool guiEnabled = true;
 
     void initWindow() {
         glfwInit();
@@ -88,6 +99,7 @@ private:
         window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);
         glfwSetWindowUserPointer(window, this);
         glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);
+       
     }
 
     static void framebufferResizeCallback(GLFWwindow* window, int width, int height) {
@@ -121,11 +133,14 @@ private:
         p_RenderPass->create();
 
         p_DescriptorSetLayout = std::make_shared<DescriptorSetLayout>(p_RenderPass);
+        p_DescriptorSetLayout->guiEnabled = guiEnabled;
         p_DescriptorSetLayout->uboEnabled = true;
         p_DescriptorSetLayout->samplerEnabled = true;
         p_DescriptorSetLayout->create();
 
         p_GraphicsPipeline = std::make_shared<GraphicsPipeline>(p_DescriptorSetLayout);
+        p_GraphicsPipeline->cullBackFaces = false;
+        p_GraphicsPipeline->displayNormals = false;
         p_GraphicsPipeline->create();
 
         p_CommandPool = std::make_shared<CommandPool>(p_GraphicsPipeline);
@@ -148,16 +163,126 @@ private:
         p_DescriptorSets = std::make_shared<DescriptorSets>(p_DescriptorPool);
         p_DescriptorSets->create();
 
+        p_Gui = std::make_shared<Gui>(p_DescriptorSets);
+
         p_CommandBuffer = std::make_shared<CommandBuffers>(p_DescriptorSets);
         p_CommandBuffer->attachVertexBuffer(p_VertexBuffer);
         p_CommandBuffer->attachIndexBuffer(p_IndexBuffer);
+        p_CommandBuffer->attachGui(p_Gui);
         p_CommandBuffer->create();
         
         p_SyncObjects = std::make_shared<SyncObjects>(p_CommandBuffer);
         p_SyncObjects->create();
+        
+
+        p_Gui->init();
+    }
+
+    void rebuild() {
+
+        bool prevDepthEnabled = p_Gui->depthEnabled;
+        bool prevWireFrameEnabled = p_Gui->wireFrameEnabled;
+        bool prevSamplerEnabled = p_Gui->samplerEnabled;
+        bool prevMsaaEnabled = p_Gui->msaaEnabled;
+        bool prevDisplayNormals = p_Gui->displayNormalsEnabled;
+        bool prevCullBackFaces = p_Gui->cullBackFacesEnabled;
+
+        p_LogicalDevice->waitIdle();
+        p_Gui->destroy();
+
+        cleanupSwapChain();
+
+        p_GraphicsPipeline->destroy();
+
+        p_RenderPass->destroy();
+
+        p_DescriptorPool->destroy();
+
+        p_DescriptorSetLayout->destroy();
+
+        p_IndexBuffer->destroy();
+
+        p_VertexBuffer->destroy();
+
+        p_SyncObjects->destroy();
+
+        p_CommandPool->destroy();
+
+        p_LogicalDevice->destroy();
+
+
+        p_PhysicalDevice->msaaEnabled = prevMsaaEnabled;
+        p_PhysicalDevice->create();
+        p_LogicalDevice->wireFrameEnabled = prevWireFrameEnabled;
+        p_LogicalDevice->create();
+
+        p_SwapChain->create();
+
+        p_ImageViews->create();
+
+        p_RenderPass->depthEnabled = prevDepthEnabled;
+        p_RenderPass->create();
+
+        p_DescriptorSetLayout->guiEnabled = guiEnabled;
+        p_DescriptorSetLayout->uboEnabled = true;
+        p_DescriptorSetLayout->samplerEnabled = prevSamplerEnabled;
+        p_DescriptorSetLayout->create();
+
+        p_GraphicsPipeline->cullBackFaces = prevCullBackFaces;
+        p_GraphicsPipeline->displayNormals = prevDisplayNormals;
+        p_GraphicsPipeline->create();
+
+        p_CommandPool->create();
+
+        p_FrameBuffers->create();
+
+        p_VertexBuffer->create(p_Model->vertices);
+
+        p_IndexBuffer->create(p_Model->indices);
+
+        p_DescriptorPool->create();
+
+        p_DescriptorSets->create();
+
+
+        p_CommandBuffer->attachVertexBuffer(p_VertexBuffer);
+        p_CommandBuffer->attachIndexBuffer(p_IndexBuffer);
+        p_CommandBuffer->attachGui(p_Gui);
+        p_CommandBuffer->create();
+
+        p_SyncObjects->create();
+
+
+        p_Gui->init();
+
+    }
+
+    void recreateFromRenderPass() {
+
+        //glfwWaitEvents();
+        p_LogicalDevice->waitIdle();
+
+        p_FrameBuffers->destroy();
+        p_SwapChain->destroyFramebuffers();
+        p_ImageViews->destroyImageViews();
+        p_SwapChain->destroySwapChain();
+        p_GraphicsPipeline->destroy();
+        p_RenderPass->destroy();
+
+        
+        p_RenderPass->depthEnabled = p_Gui->depthEnabled;
+        
+    
+        p_RenderPass->create();
+        p_GraphicsPipeline->create();
+        p_SwapChain->create();
+        p_ImageViews->create();
+        p_FrameBuffers->create();
     }
 
     void mainLoop() {
+
+       
         long long fps;
         long long microsecPerSec = 1000000;
         std::cout << std::endl;
@@ -198,11 +323,12 @@ private:
         }
 
         p_DescriptorPool->update(currentFrame);
+        p_CommandBuffer->recordBuffer(currentFrame, imageIndex);
 
         vkResetFences(p_LogicalDevice->device, 1, &p_SyncObjects->inFlightFences[currentFrame]);
 
-        p_CommandBuffer->resetBuffer(currentFrame);
-        p_CommandBuffer->recordBuffer(currentFrame, imageIndex);
+        //p_CommandBuffer->resetBuffer(currentFrame);
+        //p_CommandBuffer->recordBuffer(currentFrame, imageIndex);
 
         VkSubmitInfo submitInfo{};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -238,6 +364,11 @@ private:
 
         result = vkQueuePresentKHR(p_LogicalDevice->presentQueue, &presentInfo);
 
+        bool needRebuild = p_Gui->hasChanged();
+        if (needRebuild) {
+            rebuild();
+        }
+
         if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || framebufferResized) {
             framebufferResized = false;
             recreateSwapChain();
@@ -250,6 +381,9 @@ private:
     }
 
     void cleanup() {
+
+        p_Gui->destroy();
+
         cleanupSwapChain();
 
         p_GraphicsPipeline->destroy();

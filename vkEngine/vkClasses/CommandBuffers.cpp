@@ -42,12 +42,19 @@ void CommandBuffers::attachIndexBuffer(std::shared_ptr<IndexBuffer> p_IndexBuffe
     this->p_IndexBuffer = p_IndexBuffer;
 }
 
+void CommandBuffers::attachGui(std::shared_ptr<Gui> p_Gui)
+{
+    this->p_Gui = p_Gui;
+    guiEnabled = true;
+}
+
 void CommandBuffers::recordBuffer(uint32_t currentFrame, uint32_t imageIndex)
 {
     VkCommandBuffer commandBuffer = commandBuffers[currentFrame];
 
     VkCommandBufferBeginInfo beginInfo{};
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
     if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS) {
         throw std::runtime_error("failed to begin recording command buffer!");
@@ -94,6 +101,12 @@ void CommandBuffers::recordBuffer(uint32_t currentFrame, uint32_t imageIndex)
     vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, p_GraphicsPipeline->pipelineLayout, 0, 1, &p_DescriptorSets->descriptorSets[currentFrame], 0, nullptr);
 
     vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(p_IndexBuffer->indices.size()), 1, 0, 0, 0);
+
+
+    // GUI
+    if (guiEnabled) {
+        p_Gui->draw(commandBuffer);
+    }
 
     vkCmdEndRenderPass(commandBuffer);
 

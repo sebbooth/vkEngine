@@ -1,4 +1,8 @@
 #pragma once
+
+#ifndef MODEL_H
+#define MODEL_H
+
 #include <memory>
 #include <unordered_map>
 #include <tiny_obj_loader.h>
@@ -18,3 +22,4 @@ public:
 
 };
 
+#endif

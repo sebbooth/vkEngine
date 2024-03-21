@@ -28,7 +28,11 @@ Model::Model()
                 1.0f - attrib.texcoords[2 * index.texcoord_index + 1]
             };
 
-            vertex.color = { 1.0f, 1.0f, 1.0f };
+            vertex.normal = { 
+                attrib.vertices[3 * index.normal_index + 0],
+                attrib.vertices[3 * index.normal_index + 1],
+                attrib.vertices[3 * index.normal_index + 2]
+            };
 
             if (sharedVertices.count(vertex) == 0) {
                 sharedVertices[vertex] = static_cast<uint32_t>(vertices.size());

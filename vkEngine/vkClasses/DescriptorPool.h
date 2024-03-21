@@ -1,4 +1,8 @@
 #pragma once
+
+#ifndef DESCRIPTORPOOL_H
+#define DESCRIPTORPOOL_H
+
 #include "FrameBuffers.h"
 #include "UniformBuffers.h"
 #include "TextureSampler.h"
@@ -31,3 +35,4 @@ public:
 	void destroy();
 };
 
+#endif

@@ -1,4 +1,8 @@
 #pragma once
+
+#ifndef DESCRIPTORSETS_H
+#define DESCRIPTORSETS_H
+
 #include "DescriptorPool.h"
 
 class DescriptorSets
@@ -24,3 +28,4 @@ public:
 	void destroy();
 };
 
+#endif

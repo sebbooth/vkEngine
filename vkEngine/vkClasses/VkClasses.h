@@ -1,5 +1,8 @@
 #pragma once
 
+#ifndef VKCLASSES_H
+#define VKCLASSES_H
+
 #include "Instance.h"
 #include "Surface.h"
 #include "PhysicalDevice.h"
@@ -19,5 +22,10 @@
 #include "UniformBuffers.h"
 #include "DescriptorPool.h"
 #include "DescriptorSets.h"
+
+#include "Gui.h"
+
 #include "CommandBuffers.h" 
-#include "SyncObjects.h"  
+#include "SyncObjects.h"
+
+#endif

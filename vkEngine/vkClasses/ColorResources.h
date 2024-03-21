@@ -1,4 +1,8 @@
 #pragma once
+
+#ifndef COLORRESOURCES_H
+#define COLORRESOURCES_H
+
 #include "CommandPool.h"
 
 class ColorResources
@@ -23,3 +27,4 @@ public:
 	void create();
 };
 
+#endif

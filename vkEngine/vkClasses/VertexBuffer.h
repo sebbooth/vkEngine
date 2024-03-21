@@ -1,4 +1,8 @@
 #pragma once
+
+#ifndef VERTEXBUFFER_H
+#define VERTEXBUFFER_H
+
 #include "FrameBuffers.h"
 
 class VertexBuffer
@@ -27,3 +31,4 @@ public:
 	void destroy();
 };
 
+#endif

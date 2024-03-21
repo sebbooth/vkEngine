@@ -1,4 +1,8 @@
 #pragma once
+
+#ifndef COMMANDPOOL_H
+#define COMMANDPOOL_H
+
 #include "GraphicsPipeline.h"
 
 class CommandPool
@@ -28,3 +32,4 @@ public:
 	void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 };
 
+#endif

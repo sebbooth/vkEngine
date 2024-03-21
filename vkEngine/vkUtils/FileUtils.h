@@ -1,4 +1,8 @@
 #pragma once
+
+#ifndef FILEUTILS_H
+#define FILEUTILS_H
+
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 #include <iostream>
@@ -23,3 +27,4 @@ static std::vector<char> readFile(const std::string& filename) {
     return buffer;
 }
 
+#endif

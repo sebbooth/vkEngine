@@ -1,4 +1,8 @@
 #pragma once
+
+#ifndef TEXTUREIMAGE_H
+#define TEXTUREIMAGE_H
+
 #include <stb_image.h>
 #include "FrameBuffers.h"
 
@@ -37,3 +41,4 @@ private:
 	void generateMipmaps(VkImage image, VkFormat imageFormat, int32_t texWidth, int32_t texHeight, uint32_t mipLevels);
 };
 
+#endif

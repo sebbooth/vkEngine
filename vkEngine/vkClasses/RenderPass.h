@@ -1,4 +1,8 @@
 #pragma once
+
+#ifndef RENDERPASS_H
+#define RENDERPASS_H
+
 #include "ImageViews.h"
 #include <vector>
 
@@ -16,6 +20,7 @@ public:
 
 	bool depthEnabled = true;
 	//uint32_t attachmentCount = -1;
+	uint32_t subpass;
 
 	RenderPass(std::shared_ptr<ImageViews> p_ImageViews);
 	void create();
@@ -26,3 +31,4 @@ private:
 	VkFormat findSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
 };
 
+#endif

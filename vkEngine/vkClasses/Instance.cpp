@@ -43,7 +43,7 @@ void Instance::create()
         createInfo.pNext = nullptr;
     }
 
-    if (vkCreateInstance(&createInfo, nullptr, &instance) != VK_SUCCESS) {
+    if (vkCreateInstance(&createInfo, allocator, &instance) != VK_SUCCESS) {
         throw std::runtime_error("failed to create instance!");
     }
     if (enableValidationLayers) createDebugMessenger();

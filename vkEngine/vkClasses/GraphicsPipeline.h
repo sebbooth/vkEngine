@@ -1,4 +1,8 @@
 #pragma once
+
+#ifndef GRAPHICSPIPELINE_H
+#define GRAPHICSPIPELINE_H
+
 #include "FileUtils.h"
 #include "DescriptorSetLayout.h"
 
@@ -17,6 +21,9 @@ public:
 	VkPipeline graphicsPipeline{};
 	VkPipelineLayout pipelineLayout{};
 
+	bool displayNormals = false;
+	bool cullBackFaces = true;
+
 	GraphicsPipeline(std::shared_ptr<DescriptorSetLayout> p_DescriptorSetLayout);
 
 	void create();
@@ -25,3 +32,4 @@ public:
 	VkShaderModule createShaderModule(const std::vector<char>& code);
 };
 
+#endif

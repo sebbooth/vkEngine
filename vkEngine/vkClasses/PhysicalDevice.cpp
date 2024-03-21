@@ -41,7 +41,12 @@ void PhysicalDevice::create()
     for (const auto& device : devices) {
         if (isDeviceSuitable(device)) {
             physicalDevice = device;
-            if (msaaEnabled) msaaSamples = getMaxUsableSampleCount();
+            if (msaaEnabled) {
+                msaaSamples = getMaxUsableSampleCount();
+            }
+            else {
+                msaaSamples = VK_SAMPLE_COUNT_1_BIT;
+            }
             break;
         }
     }
@@ -71,10 +76,12 @@ QueueFamilyIndices PhysicalDevice::findQueueFamilies(VkPhysicalDevice device)
 
         if (presentSupport) {
             indices.presentFamily = i;
+            presentFamily = i;
         }
 
         if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
             indices.graphicsFamily = i;
+            graphicsFamily = i;
         }
 
         if (indices.isComplete()) {

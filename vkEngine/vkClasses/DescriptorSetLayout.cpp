@@ -29,7 +29,7 @@ void DescriptorSetLayout::create()
         bindings.push_back(uboLayoutBinding);
     }
     
-    if (samplerEnabled) {
+    if (samplerEnabled || guiEnabled) {
         VkDescriptorSetLayoutBinding samplerLayoutBinding{};
         samplerLayoutBinding.binding = bindingCount++;
         samplerLayoutBinding.descriptorCount = 1;
@@ -40,6 +40,16 @@ void DescriptorSetLayout::create()
         bindings.push_back(samplerLayoutBinding);
     }
 
+    /*
+    VkDescriptorSetLayoutBinding guiLayoutBinding{};
+    guiLayoutBinding.binding = bindingCount++;
+    guiLayoutBinding.descriptorCount = 1;
+    guiLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    guiLayoutBinding.pImmutableSamplers = nullptr;
+    guiLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+    bindings.push_back(guiLayoutBinding);
+    */
 
     VkDescriptorSetLayoutCreateInfo layoutInfo{};
     layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;

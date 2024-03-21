@@ -1,4 +1,8 @@
 #pragma once
+
+#ifndef LOGICALDEVICE_H
+#define LOGICALDEVICE_H
+
 #include "PhysicalDevice.h"
 
 class LogicalDevice
@@ -43,3 +47,4 @@ public:
     void waitIdle();
 };
 
+#endif

@@ -1,4 +1,8 @@
 #pragma once
+
+#ifndef INSTANCE_H
+#define INSTANCE_H
+
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 #include <vector>
@@ -10,6 +14,7 @@ class Instance
 public:
 	VkInstance instance{};
 	VkDebugUtilsMessengerEXT debugMessenger{};
+	VkAllocationCallbacks* allocator = nullptr;
 
 	bool enableValidationLayers;
 	std::vector<const char*> validationLayers;
@@ -47,3 +52,5 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityF
 
 	return VK_FALSE;
 }
+
+#endif

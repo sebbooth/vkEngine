@@ -1,4 +1,8 @@
 #pragma once
+
+#ifndef PHYSICALDEVICE_H
+#define PHYSICALDEVICE_H
+
 #include <stdexcept>
 #include <vector>
 #include <set>
@@ -19,6 +23,8 @@ public:
 	SwapChainSupportDetails swapChainSupportDetails;
 	QueueFamilyIndices queueFamilies;
 		
+	uint32_t presentFamily;
+	uint32_t graphicsFamily;
 	bool msaaEnabled = false;
 
 	VkSampleCountFlagBits msaaSamples = VK_SAMPLE_COUNT_1_BIT;
@@ -38,3 +44,5 @@ private:
 	VkSampleCountFlagBits getMaxUsableSampleCount();
 
 };
+
+#endif

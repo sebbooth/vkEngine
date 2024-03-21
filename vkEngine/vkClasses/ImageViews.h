@@ -1,4 +1,8 @@
 #pragma once
+
+#ifndef IMAGEVIEWS_H
+#define IMAGEVIEWS_H
+
 #include "SwapChain.h"
 
 class ImageViews
@@ -21,3 +25,4 @@ public:
 	void destroyImageViews();
 };
 
+#endif

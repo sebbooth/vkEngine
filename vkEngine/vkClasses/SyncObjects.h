@@ -1,4 +1,8 @@
 #pragma once
+
+#ifndef SYNCOBJECTS_H
+#define SYNCOBJECTS_H
+
 #include "CommandBuffers.h"
 
 class SyncObjects
@@ -29,3 +33,4 @@ public:
 	void waitForFences(uint32_t currentFrame, VkBool32 waitAll, uint64_t timeout);
 };
 
+#endif

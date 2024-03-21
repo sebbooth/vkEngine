@@ -1,4 +1,8 @@
 #pragma once
+
+#ifndef SURFACE_H
+#define SURFACE_H
+
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 #include <stdexcept>
@@ -18,3 +22,4 @@ public:
 	void destroy();
 };
 
+#endif

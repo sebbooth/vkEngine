@@ -1,4 +1,8 @@
 #pragma once
+
+#ifndef DEPTHRESOURCES_H
+#define DEPTHRESOURCES_H
+
 #include "ColorResources.h"
 
 class DepthResources
@@ -23,3 +27,4 @@ public:
 	void create();
 };
 
+#endif

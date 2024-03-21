@@ -1,6 +1,11 @@
 #pragma once
+
+#ifndef COMMANDBUFFERS_H
+#define COMMANDBUFFERS_H
+
 #include "DescriptorSets.h"
 #include "IndexBuffer.h"
+#include "Gui.h"
 
 class CommandBuffers
 {
@@ -21,7 +26,9 @@ public:
 
 	std::shared_ptr<VertexBuffer> p_VertexBuffer;
 	std::shared_ptr<IndexBuffer> p_IndexBuffer;
+	std::shared_ptr<Gui> p_Gui;
 
+	bool guiEnabled = false;
 
 	std::vector<VkCommandBuffer> commandBuffers;
 
@@ -30,8 +37,10 @@ public:
 
 	void attachVertexBuffer(std::shared_ptr<VertexBuffer> p_VertexBuffer);
 	void attachIndexBuffer(std::shared_ptr<IndexBuffer> p_IndexBuffer);
+	void attachGui(std::shared_ptr<Gui> p_Gui);
 
 	void recordBuffer(uint32_t currentFrame, uint32_t imageIndex);
 	void resetBuffer(uint32_t currentFrame);
 };
 
+#endif

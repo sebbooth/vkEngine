@@ -1,4 +1,8 @@
 #pragma once
+
+#ifndef SWAPCHAIN_H
+#define SWAPCHAIN_H
+
 #include "LogicalDevice.h"
 #include "SwapChainUtils.h"
 
@@ -22,3 +26,4 @@ public:
 	void destroySwapChain();
 };
 
+#endif

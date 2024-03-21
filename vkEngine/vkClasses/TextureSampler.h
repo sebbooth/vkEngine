@@ -1,4 +1,8 @@
 #pragma once
+
+#ifndef TEXTURESAMPLER_H
+#define TEXTURESAMPLER_H
+
 #include "TextureImage.h"
 
 class TextureSampler
@@ -23,3 +27,4 @@ public:
 	void create();
 };
 
+#endif

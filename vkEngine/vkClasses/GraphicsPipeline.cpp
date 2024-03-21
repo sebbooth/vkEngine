@@ -21,6 +21,14 @@ void GraphicsPipeline::create()
     // shader stages /////////////////////////////////////////////////////////////////////
     auto vertShaderCode = readFile("shaders/vert.spv");
     auto fragShaderCode = readFile("shaders/frag.spv");
+    if (!p_DescriptorSetLayout->samplerEnabled) {
+        vertShaderCode = readFile("shaders/no_tex_vert.spv");
+        fragShaderCode = readFile("shaders/no_tex_frag.spv");
+    }
+    if (displayNormals) {
+        vertShaderCode = readFile("shaders/norm_vert.spv");
+        fragShaderCode = readFile("shaders/norm_frag.spv");
+    }
 
     VkShaderModule vertShaderModule = createShaderModule(vertShaderCode);
     VkShaderModule fragShaderModule = createShaderModule(fragShaderCode);
@@ -118,6 +126,7 @@ void GraphicsPipeline::create()
     else rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
     rasterizer.lineWidth = 1.0f;
     rasterizer.cullMode = VK_CULL_MODE_NONE;
+    if (cullBackFaces) rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
     rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
     rasterizer.depthBiasEnable = VK_FALSE;
     rasterizer.depthBiasConstantFactor = 0.0f; // Optional

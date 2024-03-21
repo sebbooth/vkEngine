@@ -1,4 +1,8 @@
 #pragma once
+
+#ifndef INDEXBUFFER_H
+#define INDEXBUFFER_H
+
 #include "VertexBuffer.h"
 
 class IndexBuffer
@@ -27,3 +31,4 @@ public:
 	void destroy();
 };
 
+#endif

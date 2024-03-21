@@ -1,4 +1,8 @@
 #pragma once
+
+#ifndef FRAMEBUFFERS_H
+#define FRAMEBUFFERS_H
+
 #include "DepthResources.h"
 
 class FrameBuffers
@@ -25,3 +29,4 @@ public:
 	void destroy();
 };
 
+#endif

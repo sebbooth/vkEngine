@@ -1,4 +1,7 @@
 #pragma once
+
+#ifndef UNIFORMBUFFERS_H
+#define UNIFORMBUFFERS_H
 #include <chrono>
 #include "FrameBuffers.h"
 
@@ -26,3 +29,4 @@ public:
 	void update(uint32_t currentImage);
 };
 
+#endif
