@@ -39,7 +39,16 @@ public:
 	void attachIndexBuffer(std::shared_ptr<IndexBuffer> p_IndexBuffer);
 	void attachGui(std::shared_ptr<Gui> p_Gui);
 
+	void recordBuffer(VkCommandBuffer commandBuffer, uint32_t currentFrame, uint32_t imageIndex, std::vector<VkBuffer> shaderStorageBuffers, int PARTICLE_COUNT);
+
 	void recordBuffer(uint32_t currentFrame, uint32_t imageIndex);
+	void recordComputeBuffer(
+		uint32_t currentFrame, 
+		VkCommandBuffer commandBuffer, 
+		uint32_t imageIndex, 
+		std::vector<VkBuffer> shaderStorageBuffers, 
+		int PARTICLE_COUNT
+	);
 	void resetBuffer(uint32_t currentFrame);
 };
 

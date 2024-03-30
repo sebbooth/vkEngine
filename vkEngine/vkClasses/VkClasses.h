@@ -12,6 +12,7 @@
 #include "RenderPass.h"
 #include "DescriptorSetLayout.h"
 #include "GraphicsPipeline.h"
+#include "ComputeGraphicsPipeline.h"
 #include "CommandPool.h"
 #include "FrameBuffers.h"
 #include "ColorResources.h"

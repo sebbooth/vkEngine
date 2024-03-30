@@ -1,7 +1,7 @@
-#include "VkEngine.h"
+#include "ComputeApp.h"
 
 int main() {
-    VkEngine app;
+    ComputeApp app;
 
     try {
         app.run();

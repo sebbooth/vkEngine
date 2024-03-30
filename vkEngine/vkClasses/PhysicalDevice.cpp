@@ -79,11 +79,23 @@ QueueFamilyIndices PhysicalDevice::findQueueFamilies(VkPhysicalDevice device)
             presentFamily = i;
         }
 
-        if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
-            indices.graphicsFamily = i;
-            graphicsFamily = i;
-        }
+        if (computeEnabled) {
+            if ((queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) && (queueFamily.queueFlags & VK_QUEUE_COMPUTE_BIT)) {
+                indices.graphicsAndComputeFamily = i;
+                graphicsAndComputeFamily = i;
 
+                /* temp */
+                indices.graphicsFamily = i;
+                graphicsFamily = i;
+            }
+        }
+        else {
+            if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
+                indices.graphicsFamily = i;
+                graphicsFamily = i;
+            }
+        }
+        
         if (indices.isComplete()) {
             //break;
         }

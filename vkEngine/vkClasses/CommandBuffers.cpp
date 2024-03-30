@@ -48,6 +48,62 @@ void CommandBuffers::attachGui(std::shared_ptr<Gui> p_Gui)
     guiEnabled = true;
 }
 
+void CommandBuffers::recordBuffer(
+    VkCommandBuffer commandBuffer,
+    uint32_t currentFrame,
+    uint32_t imageIndex, 
+    std::vector<VkBuffer> shaderStorageBuffers,
+    int PARTICLE_COUNT
+)
+{
+    VkCommandBufferBeginInfo beginInfo{};
+    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+
+    if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS) {
+        throw std::runtime_error("failed to begin recording command buffer!");
+    }
+
+    VkRenderPassBeginInfo renderPassInfo{};
+    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+    renderPassInfo.renderPass = p_RenderPass->renderPass;
+    renderPassInfo.framebuffer = p_SwapChain->swapChainFramebuffers[imageIndex];
+    renderPassInfo.renderArea.offset = { 0, 0 };
+    renderPassInfo.renderArea.extent = p_SwapChain->swapChainExtent;
+
+    VkClearValue clearColor = { {{0.0f, 0.0f, 0.0f, 1.0f}} };
+    renderPassInfo.clearValueCount = 1;
+    renderPassInfo.pClearValues = &clearColor;
+
+    vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, p_GraphicsPipeline->graphicsPipeline);
+
+    VkViewport viewport{};
+    viewport.x = 0.0f;
+    viewport.y = 0.0f;
+    viewport.width = (float)p_SwapChain->swapChainExtent.width;
+    viewport.height = (float)p_SwapChain->swapChainExtent.height;
+    viewport.minDepth = 0.0f;
+    viewport.maxDepth = 1.0f;
+    vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+
+    VkRect2D scissor{};
+    scissor.offset = { 0, 0 };
+    scissor.extent = p_SwapChain->swapChainExtent;
+    vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+
+    VkDeviceSize offsets[] = { 0 };
+    vkCmdBindVertexBuffers(commandBuffer, 0, 1, &shaderStorageBuffers[currentFrame], offsets);
+
+    vkCmdDraw(commandBuffer, PARTICLE_COUNT, 1, 0, 0);
+
+    vkCmdEndRenderPass(commandBuffer);
+
+    if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
+        throw std::runtime_error("failed to record command buffer!");
+    }
+}
+
 void CommandBuffers::recordBuffer(uint32_t currentFrame, uint32_t imageIndex)
 {
     VkCommandBuffer commandBuffer = commandBuffers[currentFrame];
@@ -102,6 +158,68 @@ void CommandBuffers::recordBuffer(uint32_t currentFrame, uint32_t imageIndex)
 
     vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(p_IndexBuffer->indices.size()), 1, 0, 0, 0);
 
+
+    // GUI
+    if (guiEnabled) {
+        p_Gui->draw(commandBuffer);
+    }
+
+    vkCmdEndRenderPass(commandBuffer);
+
+    if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
+        throw std::runtime_error("failed to record command buffer!");
+    }
+}
+
+
+void CommandBuffers::recordComputeBuffer(
+    uint32_t currentFrame,
+    VkCommandBuffer commandBuffer, 
+    uint32_t imageIndex,
+    std::vector<VkBuffer> shaderStorageBuffers,
+    int PARTICLE_COUNT
+)
+{
+    VkCommandBufferBeginInfo beginInfo{};
+    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+
+    if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS) {
+        throw std::runtime_error("failed to begin recording command buffer!");
+    }
+
+    VkRenderPassBeginInfo renderPassInfo{};
+    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+    renderPassInfo.renderPass = p_RenderPass->renderPass;
+    renderPassInfo.framebuffer = p_SwapChain->swapChainFramebuffers[imageIndex];
+    renderPassInfo.renderArea.offset = { 0, 0 };
+    renderPassInfo.renderArea.extent = p_SwapChain->swapChainExtent;
+
+    VkClearValue clearColor = { {{0.0f, 0.0f, 0.0f, 1.0f}} };
+    renderPassInfo.clearValueCount = 1;
+    renderPassInfo.pClearValues = &clearColor;
+
+    vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, p_GraphicsPipeline->graphicsPipeline);
+
+    VkViewport viewport{};
+    viewport.x = 0.0f;
+    viewport.y = 0.0f;
+    viewport.width = (float)p_SwapChain->swapChainExtent.width;
+    viewport.height = (float)p_SwapChain->swapChainExtent.height;
+    viewport.minDepth = 0.0f;
+    viewport.maxDepth = 1.0f;
+    vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+
+    VkRect2D scissor{};
+    scissor.offset = { 0, 0 };
+    scissor.extent = p_SwapChain->swapChainExtent;
+    vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+
+    VkDeviceSize offsets[] = { 0 };
+    vkCmdBindVertexBuffers(commandBuffer, 0, 1, &shaderStorageBuffers[currentFrame], offsets);
+
+    vkCmdDraw(commandBuffer, PARTICLE_COUNT, 1, 0, 0);
 
     // GUI
     if (guiEnabled) {

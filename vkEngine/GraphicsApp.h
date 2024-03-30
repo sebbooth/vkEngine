@@ -46,7 +46,7 @@ const bool enableValidationLayers = true;
 
 
 
-class VkEngine {
+class GraphicsApp {
 public:
     void run() {
         initWindow();
@@ -103,7 +103,7 @@ private:
     }
 
     static void framebufferResizeCallback(GLFWwindow* window, int width, int height) {
-        auto app = reinterpret_cast<VkEngine*>(glfwGetWindowUserPointer(window));
+        auto app = reinterpret_cast<GraphicsApp*>(glfwGetWindowUserPointer(window));
         app->framebufferResized = true;
     }
 
@@ -179,7 +179,6 @@ private:
     }
 
     void rebuild() {
-
         bool prevDepthEnabled = p_Gui->depthEnabled;
         bool prevWireFrameEnabled = p_Gui->wireFrameEnabled;
         bool prevSamplerEnabled = p_Gui->samplerEnabled;
@@ -193,21 +192,13 @@ private:
         cleanupSwapChain();
 
         p_GraphicsPipeline->destroy();
-
         p_RenderPass->destroy();
-
         p_DescriptorPool->destroy();
-
         p_DescriptorSetLayout->destroy();
-
         p_IndexBuffer->destroy();
-
         p_VertexBuffer->destroy();
-
         p_SyncObjects->destroy();
-
         p_CommandPool->destroy();
-
         p_LogicalDevice->destroy();
 
 
@@ -215,46 +206,30 @@ private:
         p_PhysicalDevice->create();
         p_LogicalDevice->wireFrameEnabled = prevWireFrameEnabled;
         p_LogicalDevice->create();
-
         p_SwapChain->create();
-
         p_ImageViews->create();
-
         p_RenderPass->depthEnabled = prevDepthEnabled;
         p_RenderPass->create();
-
         p_DescriptorSetLayout->guiEnabled = guiEnabled;
         p_DescriptorSetLayout->uboEnabled = true;
         p_DescriptorSetLayout->samplerEnabled = prevSamplerEnabled;
         p_DescriptorSetLayout->create();
-
         p_GraphicsPipeline->cullBackFaces = prevCullBackFaces;
         p_GraphicsPipeline->displayNormals = prevDisplayNormals;
         p_GraphicsPipeline->create();
-
         p_CommandPool->create();
-
         p_FrameBuffers->create();
-
         p_VertexBuffer->create(p_Model->vertices);
-
         p_IndexBuffer->create(p_Model->indices);
-
         p_DescriptorPool->create();
-
         p_DescriptorSets->create();
-
-
         p_CommandBuffer->attachVertexBuffer(p_VertexBuffer);
         p_CommandBuffer->attachIndexBuffer(p_IndexBuffer);
         p_CommandBuffer->attachGui(p_Gui);
         p_CommandBuffer->create();
-
         p_SyncObjects->create();
 
-
         p_Gui->init();
-
     }
 
     void recreateFromRenderPass() {
@@ -268,11 +243,8 @@ private:
         p_SwapChain->destroySwapChain();
         p_GraphicsPipeline->destroy();
         p_RenderPass->destroy();
-
-        
+      
         p_RenderPass->depthEnabled = p_Gui->depthEnabled;
-        
-    
         p_RenderPass->create();
         p_GraphicsPipeline->create();
         p_SwapChain->create();
@@ -387,21 +359,13 @@ private:
         cleanupSwapChain();
 
         p_GraphicsPipeline->destroy();
-    
         p_RenderPass->destroy();
-
         p_DescriptorPool->destroy();
-
         p_DescriptorSetLayout->destroy();
-
         p_IndexBuffer->destroy();
-
         p_VertexBuffer->destroy();
-
         p_SyncObjects->destroy();
-
         p_CommandPool->destroy();
-
         p_LogicalDevice->destroy();
 
         if (enableValidationLayers) {
@@ -409,11 +373,9 @@ private:
         }
 
         p_Surface->destroy();
-
         p_Instance->destroy();
 
         glfwDestroyWindow(window);
-
         glfwTerminate();
     }
 

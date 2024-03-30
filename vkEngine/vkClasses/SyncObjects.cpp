@@ -22,7 +22,9 @@ void SyncObjects::create()
 {
     imageAvailableSemaphores.resize(p_FrameBuffers->MAX_FRAMES_IN_FLIGHT);
     renderFinishedSemaphores.resize(p_FrameBuffers->MAX_FRAMES_IN_FLIGHT);
+    computeFinishedSemaphores.resize(p_FrameBuffers->MAX_FRAMES_IN_FLIGHT);
     inFlightFences.resize(p_FrameBuffers->MAX_FRAMES_IN_FLIGHT);
+    computeInFlightFences.resize(p_FrameBuffers->MAX_FRAMES_IN_FLIGHT);
 
     VkSemaphoreCreateInfo semaphoreInfo{};
     semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
@@ -37,6 +39,10 @@ void SyncObjects::create()
             vkCreateFence(p_LogicalDevice->device, &fenceInfo, nullptr, &inFlightFences[i]) != VK_SUCCESS) {
 
             throw std::runtime_error("failed to create synchronization objects for a frame!");
+        }
+        if (vkCreateSemaphore(p_LogicalDevice->device, &semaphoreInfo, nullptr, &computeFinishedSemaphores[i]) != VK_SUCCESS ||
+            vkCreateFence(p_LogicalDevice->device, &fenceInfo, nullptr, &computeInFlightFences[i]) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create compute synchronization objects for a frame!");
         }
     }
 }

@@ -30,6 +30,8 @@ public:
 	void destroy();
 
 	VkShaderModule createShaderModule(const std::vector<char>& code);
+
+	GraphicsPipeline() = default;
 };
 
 #endif

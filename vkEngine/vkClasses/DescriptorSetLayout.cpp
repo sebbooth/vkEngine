@@ -16,10 +16,10 @@ void DescriptorSetLayout::create()
     std::vector<VkDescriptorSetLayoutBinding> bindings;
     uint32_t bindingCount = 0;
 
-    //= { uboLayoutBinding, samplerLayoutBinding };
+    //= { uboLayoutBinding, samplerLayoutBinding }
 
+    VkDescriptorSetLayoutBinding uboLayoutBinding{};
     if (uboEnabled) {
-        VkDescriptorSetLayoutBinding uboLayoutBinding{};
         uboLayoutBinding.binding = bindingCount++;
         uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         uboLayoutBinding.descriptorCount = 1;
@@ -28,9 +28,9 @@ void DescriptorSetLayout::create()
 
         bindings.push_back(uboLayoutBinding);
     }
-    
+
+    VkDescriptorSetLayoutBinding samplerLayoutBinding{};
     if (samplerEnabled || guiEnabled) {
-        VkDescriptorSetLayoutBinding samplerLayoutBinding{};
         samplerLayoutBinding.binding = bindingCount++;
         samplerLayoutBinding.descriptorCount = 1;
         samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;

@@ -10,7 +10,8 @@ class LogicalDevice
 public:
 	VkDevice device{};
 	VkQueue graphicsQueue{};
-	VkQueue presentQueue{};
+    VkQueue presentQueue{};
+    VkQueue computeQueue{};
 
     std::shared_ptr<Instance> p_Instance;
     std::shared_ptr<Surface> p_Surface;

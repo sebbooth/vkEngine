@@ -4,6 +4,7 @@
 #define COMMANDPOOL_H
 
 #include "GraphicsPipeline.h"
+#include "ComputeGraphicsPipeline.h"
 
 class CommandPool
 {

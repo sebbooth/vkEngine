@@ -49,7 +49,6 @@ private:
 static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
 {
 	std::cerr << std::endl << "\033[1;31m[VALIDATION LAYER]: \033[0m" << pCallbackData->pMessage;
-
 	return VK_FALSE;
 }
 

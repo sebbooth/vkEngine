@@ -156,6 +156,8 @@
     <None Include="shaders\HelloTriangle.vert" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ComputeApp.h" />
+    <ClInclude Include="vkClasses\ComputeGraphicsPipeline.h" />
     <ClInclude Include="vkClasses\Gui.h" />
     <ClInclude Include="vendor\imgui-1.90.4\imgui.h" />
     <ClInclude Include="vendor\imgui-1.90.4\imgui_impl_glfw.h" />
@@ -189,12 +191,13 @@
     <ClInclude Include="vkClasses\UniformBuffers.h" />
     <ClInclude Include="vkClasses\VertexBuffer.h" />
     <ClInclude Include="vkClasses\VkClasses.h" />
-    <ClInclude Include="VkEngine.h" />
+    <ClInclude Include="GraphicsApp.h" />
     <ClInclude Include="vkUtils\FileUtils.h" />
     <ClInclude Include="vkUtils\SwapChainUtils.h" />
     <ClInclude Include="vkUtils\VkStructs.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="vkClasses\ComputeGraphicsPipeline.cpp" />
     <ClCompile Include="vkClasses\Gui.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="vendor\imgui-1.90.4\imgui.cpp" />

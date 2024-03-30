@@ -25,7 +25,10 @@ public:
 
 	std::vector<VkSemaphore> imageAvailableSemaphores;
 	std::vector<VkSemaphore> renderFinishedSemaphores;
+	std::vector<VkSemaphore> computeFinishedSemaphores;
+
 	std::vector<VkFence> inFlightFences;
+	std::vector<VkFence> computeInFlightFences;
 
 	SyncObjects(std::shared_ptr<CommandBuffers> p_CommandBuffer);
 	void create();

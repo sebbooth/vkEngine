@@ -25,7 +25,9 @@ public:
 		
 	uint32_t presentFamily;
 	uint32_t graphicsFamily;
+	uint32_t graphicsAndComputeFamily;
 	bool msaaEnabled = false;
+	bool computeEnabled = false;
 
 	VkSampleCountFlagBits msaaSamples = VK_SAMPLE_COUNT_1_BIT;
 

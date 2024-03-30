@@ -51,6 +51,7 @@ void LogicalDevice::create()
 
     vkGetDeviceQueue(device, indices.graphicsFamily.value(), 0, &graphicsQueue);
     vkGetDeviceQueue(device, indices.presentFamily.value(), 0, &presentQueue);
+    if (p_PhysicalDevice->computeEnabled) vkGetDeviceQueue(device, indices.graphicsAndComputeFamily.value(), 0, &computeQueue);
 }
 
 void LogicalDevice::destroy()
