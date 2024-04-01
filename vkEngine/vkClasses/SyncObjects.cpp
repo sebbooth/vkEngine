@@ -52,7 +52,9 @@ void SyncObjects::destroy()
     for (size_t i = 0; i < p_FrameBuffers->MAX_FRAMES_IN_FLIGHT; i++) {
         vkDestroySemaphore(p_LogicalDevice->device, renderFinishedSemaphores[i], nullptr);
         vkDestroySemaphore(p_LogicalDevice->device, imageAvailableSemaphores[i], nullptr);
+        vkDestroySemaphore(p_LogicalDevice->device, computeFinishedSemaphores[i], nullptr);
         vkDestroyFence(p_LogicalDevice->device, inFlightFences[i], nullptr);
+        vkDestroyFence(p_LogicalDevice->device, computeInFlightFences[i], nullptr);
     }
 }
 
