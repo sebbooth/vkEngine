@@ -25,6 +25,8 @@ public:
 	DescriptorSetLayout(std::shared_ptr<RenderPass> p_RenderPass);
 	void create();
 	void destroy();
+
+	DescriptorSetLayout() = default;
 };
 
 #endif

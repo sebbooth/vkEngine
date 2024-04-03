@@ -11,6 +11,7 @@
 #include "ImageViews.h"
 #include "RenderPass.h"
 #include "DescriptorSetLayout.h"
+#include "DescriptorSetLayoutRays.h"
 #include "GraphicsPipeline.h"
 #include "ComputeGraphicsPipeline.h"
 #include "CommandPool.h"

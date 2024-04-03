@@ -2,6 +2,14 @@
 
 (name for now cause naming things is hard)
 
+## 2024-04-02
+
+Busy with other things so didn't touch this for a little while, but bodged together the compute pipeline. Made the particles example from vulkan-tutorial.com, and even got a sketchy little raytracer working on the particles code since I was too impatient to set up all of the resources for writing to a texture image and so on.
+
+| vulkan-tutorial.com compute shader particles example | sketchy raytracer made by modifying shader code from particles example |
+| ---------------------------------------------------- | ---------------------------------------------------------------------- |
+| ![ImGui Example 1](readme/compute1.png)              | ![ImGui Example 2](readme/compute2.png)                                |
+
 ## 2024-03-20
 
 Added ImGui with some basic functionality for changing certain rendering settings. Fixed issues from previous update, which were primarily due to declaring Vulkan Structs within conditional scopes, and the compiler tossing the pointers (whoops).

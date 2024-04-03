@@ -12,4 +12,8 @@ C:/VulkanSDK/1.3.275.0/Bin/glslc.exe 2.frag -o 2_f.spv
 C:/VulkanSDK/1.3.275.0/Bin/glslc.exe compute.vert -o c_vert.spv
 C:/VulkanSDK/1.3.275.0/Bin/glslc.exe compute.frag -o c_frag.spv
 C:/VulkanSDK/1.3.275.0/Bin/glslc.exe compute.comp -o comp.spv
+
+C:/VulkanSDK/1.3.275.0/Bin/glslc.exe raytracer.vert -o rays_vert.spv
+C:/VulkanSDK/1.3.275.0/Bin/glslc.exe raytracer.frag -o rays_frag.spv
+C:/VulkanSDK/1.3.275.0/Bin/glslc.exe raytracer.comp -o rays_comp.spv
 pause

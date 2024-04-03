@@ -159,6 +159,7 @@
     <ClInclude Include="ComputeApp.h" />
     <ClInclude Include="ComputeAppTexOut.h" />
     <ClInclude Include="vkClasses\ComputeGraphicsPipeline.h" />
+    <ClInclude Include="vkClasses\DescriptorSetLayoutRays.h" />
     <ClInclude Include="vkClasses\Gui.h" />
     <ClInclude Include="vendor\imgui-1.90.4\imgui.h" />
     <ClInclude Include="vendor\imgui-1.90.4\imgui_impl_glfw.h" />
@@ -199,6 +200,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="vkClasses\ComputeGraphicsPipeline.cpp" />
+    <ClCompile Include="vkClasses\DescriptorSetLayoutRays.cpp" />
     <ClCompile Include="vkClasses\Gui.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="vendor\imgui-1.90.4\imgui.cpp" />
