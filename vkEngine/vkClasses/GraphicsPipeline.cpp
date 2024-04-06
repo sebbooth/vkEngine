@@ -19,8 +19,10 @@ void GraphicsPipeline::create()
 
 
     // shader stages /////////////////////////////////////////////////////////////////////
+    
     auto vertShaderCode = readFile("shaders/vert.spv");
     auto fragShaderCode = readFile("shaders/frag.spv");
+    
     if (!p_DescriptorSetLayout->samplerEnabled) {
         vertShaderCode = readFile("shaders/no_tex_vert.spv");
         fragShaderCode = readFile("shaders/no_tex_frag.spv");
@@ -28,6 +30,10 @@ void GraphicsPipeline::create()
     if (displayNormals) {
         vertShaderCode = readFile("shaders/norm_vert.spv");
         fragShaderCode = readFile("shaders/norm_frag.spv");
+    }
+
+    if (simpleShader) {
+        vertShaderCode = readFile("shaders/vertNoUBO.spv");
     }
 
     VkShaderModule vertShaderModule = createShaderModule(vertShaderCode);

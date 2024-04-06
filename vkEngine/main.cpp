@@ -1,7 +1,7 @@
-#include "ComputeApp.h"
+#include "ComputeTexRays.h"
 
 int main() {
-    ComputeApp app;
+    ComputeTexRays app;
 
     try {
         app.run();

@@ -41,7 +41,7 @@ const bool enableValidationLayers = true;
 #endif
 
 
-class ComputeAppTexOut {
+class ComputeSSBORays {
 public:
     void run() {
         initWindow();
@@ -83,7 +83,7 @@ private:
     }
 
     static void framebufferResizeCallback(GLFWwindow* window, int width, int height) {
-        auto app = reinterpret_cast<ComputeAppTexOut*>(glfwGetWindowUserPointer(window));
+        auto app = reinterpret_cast<ComputeSSBORays*>(glfwGetWindowUserPointer(window));
         app->framebufferResized = true;
     }
 

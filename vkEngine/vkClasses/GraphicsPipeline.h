@@ -23,6 +23,7 @@ public:
 
 	bool displayNormals = false;
 	bool cullBackFaces = true;
+	bool simpleShader = false;
 
 	GraphicsPipeline(std::shared_ptr<DescriptorSetLayout> p_DescriptorSetLayout);
 

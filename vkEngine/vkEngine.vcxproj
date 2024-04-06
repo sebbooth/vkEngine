@@ -157,7 +157,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ComputeApp.h" />
-    <ClInclude Include="ComputeAppTexOut.h" />
+    <ClInclude Include="ComputeSSBORays.h" />
+    <ClInclude Include="ComputeTexRays.h" />
     <ClInclude Include="vkClasses\ComputeGraphicsPipeline.h" />
     <ClInclude Include="vkClasses\DescriptorSetLayoutRays.h" />
     <ClInclude Include="vkClasses\Gui.h" />

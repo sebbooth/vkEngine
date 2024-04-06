@@ -25,6 +25,7 @@ public:
 
 	DescriptorSets(std::shared_ptr<DescriptorPool> p_DescriptorPool);
 	void create();
+	void createWithStorageSampler(std::vector<VkImageView> imageViews, std::vector<VkSampler> imageSamplers);
 	void destroy();
 };
 

@@ -2,6 +2,14 @@
 
 (name for now cause naming things is hard)
 
+## 2024-04-04
+
+Restructured pipelines so that the compute shader writes to an image, and then that image is passed into the fragment shader as a texture/sampler. All of the Vulkan code has become complete spaghetti, so will need to spend a lot of time refactoring it. Will probably start doing some voxel stuff first and do refactoring in between - I shouldn't need to make too many changes to the rendering/compute pipelines besides adjusting storage/uniform buffers for the next while.
+
+| Drawing the texture onto a rotating quad | Drawing texture across whole screen     |
+| ---------------------------------------- | --------------------------------------- |
+| ![ImGui Example 1](readme/compute4.png)  | ![ImGui Example 2](readme/compute3.png) |
+
 ## 2024-04-02
 
 Busy with other things so didn't touch this for a little while, but bodged together the compute pipeline. Made the particles example from vulkan-tutorial.com, and even got a sketchy little raytracer working on the particles code since I was too impatient to set up all of the resources for writing to a texture image and so on.

@@ -1,4 +1,5 @@
 C:/VulkanSDK/1.3.275.0/Bin/glslc.exe HelloTriangle.vert -o vert.spv
+C:/VulkanSDK/1.3.275.0/Bin/glslc.exe HelloTriangleNoUBO.vert -o vertNoUBO.spv
 C:/VulkanSDK/1.3.275.0/Bin/glslc.exe HelloTriangle.frag -o frag.spv
 C:/VulkanSDK/1.3.275.0/Bin/glslc.exe no_tex.vert -o no_tex_vert.spv
 C:/VulkanSDK/1.3.275.0/Bin/glslc.exe no_tex.frag -o no_tex_frag.spv
@@ -16,4 +17,6 @@ C:/VulkanSDK/1.3.275.0/Bin/glslc.exe compute.comp -o comp.spv
 C:/VulkanSDK/1.3.275.0/Bin/glslc.exe raytracer.vert -o rays_vert.spv
 C:/VulkanSDK/1.3.275.0/Bin/glslc.exe raytracer.frag -o rays_frag.spv
 C:/VulkanSDK/1.3.275.0/Bin/glslc.exe raytracer.comp -o rays_comp.spv
+
+C:/VulkanSDK/1.3.275.0/Bin/glslc.exe raytracerToTex.comp -o rays_tex_comp.spv
 pause

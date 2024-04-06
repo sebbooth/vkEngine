@@ -76,9 +76,71 @@ void DescriptorSets::create()
     }
 }
 
+void DescriptorSets::createWithStorageSampler(std::vector<VkImageView> imageViews, std::vector<VkSampler> imageSamplers)
+{
+    std::vector<VkDescriptorSetLayout> layouts(p_FrameBuffers->MAX_FRAMES_IN_FLIGHT, p_DescriptorSetLayout->descriptorSetLayout);
+    VkDescriptorSetAllocateInfo allocInfo{};
+    allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+    allocInfo.descriptorPool = p_DescriptorPool->descriptorPool;
+    allocInfo.descriptorSetCount = static_cast<uint32_t>(p_FrameBuffers->MAX_FRAMES_IN_FLIGHT);
+    allocInfo.pSetLayouts = layouts.data();
+
+    descriptorSets.resize(p_FrameBuffers->MAX_FRAMES_IN_FLIGHT);
+    if (vkAllocateDescriptorSets(p_LogicalDevice->device, &allocInfo, descriptorSets.data()) != VK_SUCCESS) {
+        throw std::runtime_error("failed to allocate descriptor sets!");
+    }
+
+    for (size_t i = 0; i < p_FrameBuffers->MAX_FRAMES_IN_FLIGHT; i++) {
+
+        std::vector<VkWriteDescriptorSet> descriptorWrites{};
+
+        VkDescriptorBufferInfo uboBufferInfo{};
+        VkWriteDescriptorSet uboDescriptorWrite{};
+
+        if (p_DescriptorSetLayout->uboEnabled) {
+            uboBufferInfo.buffer = p_DescriptorPool->p_UniformBuffers->uniformBuffers[i];
+            uboBufferInfo.offset = 0;
+            uboBufferInfo.range = sizeof(UniformBufferObject);
+
+            uboDescriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            uboDescriptorWrite.dstSet = descriptorSets[i];
+            uboDescriptorWrite.dstBinding = 0;
+            uboDescriptorWrite.dstArrayElement = 0;
+            uboDescriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            uboDescriptorWrite.descriptorCount = 1;
+            uboDescriptorWrite.pBufferInfo = &uboBufferInfo;
+
+            descriptorWrites.push_back(uboDescriptorWrite);
+        }
+
+        VkDescriptorImageInfo samplerImageInfo{};
+        VkWriteDescriptorSet samplerDescriptorWrite{};
+
+        if (p_DescriptorSetLayout->samplerEnabled) {
+            samplerImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            samplerImageInfo.imageView = imageViews[i];
+            samplerImageInfo.sampler = imageSamplers[i];
+
+            samplerDescriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            samplerDescriptorWrite.dstSet = descriptorSets[i];
+            samplerDescriptorWrite.dstBinding = 1;
+            samplerDescriptorWrite.dstArrayElement = 0;
+            samplerDescriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            samplerDescriptorWrite.descriptorCount = 1;
+            samplerDescriptorWrite.pImageInfo = &samplerImageInfo;
+
+            descriptorWrites.push_back(samplerDescriptorWrite);
+        }
+
+        vkUpdateDescriptorSets(p_LogicalDevice->device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+    }
+}
+
+
 void DescriptorSets::destroy()
 {
     if (p_DescriptorSetLayout->uboEnabled) {
+
     }
 
     if (p_DescriptorSetLayout->samplerEnabled) {

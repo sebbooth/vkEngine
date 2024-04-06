@@ -143,10 +143,13 @@
     <ClInclude Include="vkClasses\ComputeGraphicsPipeline.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ComputeAppTexOut.h">
+    <ClInclude Include="ComputeSSBORays.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="vkClasses\DescriptorSetLayoutRays.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ComputeTexRays.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

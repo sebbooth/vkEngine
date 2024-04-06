@@ -35,13 +35,15 @@ void DescriptorPool::create()
     VkDescriptorPoolSize texturePoolSize{};
 
     if (true) {
-        this->p_TextureImage = std::make_shared<TextureImage>(p_FrameBuffers);
-        p_TextureImage->mipmapsEnabled = true;
-        p_TextureImage->create();
+        if (!p_GraphicsPipeline->simpleShader) {
+            this->p_TextureImage = std::make_shared<TextureImage>(p_FrameBuffers);
+            p_TextureImage->mipmapsEnabled = true;
+            p_TextureImage->create();
 
-        this->p_TextureSampler = std::make_shared<TextureSampler>(p_TextureImage);
-        p_TextureSampler->create();
-
+            this->p_TextureSampler = std::make_shared<TextureSampler>(p_TextureImage);
+            p_TextureSampler->create();
+        }
+        
         texturePoolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         texturePoolSize.descriptorCount = static_cast<uint32_t>(p_FrameBuffers->MAX_FRAMES_IN_FLIGHT);
 
@@ -57,7 +59,6 @@ void DescriptorPool::create()
     maxSets += static_cast<uint32_t>(p_FrameBuffers->MAX_FRAMES_IN_FLIGHT);
 
     poolSizes.push_back(guiPoolSize);
-
 
 
     VkDescriptorPoolCreateInfo poolInfo{};
@@ -93,7 +94,7 @@ void DescriptorPool::destroy()
 
     vkDestroyDescriptorPool(p_LogicalDevice->device, descriptorPool, nullptr);
 
-    if (p_DescriptorSetLayout->samplerEnabled || p_DescriptorSetLayout->guiEnabled) {
+    if ((p_DescriptorSetLayout->samplerEnabled || p_DescriptorSetLayout->guiEnabled) && !p_GraphicsPipeline->simpleShader) {
         vkDestroySampler(p_LogicalDevice->device, p_TextureSampler->textureSampler, nullptr);
         vkDestroyImageView(p_LogicalDevice->device, p_TextureImage->textureImageView, nullptr);
 
