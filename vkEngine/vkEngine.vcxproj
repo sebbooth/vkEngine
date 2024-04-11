@@ -159,6 +159,8 @@
     <ClInclude Include="ComputeApp.h" />
     <ClInclude Include="ComputeSSBORays.h" />
     <ClInclude Include="ComputeTexRays.h" />
+    <ClInclude Include="Octree.h" />
+    <ClInclude Include="OctreeStructs.h" />
     <ClInclude Include="vkClasses\ComputeGraphicsPipeline.h" />
     <ClInclude Include="vkClasses\DescriptorSetLayoutRays.h" />
     <ClInclude Include="vkClasses\Gui.h" />
@@ -200,6 +202,7 @@
     <ClInclude Include="vkUtils\VkStructs.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Octree.cpp" />
     <ClCompile Include="vkClasses\ComputeGraphicsPipeline.cpp" />
     <ClCompile Include="vkClasses\DescriptorSetLayoutRays.cpp" />
     <ClCompile Include="vkClasses\Gui.cpp" />

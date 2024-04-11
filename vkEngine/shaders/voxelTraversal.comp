@@ -1,0 +1,404 @@
+
+
+
+ivec3[8] voxel_traversal(vec3 ray_start, vec3 ray_end, float bin_size) {
+    ivec3 visited_voxels[8];
+    int voxelCount = 0;
+
+    // Compute the current voxel position
+    ivec3 current_voxel = ivec3(floor(ray_start.x / bin_size),
+        floor(ray_start.y / bin_size),
+        floor(ray_start.z / bin_size));
+
+    // Compute the last voxel position
+    ivec3 last_voxel = ivec3(floor(ray_end.x / bin_size),
+        floor(ray_end.y / bin_size),
+        floor(ray_end.z / bin_size));
+
+    // Compute the ray direction
+    vec3 ray = ray_end - ray_start;
+
+    // Determine step direction for voxel ids
+    int stepX = (ray.x >= 0.0) ? 1 : -1;
+    int stepY = (ray.y >= 0.0) ? 1 : -1;
+    int stepZ = (ray.z >= 0.0) ? 1 : -1;
+
+    // Compute distances to next voxel boundaries
+    float next_voxel_boundary_x = float(current_voxel.x + stepX) * bin_size;
+    float next_voxel_boundary_y = float(current_voxel.y + stepY) * bin_size;
+    float next_voxel_boundary_z = float(current_voxel.z + stepZ) * bin_size;
+
+    // Compute distances until next intersection with voxel border
+    float tMaxX = (ray.x != 0.0) ? (next_voxel_boundary_x - ray_start.x) / ray.x : 1e20;
+    float tMaxY = (ray.y != 0.0) ? (next_voxel_boundary_y - ray_start.y) / ray.y : 1e20;
+    float tMaxZ = (ray.z != 0.0) ? (next_voxel_boundary_z - ray_start.z) / ray.z : 1e20;
+
+    // Compute how far along the ray we must move for the horizontal component to equal the width of a voxel
+    float tDeltaX = (ray.x != 0.0) ? bin_size / ray.x * float(stepX) : 1e20;
+    float tDeltaY = (ray.y != 0.0) ? bin_size / ray.y * float(stepY) : 1e20;
+    float tDeltaZ = (ray.z != 0.0) ? bin_size / ray.z * float(stepZ) : 1e20;
+
+    // Loop until the current voxel reaches the last voxel
+    while (current_voxel != last_voxel && voxelCount < 8) {
+        if (tMaxX < tMaxY) {
+            if (tMaxX < tMaxZ) {
+                current_voxel.x += stepX;
+                tMaxX += tDeltaX;
+            }
+            else {
+                current_voxel.z += stepZ;
+                tMaxZ += tDeltaZ;
+            }
+        }
+        else {
+            if (tMaxY < tMaxZ) {
+                current_voxel.y += stepY;
+                tMaxY += tDeltaY;
+            }
+            else {
+                current_voxel.z += stepZ;
+                tMaxZ += tDeltaZ;
+            }
+        }
+        visited_voxels[voxelCount++] = current_voxel;
+    }
+    return visited_voxels;
+}
+
+
+
+
+
+vec3 traverseOctree(vec3 rayOrigin, vec3 rayDir) {
+    vec3 voxelCenter = vec3(octreeSize / 2, octreeSize / 2, octreeSize / 2);
+    vec3 curVoxel = octreeSize * floor(rayOrigin / octreeSize);
+
+    if (curVoxel.x >= 0 && curVoxel.x < octreeSize &&
+        curVoxel.y >= 0 && curVoxel.y < octreeSize &&
+        curVoxel.z >= 0 && curVoxel.z < octreeSize) {
+        return vec3(1, 0, 0);
+    }
+
+    while (dot(rayOrigin - voxelCenter, rayOrigin - voxelCenter) > dot(rayOrigin + rayDir - voxelCenter, rayOrigin + rayDir - voxelCenter)) {
+
+        vec3 curVoxel = octreeSize * floor(rayOrigin / octreeSize);
+
+        if (curVoxel.x >= 0 && curVoxel.x < octreeSize &&
+            curVoxel.y >= 0 && curVoxel.y < octreeSize &&
+            curVoxel.z >= 0 && curVoxel.z < octreeSize) {
+            return vec3(0, 1, 0);
+        }
+        else {
+            rayOrigin += rayDir;
+        }
+    }
+    return vec3(1, 1, 1);
+}
+
+
+
+vec3 voxel_traversal_1(vec3 ray_start, vec3 ray_end, float bin_size) {
+    ivec3 visited_voxels[8];
+    int voxelCount = 0;
+
+    // Compute the current voxel position
+    ivec3 current_voxel = ivec3(floor(ray_start.x / bin_size),
+        floor(ray_start.y / bin_size),
+        floor(ray_start.z / bin_size));
+
+    if (current_voxel == ivec3(0, 0, 0)) {
+        return vec3(0, 1, 0);
+    }
+    // Compute the last voxel position
+    ivec3 last_voxel = ivec3(floor(ray_end.x / bin_size),
+        floor(ray_end.y / bin_size),
+        floor(ray_end.z / bin_size));
+
+    // Compute the ray direction
+    vec3 ray = ray_end - ray_start;
+
+    // Determine step direction for voxel ids
+    int stepX = (ray.x >= 0.0) ? 1 : -1;
+    int stepY = (ray.y >= 0.0) ? 1 : -1;
+    int stepZ = (ray.z >= 0.0) ? 1 : -1;
+
+    // Compute distances to next voxel boundaries
+    float next_voxel_boundary_x = float(current_voxel.x + stepX) * bin_size;
+    float next_voxel_boundary_y = float(current_voxel.y + stepY) * bin_size;
+    float next_voxel_boundary_z = float(current_voxel.z + stepZ) * bin_size;
+
+    // Compute distances until next intersection with voxel border
+    float tMaxX = (ray.x != 0.0) ? (next_voxel_boundary_x - ray_start.x) / ray.x : 1e20;
+    float tMaxY = (ray.y != 0.0) ? (next_voxel_boundary_y - ray_start.y) / ray.y : 1e20;
+    float tMaxZ = (ray.z != 0.0) ? (next_voxel_boundary_z - ray_start.z) / ray.z : 1e20;
+
+    // Compute how far along the ray we must move for the horizontal component to equal the width of a voxel
+    float tDeltaX = (ray.x != 0.0) ? bin_size / ray.x * float(stepX) : 1e20;
+    float tDeltaY = (ray.y != 0.0) ? bin_size / ray.y * float(stepY) : 1e20;
+    float tDeltaZ = (ray.z != 0.0) ? bin_size / ray.z * float(stepZ) : 1e20;
+
+    // Loop until the current voxel reaches the last voxel
+    while (current_voxel != last_voxel && voxelCount < 8) {
+
+        if (tMaxX < tMaxY) {
+            if (tMaxX < tMaxZ) {
+                current_voxel.x += stepX;
+                tMaxX += tDeltaX;
+                if (current_voxel == ivec3(0, 0, 0)) {
+                    return vec3(0.9, 0, 0);
+                }
+            }
+            else {
+                current_voxel.z += stepZ;
+                tMaxZ += tDeltaZ;
+                if (current_voxel == ivec3(0, 0, 0)) {
+                    return vec3(0.7, 0, 0);
+                }
+            }
+        }
+        else {
+            if (tMaxY < tMaxZ) {
+                current_voxel.y += stepY;
+                tMaxY += tDeltaY;
+                if (current_voxel == ivec3(0, 0, 0)) {
+                    return vec3(0.4, 0, 0);
+                }
+            }
+            else {
+                current_voxel.z += stepZ;
+                tMaxZ += tDeltaZ;
+                if (current_voxel == ivec3(0, 0, 0)) {
+                    return vec3(0.7, 0, 0);
+                }
+            }
+        }
+        visited_voxels[voxelCount++] = current_voxel;
+    }
+    return vec3(0, 0, 0);
+}
+
+
+vec3 DDA(vec3 ray_start, vec3 ray_end, vec3 ray_dir, int partitionSize) {
+    // Compute the current voxel position
+    ivec3 current_voxel = ivec3(floor(ray_start.x / partitionSize),
+        floor(ray_start.y / partitionSize),
+        floor(ray_start.z / partitionSize));
+
+    // inside voxel
+    if (current_voxel == ivec3(0, 0, 0)) {  // replace ivec3(0, 0, 0) with position of root voxel
+        return vec3(0, 1, 0);
+    }
+
+    // Compute the last voxel position
+    ivec3 last_voxel = ivec3(floor(ray_end.x / partitionSize),
+        floor(ray_end.y / partitionSize),
+        floor(ray_end.z / partitionSize));
+
+    // Determine step direction for voxel ids
+    int stepX = (ray_dir.x >= 0.0) ? 1 : -1;
+    int stepY = (ray_dir.y >= 0.0) ? 1 : -1;
+    int stepZ = (ray_dir.z >= 0.0) ? 1 : -1;
+
+    // Compute distances to next voxel boundaries
+    float next_voxel_boundary_x = float(current_voxel.x + stepX) * partitionSize;
+    float next_voxel_boundary_y = float(current_voxel.y + stepY) * partitionSize;
+    float next_voxel_boundary_z = float(current_voxel.z + stepZ) * partitionSize;
+
+    // Compute distances until next intersection with voxel border
+    float tMaxX = (ray_dir.x != 0.0) ? (next_voxel_boundary_x - ray_start.x) / ray_dir.x : 1e20;
+    float tMaxY = (ray_dir.y != 0.0) ? (next_voxel_boundary_y - ray_start.y) / ray_dir.y : 1e20;
+    float tMaxZ = (ray_dir.z != 0.0) ? (next_voxel_boundary_z - ray_start.z) / ray_dir.z : 1e20;
+
+    // Compute how far along the ray we must move for the horizontal component to equal the width of a voxel
+    float tDeltaX = (ray_dir.x != 0.0) ? partitionSize / ray_dir.x * float(stepX) : 1e20;
+    float tDeltaY = (ray_dir.y != 0.0) ? partitionSize / ray_dir.y * float(stepY) : 1e20;
+    float tDeltaZ = (ray_dir.z != 0.0) ? partitionSize / ray_dir.z * float(stepZ) : 1e20;
+
+
+    int voxelCount = 0;
+    // Loop until the current voxel reaches the last voxel
+    while (current_voxel != last_voxel && voxelCount < 100) {
+
+        if (tMaxX < tMaxY) {
+            if (tMaxX < tMaxZ) {
+                current_voxel.x += stepX;
+                tMaxX += tDeltaX;
+                if (current_voxel == ivec3(0, 0, 0)) {
+                    return vec3(0.9, 0, 0);
+                }
+            }
+            else {
+                current_voxel.z += stepZ;
+                tMaxZ += tDeltaZ;
+                if (current_voxel == ivec3(0, 0, 0)) {
+                    return vec3(0.7, 0, 0);
+                }
+            }
+        }
+        else {
+            if (tMaxY < tMaxZ) {
+                current_voxel.y += stepY;
+                tMaxY += tDeltaY;
+                if (current_voxel == ivec3(0, 0, 0)) {
+                    return vec3(0.4, 0, 0);
+                }
+            }
+            else {
+                current_voxel.z += stepZ;
+                tMaxZ += tDeltaZ;
+                if (current_voxel == ivec3(0, 0, 0)) {
+                    return vec3(0.7, 0, 0);
+                }
+            }
+        }
+        voxelCount++;
+    }
+    return vec3(0, 0, 0);
+}
+
+
+
+
+vec3 calcDelta(float curPartitionN, float directionN, float startN, int partitionSize) {
+    float nextN;
+
+    if (directionN > 0) {
+        nextN = curPartitionN + partitionSize;
+    }
+    else if (directionN < 0) {
+        nextN = curPartitionN - partitionSize;
+    }
+    else {
+        nextN = curPartitionN;
+    }
+
+    float diffN = nextN - startN;
+    float deltaN = diffN / directionN;
+
+    return vec3(nextN, diffN, deltaN);
+}
+
+vec3 3d_DDA(vec3 start, vec3 end, vec3 dir, int partitionSize) {
+    vec3 curPartition = partitionSize * floor(start / partitionSize);
+
+    vec3 xDeltas = calcDelta(curPartition.x, dir.x, start.x, partitionSize);
+    vec3 yDeltas = calcDelta(curPartition.y, dir.y, start.y, partitionSize);
+    vec3 zDeltas = calcDelta(curPartition.z, dir.z, start.z, partitionSize);
+
+    int smallest;
+    if (xDeltas.z < yDeltas.z) {
+        if (xDeltas.z < zDeltas.z) {
+            vec3 collision = start + xDeltas.z * dir;
+            vec3 nextVoxel = (vec3(dir.x * 0.1, 0, 0) + collision)
+                smallest = 0;
+        }
+        else {
+            vec3 collision = start + zDeltas.z * dir;
+            vec3 nextVoxel = (vec3(dir.z * 0.1, 0, 0) + collision)
+                smallest = 2;
+        }
+    }
+    else if (yDeltas.z < zDeltas.z) {
+        vec3 collision = start + yDeltas.z * dir;
+        vec3 nextVoxel = (vec3(dir.y * 0.1, 0, 0) + collision)
+            smallest = 1;
+    }
+    else {
+        vec3 collision = start + zDeltas.z * dir;
+        vec3 nextVoxel = (vec3(dir.z * 0.1, 0, 0) + collision)
+            smallest = 2;
+    }
+
+    ivec3 coll_voxel = partitionSize * ivec3(floor(nextVoxel.x / partitionSize),
+        floor(nextVoxel.y / partitionSize),
+        floor(nextVoxel.z / partitionSize));
+
+    if (coll_voxel == ivec3(0, 0, 0)) {
+        return vec3(1, 1, 1);
+    }
+    return vec3(0, 0, 0);
+}
+
+
+
+
+
+
+
+
+
+
+vec3 calcDelta(int curPartitionN, float directionN, float startN, int partitionSize) {
+    int nextN;
+    if (directionN > 0) {
+        nextN = curPartitionN + partitionSize;
+    }
+    else if (directionN < 0) {
+        nextN = curPartitionN - partitionSize;
+    }
+    else {
+        nextN = curPartitionN;
+    }
+
+    float diffN = nextN - startN;
+    float deltaN = diffN / directionN;
+    return vec3(nextN, diffN, deltaN);
+}
+
+vec3 nextX(vec3 start, vec3 dir, int partitionSize) {
+    if (dir.x > 0) {
+        nextX =
+    }
+}
+
+vec3 DDA3d(vec3 start, vec3 end, vec3 dir, int partitionSize) {
+    ivec3 curPartition = partitionSize * ivec3(floor(start / partitionSize));
+
+    vec3 xDeltas = calcDelta(curPartition.x, dir.x, start.x, partitionSize);
+    vec3 yDeltas = calcDelta(curPartition.y, dir.y, start.y, partitionSize);
+    vec3 zDeltas = calcDelta(curPartition.z, dir.z, start.z, partitionSize);
+
+    vec3 nextVoxel;
+    vec3 collision = start;
+    vec3 cur = start;
+    float smallest = 1;
+    int i = 0;
+
+    while (i++ < 20) {
+        if (xDeltas.z < yDeltas.z) {
+            if (xDeltas.z < zDeltas.z) {
+                collision = cur + xDeltas.z * dir;
+                nextVoxel = (vec3(dir.x * 0.5, 0, 0) + collision);
+                smallest = 0.7;
+            }
+            else {
+                collision = cur + zDeltas.z * dir;
+                nextVoxel = (vec3(0, 0, dir.z * 0.5) + collision);
+                smallest = 0.9;
+            }
+        }
+        else if (yDeltas.z < zDeltas.z) {
+            collision = cur + yDeltas.z * dir;
+            nextVoxel = (vec3(0, dir.y * 0.5, 0) + collision);
+            smallest = 1;
+        }
+        else {
+            collision = cur + zDeltas.z * dir;
+            nextVoxel = (vec3(0, 0, dir.z * 0.5) + collision);
+            smallest = 0.9;
+        }
+
+        ivec3 coll_voxel = partitionSize * ivec3(floor(nextVoxel.x / partitionSize),
+            floor(nextVoxel.y / partitionSize),
+            floor(nextVoxel.z / partitionSize));
+
+        if (coll_voxel == ivec3(0, 0, 0)) {
+            return smallest * vec3(1, 1, 1);
+        }
+        cur = collision;
+        vec3 xDeltas = calcDelta(coll_voxel.x, dir.x, cur.x, partitionSize);
+        vec3 yDeltas = calcDelta(coll_voxel.y, dir.y, cur.y, partitionSize);
+        vec3 zDeltas = calcDelta(coll_voxel.z, dir.z, cur.z, partitionSize);
+    }
+    return vec3(0, 0, 0);
+}

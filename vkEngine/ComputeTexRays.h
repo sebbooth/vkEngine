@@ -11,6 +11,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/hash.hpp>
+#include "glm/ext.hpp"
 
 #define STB_IMAGE_IMPLEMENTATION
 
@@ -19,6 +20,7 @@
 #include <iomanip> // For std::setw
 
 #include "VkClasses.h"
+#include "Octree.h"
 
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
@@ -45,6 +47,7 @@ const bool enableValidationLayers = true;
 class ComputeTexRays {
 public:
     void run() {
+        createOctree();
         initWindow();
         initVulkan();
         mainLoop();
@@ -191,52 +194,22 @@ private:
     double lastTime = 0.0f;
 
     struct ComputeUniformBufferObject {
+        alignas(16) glm::vec3 camPos = glm::vec3(17.964096, 53.200813, 22.180742);
+        alignas(16) glm::vec3 camDir = glm::vec3(-0.633519, 0.223048, -0.740879);
+        alignas(16) glm::vec3 camUp = glm::vec3(0.069988, 0.970141, 0.232223);
+
+        /*
+        alignas(16) glm::vec3 camPos = glm::vec3(32, 32, -14
+        alignas(16) glm::vec3 camDir = glm::vec3(0, 0, 1);
+        alignas(16) glm::vec3 camUp = glm::vec3(0, 1, 0);
+        */
+
+        /*Cam Pos: vec3(17.964096, 53.200813, 22.180742)
+Cam Dir: vec3(-0.633519, 0.223048, -0.740879)
+Cam Up: vec3(0.069988, 0.970141, 0.232223)*/
         float deltaTime = 1.0f;
         int width = 600;
         int height = 800;
-    };
-
-    struct OctreeNode {
-        unsigned int p0;
-        unsigned int p1;
-        unsigned int p2;
-        unsigned int p3;
-        unsigned int p4;
-        unsigned int p5;
-        unsigned int p6;
-        unsigned int p7;
-    };
-
-
-    struct Particle {
-        glm::vec2 position;
-        glm::vec2 velocity;
-        glm::vec4 color;
-
-        static VkVertexInputBindingDescription getBindingDescription() {
-            VkVertexInputBindingDescription bindingDescription{};
-            bindingDescription.binding = 0;
-            bindingDescription.stride = sizeof(Particle);
-            bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-
-            return bindingDescription;
-        }
-
-        static std::array<VkVertexInputAttributeDescription, 2> getAttributeDescriptions() {
-            std::array<VkVertexInputAttributeDescription, 2> attributeDescriptions{};
-
-            attributeDescriptions[0].binding = 0;
-            attributeDescriptions[0].location = 0;
-            attributeDescriptions[0].format = VK_FORMAT_R32G32_SFLOAT;
-            attributeDescriptions[0].offset = offsetof(Particle, position);
-
-            attributeDescriptions[1].binding = 0;
-            attributeDescriptions[1].location = 1;
-            attributeDescriptions[1].format = VK_FORMAT_R32G32B32A32_SFLOAT;
-            attributeDescriptions[1].offset = offsetof(Particle, color);
-
-            return attributeDescriptions;
-        }
     };
 
     void createComputeDescriptorPool() {
@@ -245,7 +218,7 @@ private:
         poolSizes[0].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
 
         poolSizes[1].type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-        poolSizes[1].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT) * 2;
+        poolSizes[1].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
 
         poolSizes[2].type = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
         poolSizes[2].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
@@ -292,7 +265,7 @@ private:
             VkDescriptorBufferInfo storageBufferInfoLastFrame{};
             storageBufferInfoLastFrame.buffer = shaderStorageBuffers[(i - 1) % MAX_FRAMES_IN_FLIGHT];
             storageBufferInfoLastFrame.offset = 0;
-            storageBufferInfoLastFrame.range = sizeof(Particle) * PARTICLE_COUNT;
+            storageBufferInfoLastFrame.range = sizeof(OctreeNode) * octree.octreeArray.size();
 
             descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
             descriptorWrites[1].dstSet = computeDescriptorSets[i];
@@ -302,37 +275,24 @@ private:
             descriptorWrites[1].descriptorCount = 1;
             descriptorWrites[1].pBufferInfo = &storageBufferInfoLastFrame;
 
-            VkDescriptorBufferInfo storageBufferInfoCurrentFrame{};
-            storageBufferInfoCurrentFrame.buffer = shaderStorageBuffers[i];
-            storageBufferInfoCurrentFrame.offset = 0;
-            storageBufferInfoCurrentFrame.range = sizeof(Particle) * PARTICLE_COUNT;
-
-            descriptorWrites[2].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-            descriptorWrites[2].dstSet = computeDescriptorSets[i];
-            descriptorWrites[2].dstBinding = 2;
-            descriptorWrites[2].dstArrayElement = 0;
-            descriptorWrites[2].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-            descriptorWrites[2].descriptorCount = 1;
-            descriptorWrites[2].pBufferInfo = &storageBufferInfoCurrentFrame;
-
             VkDescriptorImageInfo storageImageInfo{};
             storageImageInfo.imageView = storageImageViews[i];
             storageImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
             
-            descriptorWrites[3].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-            descriptorWrites[3].dstSet = computeDescriptorSets[i];
-            descriptorWrites[3].dstBinding = 3;
-            descriptorWrites[3].dstArrayElement = 0;
-            descriptorWrites[3].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
-            descriptorWrites[3].descriptorCount = 1;
-            descriptorWrites[3].pImageInfo = &storageImageInfo;
+            descriptorWrites[2].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            descriptorWrites[2].dstSet = computeDescriptorSets[i];
+            descriptorWrites[2].dstBinding = 2;
+            descriptorWrites[2].dstArrayElement = 0;
+            descriptorWrites[2].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+            descriptorWrites[2].descriptorCount = 1;
+            descriptorWrites[2].pImageInfo = &storageImageInfo;
          
-            vkUpdateDescriptorSets(p_LogicalDevice->device, 4, descriptorWrites.data(), 0, nullptr);
+            vkUpdateDescriptorSets(p_LogicalDevice->device, 3, descriptorWrites.data(), 0, nullptr);
         }
     }
 
     void createComputeDescriptorSetLayout() {
-        std::array<VkDescriptorSetLayoutBinding, 4> layoutBindings{};
+        std::array<VkDescriptorSetLayoutBinding, 3> layoutBindings{};
         layoutBindings[0].binding = 0;
         layoutBindings[0].descriptorCount = 1;
         layoutBindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -347,19 +307,13 @@ private:
 
         layoutBindings[2].binding = 2;
         layoutBindings[2].descriptorCount = 1;
-        layoutBindings[2].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+        layoutBindings[2].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
         layoutBindings[2].pImmutableSamplers = nullptr;
         layoutBindings[2].stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
 
-        layoutBindings[3].binding = 3;
-        layoutBindings[3].descriptorCount = 1;
-        layoutBindings[3].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
-        layoutBindings[3].pImmutableSamplers = nullptr;
-        layoutBindings[3].stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
-
         VkDescriptorSetLayoutCreateInfo layoutInfo{};
         layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-        layoutInfo.bindingCount = 4;
+        layoutInfo.bindingCount = 3;
         layoutInfo.pBindings = layoutBindings.data();
 
         if (vkCreateDescriptorSetLayout(p_LogicalDevice->device, &layoutInfo, nullptr, &computeDescriptorSetLayout) != VK_SUCCESS) {
@@ -371,6 +325,40 @@ private:
     std::vector<VkDeviceMemory> storageImageMemories;
     std::vector<VkImageView> storageImageViews;
     std::vector<VkSampler> storageImageSamplers;
+    Octree octree;
+
+    void createOctree() {
+        std::random_device rd;  // Seed for random number engine
+        std::mt19937 gen(rd()); // Mersenne Twister random number engine
+        std::uniform_int_distribution<> distribution(1, 100); // Range from 1 to 100
+
+        std::vector<Voxel> testRandomVoxels;
+
+        int depth = 6;
+        int width = pow(2, depth);
+
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < width; y++) {
+                for (int z = 0; z < width; z++) {
+                    if (true || y < width / 2 || ( x < width / 64 && z < width/64 && y < 63)) {
+                        if (distribution(gen) >= 95) {
+                            Voxel voxel{};
+                            voxel.x = x;
+                            voxel.y = y;
+                            voxel.z = z;
+                            voxel.mat = -2;
+                            testRandomVoxels.push_back(voxel);
+                        }
+                        
+                    }
+                }
+            }
+        }
+
+        std::cout << "Chunk Size: " << width << " x " << width << " x " << width << std::endl;
+        octree = Octree(testRandomVoxels, depth);
+        std::cout << "Octree Size: " << octree.octreeArray.size() << std::endl;
+    }
 
     void createStorageImages() {
         storageImages.resize(MAX_FRAMES_IN_FLIGHT);
@@ -421,7 +409,6 @@ private:
             vkFreeMemory(p_LogicalDevice->device, storageImageMemories[i], nullptr);
         }
     }
-
 
     void createTexSampler(VkSampler textureSampler) {
         VkPhysicalDeviceProperties  properties{};
@@ -558,22 +545,7 @@ private:
         shaderStorageBuffers.resize(MAX_FRAMES_IN_FLIGHT);
         shaderStorageBuffersMemory.resize(MAX_FRAMES_IN_FLIGHT);
 
-        std::default_random_engine rndEngine((unsigned)time(nullptr));
-        std::uniform_real_distribution<float> rndDist(0.0f, 1.0f);
-
-        // Initial particle positions on a circle
-        std::vector<Particle> particles(PARTICLE_COUNT);
-        for (auto& particle : particles) {
-            float r = 0.25f * sqrt(rndDist(rndEngine));
-            float theta = rndDist(rndEngine) * 2 * 3.14159265358979323846;
-            float x = r * cos(theta) * HEIGHT / WIDTH;
-            float y = r * sin(theta);
-            particle.position = glm::vec2(x, y);
-            particle.velocity = glm::normalize(glm::vec2(x, y)) * 0.00025f;
-            particle.color = glm::vec4(rndDist(rndEngine), rndDist(rndEngine), rndDist(rndEngine), 1.0f);
-        }
-
-        VkDeviceSize bufferSize = sizeof(Particle) * PARTICLE_COUNT;
+        VkDeviceSize bufferSize = sizeof(OctreeNode) * octree.octreeArray.size();
 
         // Create a staging buffer used to upload data to the gpu
         VkBuffer stagingBuffer;
@@ -582,7 +554,7 @@ private:
 
         void* data;
         vkMapMemory(p_LogicalDevice->device, stagingBufferMemory, 0, bufferSize, 0, &data);
-        memcpy(data, particles.data(), (size_t)bufferSize);
+        memcpy(data, octree.octreeArray.data(), (size_t)bufferSize);
         vkUnmapMemory(p_LogicalDevice->device, stagingBufferMemory);
 
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
@@ -595,7 +567,7 @@ private:
     }
 
     void createComputePipeline() {
-        auto computeShaderCode = readFile("shaders/rays_tex_comp.spv");
+        auto computeShaderCode = readFile("shaders/raycast_comp.spv");
 
         VkShaderModule computeShaderModule = p_GraphicsPipeline->createShaderModule(computeShaderCode);
 
@@ -666,16 +638,82 @@ private:
 
         vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, computePipelineLayout, 0, 1, &computeDescriptorSets[currentFrame], 0, nullptr);
 
-        vkCmdDispatch(commandBuffer, p_SwapChain->swapChainExtent.width * p_SwapChain->swapChainExtent.height / 256, 1, 1);
+        vkCmdDispatch(commandBuffer, std::ceil(p_SwapChain->swapChainExtent.width * p_SwapChain->swapChainExtent.height / 256), 1, 1);
 
         if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
             throw std::runtime_error("failed to record compute command buffer!");
         }
     }
 
+    ComputeUniformBufferObject ubo{};
+    float rotateSpeed = 0.001;
+    float moveSpeed = 0.05;
+    bool p_Clicked = false;
+    
+    double cursorX = -999;
+    double cursorY = -999;
+    double prevCursorX = cursorX;
+    double prevCursorY = cursorY;
+
     void updateComputeUniformBuffer(uint32_t currentImage) {
-        ComputeUniformBufferObject ubo{};
         ubo.deltaTime = lastFrameTime * 2.0f;
+
+        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+            glm::vec3 camLeft = glm::cross(ubo.camUp, ubo.camDir);
+            ubo.camPos += ubo.deltaTime * moveSpeed * camLeft;
+        }
+        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+            glm::vec3 camLeft = glm::cross(ubo.camUp, ubo.camDir);
+            ubo.camPos -= ubo.deltaTime * moveSpeed * camLeft;
+        }
+        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+            ubo.camPos += ubo.deltaTime * moveSpeed * ubo.camDir;
+        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+            ubo.camPos -= ubo.deltaTime * moveSpeed * ubo.camDir;
+        if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
+            ubo.camPos += ubo.deltaTime * moveSpeed * ubo.camUp;
+        if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS)
+            ubo.camPos -= ubo.deltaTime * moveSpeed * ubo.camUp;
+
+        if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS) {
+            p_Clicked = true;
+        }
+        if (glfwGetKey(window, GLFW_KEY_P) == GLFW_RELEASE && p_Clicked) {
+            std::cout << "\nCam Pos: " << glm::to_string(ubo.camPos);
+            std::cout << "\nCam Dir: " << glm::to_string(ubo.camDir);
+            std::cout << "\nCam Up: " << glm::to_string(ubo.camUp) << "\n";
+            p_Clicked = false;
+        }
+
+
+
+        if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+            float deltaX = 0;
+            float deltaY = 0;
+
+            glfwGetCursorPos(window, &cursorX, &cursorY);
+            if (!(prevCursorX == -999 && prevCursorY == -999)) {
+                deltaX = prevCursorX - cursorX;
+                deltaY = prevCursorY - cursorY;
+            }
+            prevCursorX = cursorX;
+            prevCursorY = cursorY;
+
+            glm::mat4 rotationMat(1);
+            rotationMat = glm::rotate(rotationMat, rotateSpeed * deltaX * ubo.deltaTime, ubo.camUp);
+            ubo.camDir = glm::vec3(rotationMat * glm::vec4(ubo.camDir, 1.0));
+
+            rotationMat = glm::mat4(1);
+            glm::vec3 camLeft = glm::cross(ubo.camUp, ubo.camDir);
+            rotationMat = glm::rotate(rotationMat, -rotateSpeed * deltaY * ubo.deltaTime, camLeft);
+            ubo.camDir = glm::vec3(rotationMat * glm::vec4(ubo.camDir, 1.0));
+            ubo.camUp = glm::vec3(rotationMat * glm::vec4(ubo.camUp, 1.0));
+        }
+        else {
+            prevCursorX = -999;
+            prevCursorY = -999;
+        }
+        
         ubo.height = p_SwapChain->swapChainExtent.height;
         ubo.width = p_SwapChain->swapChainExtent.width;
         memcpy(computeUniformBuffersMapped[currentImage], &ubo, sizeof(ubo));
@@ -690,6 +728,7 @@ private:
             auto start = std::chrono::high_resolution_clock::now();
 
             glfwPollEvents();
+           
             drawFrame();
             double currentTime = glfwGetTime();
             lastFrameTime = (currentTime - lastTime) * 1000.0;

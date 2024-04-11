@@ -1,0 +1,96 @@
+#version 450
+
+struct Particle {
+    vec2 position;
+    vec2 velocity;
+    vec4 color;
+};
+
+layout(binding = 0) uniform ParameterUBO {
+    vec3 camPos;
+    vec3 camDir;
+    vec3 camUp;
+
+    float deltaTime;
+    int screenWidth;
+    int screenHeight;
+} ubo;
+
+layout(std140, binding = 1) readonly buffer ParticleSSBOIn {
+    Particle particlesIn[];
+};
+
+layout(std140, binding = 2) buffer ParticleSSBOOut {
+    Particle particlesOut[];
+};
+
+layout(binding = 3, rgba8) uniform writeonly image2D outputImage;
+
+layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
+
+float aspectRatio = float(ubo.screenWidth) / float(ubo.screenHeight);
+float focalLength = 1.0;
+float viewportHeight = 2.0;
+float viewportWidth = viewportHeight * aspectRatio;
+float viewportV = viewportHeight / float(ubo.screenHeight);
+float viewportU = viewportWidth / float(ubo.screenWidth);
+float inf = 1.0 / 0.0;
+
+vec3 camRight = -normalize(cross(ubo.camDir, ubo.camUp));
+vec3 viewportCenter = ubo.camPos + ubo.camDir * focalLength;
+vec3 topLeft = viewportCenter + ubo.camUp * 0.5 * viewportHeight - camRight * 0.5 * viewportWidth;
+
+float hit_sphere(vec3 center, float radius, vec3 rayDir, vec3 rayOrigin) {
+    vec3 oc = rayOrigin - center;
+    float a = dot(rayDir, rayDir);
+    float half_b = dot(oc, rayDir);
+    float c = dot(oc, oc) - radius * radius;
+    float discriminant = half_b * half_b - a * c;
+    if (discriminant < 0) {
+        return -1.0;
+    }
+    else {
+        return (-half_b - sqrt(discriminant)) / a;
+    }
+}
+
+vec3 ray_color(vec3 rayDir, vec3 rayOrigin) {
+    float t = inf;
+    vec3 center;
+    for (int i = 0; i < 20; i++) {
+        for (int j = 0; j < 20; j++) {
+            vec3 sphereCenter = vec3(10-i, 0, 2 - j);
+            float tPrime = hit_sphere(sphereCenter, 0.40, rayDir, rayOrigin);
+
+            if (tPrime < t && tPrime > 0.0) {
+                t = tPrime;
+                center = sphereCenter;
+            }
+        }
+    }
+
+    if (t != inf && t > 0.0) {
+        vec3 N = normalize((rayOrigin + t * rayDir) - center);
+        return 0.5 * (N + vec3(1,1,1));
+    }
+      
+    float a = 0.5 * (normalize(rayDir).y + 1.0);
+    return (1.0 - a) * vec3(1.0, 1.0, 1.0) + a * vec3(0.5, 0.7, 1.0);
+}
+
+void main() {
+    uint index = gl_GlobalInvocationID.x;
+ 
+    int screenX = ubo.screenWidth - int(mod(index, ubo.screenWidth));
+    int screenY = ubo.screenHeight - int(floor(index / ubo.screenWidth));
+
+    ivec2 texPos = ivec2(screenX, screenY);
+   
+    vec3 pixelCenter = topLeft - (viewportV * ubo.camUp * screenY) + (viewportU * camRight * screenX);
+
+    vec3 rayDir = pixelCenter - ubo.camPos;
+
+    vec3 pixelColor = ray_color(rayDir, ubo.camPos);
+
+    imageStore(outputImage, texPos, vec4(pixelColor, 1.0));
+}

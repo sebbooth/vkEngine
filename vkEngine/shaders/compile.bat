@@ -19,4 +19,5 @@ C:/VulkanSDK/1.3.275.0/Bin/glslc.exe raytracer.frag -o rays_frag.spv
 C:/VulkanSDK/1.3.275.0/Bin/glslc.exe raytracer.comp -o rays_comp.spv
 
 C:/VulkanSDK/1.3.275.0/Bin/glslc.exe raytracerToTex.comp -o rays_tex_comp.spv
+C:/VulkanSDK/1.3.275.0/Bin/glslc.exe raycaster.comp -o raycast_comp.spv
 pause
