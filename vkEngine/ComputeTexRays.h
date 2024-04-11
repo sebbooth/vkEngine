@@ -340,17 +340,14 @@ Cam Up: vec3(0.069988, 0.970141, 0.232223)*/
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < width; y++) {
                 for (int z = 0; z < width; z++) {
-                    if (true || y < width / 2 || ( x < width / 64 && z < width/64 && y < 63)) {
-                        if (distribution(gen) >= 95) {
-                            Voxel voxel{};
-                            voxel.x = x;
-                            voxel.y = y;
-                            voxel.z = z;
-                            voxel.mat = -2;
-                            testRandomVoxels.push_back(voxel);
-                        }
-                        
-                    }
+                    if (distribution(gen) >= 50) {
+                        Voxel voxel{};
+                        voxel.x = x;
+                        voxel.y = y;
+                        voxel.z = z;
+                        voxel.mat = -2;
+                        testRandomVoxels.push_back(voxel);
+                    }                        
                 }
             }
         }
