@@ -21,6 +21,8 @@
 
 #include "VkClasses.h"
 #include "Octree.h"
+#include "Perlin.h"
+#include "SimplexNoise.h"
 
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
@@ -194,22 +196,29 @@ private:
     double lastTime = 0.0f;
 
     struct ComputeUniformBufferObject {
-        alignas(16) glm::vec3 camPos = glm::vec3(17.964096, 53.200813, 22.180742);
-        alignas(16) glm::vec3 camDir = glm::vec3(-0.633519, 0.223048, -0.740879);
-        alignas(16) glm::vec3 camUp = glm::vec3(0.069988, 0.970141, 0.232223);
-
         /*
-        alignas(16) glm::vec3 camPos = glm::vec3(32, 32, -14
+        alignas(16) glm::vec3 camPos = glm::vec3(32, 32, -14);
         alignas(16) glm::vec3 camDir = glm::vec3(0, 0, 1);
         alignas(16) glm::vec3 camUp = glm::vec3(0, 1, 0);
         */
 
-        /*Cam Pos: vec3(17.964096, 53.200813, 22.180742)
-Cam Dir: vec3(-0.633519, 0.223048, -0.740879)
-Cam Up: vec3(0.069988, 0.970141, 0.232223)*/
+        alignas(16) glm::vec3 camPos = glm::vec3(577.516724, 565.847046, 484.979584);
+        alignas(16) glm::vec3 camDir = glm::vec3(-0.647795, -0.570642, -0.504715);
+        alignas(16) glm::vec3 camUp = glm::vec3(-0.557979, 0.806464, -0.195643);
+        /*
+        Cam Pos: vec3(577.516724, 565.847046, 484.979584)
+Cam Dir: vec3(-0.647795, -0.570642, -0.504715)
+Cam Up: vec3(-0.557979, 0.806464, -0.195643)
+*/
+
+
+        alignas(16) glm::vec3 sunDir = glm::vec3(-1,-2,-3);
+
         float deltaTime = 1.0f;
         int width = 600;
         int height = 800;
+        int octreeSize;
+        int octreeMaxDepth;
     };
 
     void createComputeDescriptorPool() {
@@ -326,33 +335,77 @@ Cam Up: vec3(0.069988, 0.970141, 0.232223)*/
     std::vector<VkImageView> storageImageViews;
     std::vector<VkSampler> storageImageSamplers;
     Octree octree;
-
+    int octreeDepth = 7;
+    int octreeWidth = pow(2, octreeDepth);
+    bool visualizeOctree = false;
+    bool terrain = true;
+    bool shadows = true;
     void createOctree() {
+
+        int depth = octreeDepth;
+        int width = octreeWidth;
+
+        Perlin perlinGenerator;
+        perlinGenerator.layers = octreeDepth-1;
+        perlinGenerator.init_amp = 2;
+        perlinGenerator.grid_size = width * 2;
+
+        SimplexNoise simplexNoiseGenerator = SimplexNoise(8.0f, 3.0f, 3.0f, 0.1f);
+
+
+
         std::random_device rd;  // Seed for random number engine
         std::mt19937 gen(rd()); // Mersenne Twister random number engine
-        std::uniform_int_distribution<> distribution(1, 100); // Range from 1 to 100
+        std::uniform_int_distribution<> distribution(-.05 * octreeWidth, .05 * octreeWidth); // Range from 1 to 100
+        std::uniform_int_distribution<> materialDist(0, 5); // Range from 1 to 100
 
         std::vector<Voxel> testRandomVoxels;
 
-        int depth = 6;
-        int width = pow(2, depth);
+        std::cout << "Generating Random Voxels... " << std::endl;
+
 
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < width; y++) {
                 for (int z = 0; z < width; z++) {
-                    if (distribution(gen) >= 50) {
-                        Voxel voxel{};
-                        voxel.x = x;
-                        voxel.y = y;
-                        voxel.z = z;
-                        voxel.mat = -2;
-                        testRandomVoxels.push_back(voxel);
-                    }                        
+                    if (terrain) {
+                        float perlinVal = perlinGenerator.perlin2D(x, z);
+                        float simplex = simplexNoiseGenerator.fractal(5, (float)x / width, (float)y / width, (float)z / width);
+
+                        int yThreshold = (int)(perlinVal * width);
+                        if (y < yThreshold && simplex < 0.5f) {
+                            Voxel voxel{};
+                            voxel.x = x;
+                            voxel.y = y;
+                            voxel.z = z;
+                            voxel.mat = -2 - materialDist(gen);   // -2 - -7 grass
+                            if (y < yThreshold - 6) {
+                                voxel.mat = -8 - materialDist(gen);   // -8 - -13 stone
+                            }
+                            if (y > distribution(gen) + (width * 0.55)) {
+                                voxel.mat = -8 - materialDist(gen);
+                            }
+                            if (y > distribution(gen) + (width * 0.70)) {
+                                voxel.mat = -14 - materialDist(gen);  // -14 - -19 snow
+                            }
+                            testRandomVoxels.push_back(voxel);
+                        }
+                    }
+                    else {
+                        float simplex = simplexNoiseGenerator.fractal(5, (float)x / width, (float)y / width, (float)z / width);
+                        if (simplex > 0.7f) {
+                            Voxel voxel{};
+                            voxel.x = x;
+                            voxel.y = y;
+                            voxel.z = z;
+                            voxel.mat = -2 - materialDist(gen);   // -2 - -7 grass
+                            testRandomVoxels.push_back(voxel);
+                        }
+                    }                    
                 }
             }
         }
 
-        std::cout << "Chunk Size: " << width << " x " << width << " x " << width << std::endl;
+        std::cout << "Generating SVO Chunk Size: " << width << " x " << width << " x " << width << std::endl;
         octree = Octree(testRandomVoxels, depth);
         std::cout << "Octree Size: " << octree.octreeArray.size() << std::endl;
     }
@@ -565,6 +618,8 @@ Cam Up: vec3(0.069988, 0.970141, 0.232223)*/
 
     void createComputePipeline() {
         auto computeShaderCode = readFile("shaders/raycast_comp.spv");
+        if (shadows) computeShaderCode = readFile("shaders/shadowRays.spv");
+        if (visualizeOctree) computeShaderCode = readFile("shaders/raycast_vis_comp.spv");
 
         VkShaderModule computeShaderModule = p_GraphicsPipeline->createShaderModule(computeShaderCode);
 
@@ -643,7 +698,7 @@ Cam Up: vec3(0.069988, 0.970141, 0.232223)*/
     }
 
     ComputeUniformBufferObject ubo{};
-    float rotateSpeed = 0.001;
+    float rotateSpeed = 0.01;
     float moveSpeed = 0.05;
     bool p_Clicked = false;
     
@@ -653,7 +708,13 @@ Cam Up: vec3(0.069988, 0.970141, 0.232223)*/
     double prevCursorY = cursorY;
 
     void updateComputeUniformBuffer(uint32_t currentImage) {
+        ubo.octreeSize = octreeWidth;
+        ubo.octreeMaxDepth = octreeDepth;
         ubo.deltaTime = lastFrameTime * 2.0f;
+
+        glm::mat4 rotationMat(1);
+        rotationMat = glm::rotate(rotationMat, 0.0001f * ubo.deltaTime, glm::vec3(0,1,0));
+        ubo.sunDir = glm::vec3(rotationMat * glm::vec4(ubo.sunDir, 1.0));
 
         if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
             glm::vec3 camLeft = glm::cross(ubo.camUp, ubo.camDir);
@@ -697,12 +758,12 @@ Cam Up: vec3(0.069988, 0.970141, 0.232223)*/
             prevCursorY = cursorY;
 
             glm::mat4 rotationMat(1);
-            rotationMat = glm::rotate(rotationMat, rotateSpeed * deltaX * ubo.deltaTime, ubo.camUp);
+            rotationMat = glm::rotate(rotationMat, rotateSpeed * deltaX, ubo.camUp);
             ubo.camDir = glm::vec3(rotationMat * glm::vec4(ubo.camDir, 1.0));
 
             rotationMat = glm::mat4(1);
             glm::vec3 camLeft = glm::cross(ubo.camUp, ubo.camDir);
-            rotationMat = glm::rotate(rotationMat, -rotateSpeed * deltaY * ubo.deltaTime, camLeft);
+            rotationMat = glm::rotate(rotationMat, -rotateSpeed * deltaY, camLeft);
             ubo.camDir = glm::vec3(rotationMat * glm::vec4(ubo.camDir, 1.0));
             ubo.camUp = glm::vec3(rotationMat * glm::vec4(ubo.camUp, 1.0));
         }

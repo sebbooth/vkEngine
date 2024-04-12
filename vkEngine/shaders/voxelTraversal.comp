@@ -321,7 +321,11 @@ vec3 3d_DDA(vec3 start, vec3 end, vec3 dir, int partitionSize) {
 
 
 
-
+bool voxelInParent(vec3 child, ivec3 parent, ivec3 parentEnds) {
+    return (child.x >= parent.x && child.x <= parentEnds.x &&
+            child.y >= parent.y && child.y <= parentEnds.y &&
+            child.z >= parent.z && child.z <= parentEnds.z);
+}
 
 
 

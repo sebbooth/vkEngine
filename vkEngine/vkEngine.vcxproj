@@ -161,6 +161,8 @@
     <ClInclude Include="ComputeTexRays.h" />
     <ClInclude Include="Octree.h" />
     <ClInclude Include="OctreeStructs.h" />
+    <ClInclude Include="Perlin.h" />
+    <ClInclude Include="SimplexNoise.h" />
     <ClInclude Include="vkClasses\ComputeGraphicsPipeline.h" />
     <ClInclude Include="vkClasses\DescriptorSetLayoutRays.h" />
     <ClInclude Include="vkClasses\Gui.h" />
@@ -203,6 +205,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Octree.cpp" />
+    <ClCompile Include="Perlin.cpp" />
+    <ClCompile Include="SimplexNoise.cpp" />
     <ClCompile Include="vkClasses\ComputeGraphicsPipeline.cpp" />
     <ClCompile Include="vkClasses\DescriptorSetLayoutRays.cpp" />
     <ClCompile Include="vkClasses\Gui.cpp" />
