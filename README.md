@@ -2,6 +2,20 @@
 
 (name for now cause naming things is hard)
 
+## 2024-04-12
+
+With the now functional raycaster, I implemented some terrain generation with perlin noise, and added colours to the voxels. Also made a shader for visualizing the octree structure, and one with simple ray-traced shadows.
+
+Going to be doing a full rewrite of my Vulkan code next, since the class structure I implemented at first doesn't lend well to the pipeline I'm currently using (everything's very spaghetti right now). Once that's done, I will probably get to work on a new GUI system or try chunk-loading.
+
+| Perlin Noise Terrain                       | Octree Visualization                          |
+| ------------------------------------------ | --------------------------------------------- |
+| ![Terrain Generation](readme/terrain1.png) | ![Octree Visualization](readme/octreevis.png) |
+
+#### Ray-tracing shadows:
+
+![Shadow Rays](readme/shadows.gif)
+
 ## 2024-04-10
 
 After wayyy too much wrestling with compute shaders, finally got a working implementation of a raycaster that traverses a sparse voxel octree. The CPU-side octree building was pretty straight-forward. The algorithm I have now is pretty naive and slow, so I'll need to make changes to handle fast updates to the tree down the line when implementing voxel breaking/building. I ran into a ridiculous number of bugs while implementing the octree traversal in my compute shader, but I have a working implementation now, and can work on optimizing and adding new features (lighting, shadows, materials, etc.).

@@ -38,84 +38,6 @@
     <ClInclude Include="vkUtils\VkStructs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="vkClasses\ColorResources.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vkClasses\CommandBuffers.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vkClasses\CommandPool.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vkClasses\DepthResources.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vkClasses\DescriptorPool.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vkClasses\DescriptorSetLayout.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vkClasses\DescriptorSets.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vkClasses\FrameBuffers.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vkClasses\GraphicsPipeline.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vkClasses\ImageViews.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vkClasses\IndexBuffer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vkClasses\Instance.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vkClasses\LogicalDevice.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vkClasses\Model.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vkClasses\PhysicalDevice.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vkClasses\RenderPass.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vkClasses\Surface.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vkClasses\SwapChain.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vkClasses\SyncObjects.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vkClasses\TextureImage.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vkClasses\TextureSampler.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vkClasses\UniformBuffers.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vkClasses\VertexBuffer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vkClasses\VkClasses.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ComputeApp.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vkClasses\Gui.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="vendor\imgui-1.90.4\imgui.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -137,108 +59,21 @@
     <ClInclude Include="vendor\imgui-1.90.4\imstb_truetype.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GraphicsApp.h">
+    <ClInclude Include="vkClassesReWrite\Instance.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="vkClasses\ComputeGraphicsPipeline.h">
+    <ClInclude Include="testRewrite.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ComputeSSBORays.h">
+    <ClInclude Include="vkClassesReWrite\VkClassesReWrite.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="vkClasses\DescriptorSetLayoutRays.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ComputeTexRays.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Octree.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="OctreeStructs.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Perlin.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="SimplexNoise.h">
+    <ClInclude Include="vkClassesReWrite\Surface.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="vkClasses\ColorResources.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="vkClasses\CommandBuffers.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="vkClasses\CommandPool.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="vkClasses\DepthResources.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="vkClasses\DescriptorPool.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="vkClasses\DescriptorSetLayout.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="vkClasses\DescriptorSets.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="vkClasses\FrameBuffers.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="vkClasses\GraphicsPipeline.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="vkClasses\ImageViews.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="vkClasses\IndexBuffer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="vkClasses\Instance.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="vkClasses\LogicalDevice.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="vkClasses\Model.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="vkClasses\PhysicalDevice.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="vkClasses\RenderPass.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="vkClasses\Surface.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="vkClasses\SwapChain.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="vkClasses\SyncObjects.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="vkClasses\TextureImage.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="vkClasses\TextureSampler.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="vkClasses\UniformBuffers.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="vkClasses\VertexBuffer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="vkClasses\Gui.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="vendor\imgui-1.90.4\imgui.cpp">
@@ -262,19 +97,10 @@
     <ClCompile Include="vendor\imgui-1.90.4\imgui_widgets.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="vkClasses\ComputeGraphicsPipeline.cpp">
+    <ClCompile Include="vkClassesReWrite\Instance.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="vkClasses\DescriptorSetLayoutRays.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Octree.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Perlin.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="SimplexNoise.cpp">
+    <ClCompile Include="vkClassesReWrite\Surface.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

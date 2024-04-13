@@ -335,7 +335,7 @@ Cam Up: vec3(-0.557979, 0.806464, -0.195643)
     std::vector<VkImageView> storageImageViews;
     std::vector<VkSampler> storageImageSamplers;
     Octree octree;
-    int octreeDepth = 7;
+    int octreeDepth = 9;
     int octreeWidth = pow(2, octreeDepth);
     bool visualizeOctree = false;
     bool terrain = true;

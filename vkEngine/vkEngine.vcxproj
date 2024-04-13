@@ -76,7 +76,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)vkEngine\vendor\imgui-1.90.4;$(SolutionDir)vkEngine\vkUtils;$(SolutionDir)vkEngine\vkClasses;$(SolutionDir)vkEngine\vendor\tinyobjloader;$(SolutionDir)vkEngine\vendor\stb;$(SolutionDir)vkEngine\vendor\glfw-3.4.bin.WIN64\include;$(SolutionDir)vkEngine\vendor\glm-1.0.1;C:\VulkanSDK\1.3.275.0\Include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)vkEngine\vendor\imgui-1.90.4;$(SolutionDir)vkEngine\vkUtils;$(SolutionDir)vkEngine\vkClassesReWrite;$(SolutionDir)vkEngine\vendor\tinyobjloader;$(SolutionDir)vkEngine\vendor\stb;$(SolutionDir)vkEngine\vendor\glfw-3.4.bin.WIN64\include;$(SolutionDir)vkEngine\vendor\glm-1.0.1;C:\VulkanSDK\1.3.275.0\Include</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <PreprocessToFile>false</PreprocessToFile>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
@@ -96,7 +96,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)vkEngine\vendor\imgui-1.90.4;$(SolutionDir)vkEngine\vkUtils;$(SolutionDir)vkEngine\vkClasses;$(SolutionDir)vkEngine\vendor\tinyobjloader;$(SolutionDir)vkEngine\vendor\stb;$(SolutionDir)vkEngine\vendor\glfw-3.4.bin.WIN64\include;$(SolutionDir)vkEngine\vendor\glm-1.0.1;C:\VulkanSDK\1.3.275.0\Include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)vkEngine\vendor\imgui-1.90.4;$(SolutionDir)vkEngine\vkUtils;$(SolutionDir)vkEngine\vkClassesReWrite;$(SolutionDir)vkEngine\vendor\tinyobjloader;$(SolutionDir)vkEngine\vendor\stb;$(SolutionDir)vkEngine\vendor\glfw-3.4.bin.WIN64\include;$(SolutionDir)vkEngine\vendor\glm-1.0.1;C:\VulkanSDK\1.3.275.0\Include</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <PreprocessToFile>false</PreprocessToFile>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
@@ -116,7 +116,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)vkEngine\vendor\imgui-1.90.4;$(SolutionDir)vkEngine\vkUtils;$(SolutionDir)vkEngine\vkClasses;$(SolutionDir)vkEngine\vendor\tinyobjloader;$(SolutionDir)vkEngine\vendor\stb;$(SolutionDir)vkEngine\vendor\glfw-3.4.bin.WIN64\include;$(SolutionDir)vkEngine\vendor\glm-1.0.1;C:\VulkanSDK\1.3.275.0\Include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)vkEngine\vendor\imgui-1.90.4;$(SolutionDir)vkEngine\vkUtils;$(SolutionDir)vkEngine\vkClassesReWrite;$(SolutionDir)vkEngine\vendor\tinyobjloader;$(SolutionDir)vkEngine\vendor\stb;$(SolutionDir)vkEngine\vendor\glfw-3.4.bin.WIN64\include;$(SolutionDir)vkEngine\vendor\glm-1.0.1;C:\VulkanSDK\1.3.275.0\Include</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <PreprocessToFile>false</PreprocessToFile>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
@@ -136,7 +136,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)vkEngine\vendor\imgui-1.90.4;$(SolutionDir)vkEngine\vkUtils;$(SolutionDir)vkEngine\vkClasses;$(SolutionDir)vkEngine\vendor\tinyobjloader;$(SolutionDir)vkEngine\vendor\stb;$(SolutionDir)vkEngine\vendor\glfw-3.4.bin.WIN64\include;$(SolutionDir)vkEngine\vendor\glm-1.0.1;C:\VulkanSDK\1.3.275.0\Include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)vkEngine\vendor\imgui-1.90.4;$(SolutionDir)vkEngine\vkUtils;$(SolutionDir)vkEngine\vkClassesReWrite;$(SolutionDir)vkEngine\vendor\tinyobjloader;$(SolutionDir)vkEngine\vendor\stb;$(SolutionDir)vkEngine\vendor\glfw-3.4.bin.WIN64\include;$(SolutionDir)vkEngine\vendor\glm-1.0.1;C:\VulkanSDK\1.3.275.0\Include</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <PreprocessToFile>false</PreprocessToFile>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
@@ -156,16 +156,10 @@
     <None Include="shaders\HelloTriangle.vert" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ComputeApp.h" />
-    <ClInclude Include="ComputeSSBORays.h" />
-    <ClInclude Include="ComputeTexRays.h" />
-    <ClInclude Include="Octree.h" />
-    <ClInclude Include="OctreeStructs.h" />
-    <ClInclude Include="Perlin.h" />
-    <ClInclude Include="SimplexNoise.h" />
-    <ClInclude Include="vkClasses\ComputeGraphicsPipeline.h" />
-    <ClInclude Include="vkClasses\DescriptorSetLayoutRays.h" />
-    <ClInclude Include="vkClasses\Gui.h" />
+    <ClInclude Include="testRewrite.h" />
+    <ClInclude Include="vkClassesReWrite\Instance.h" />
+    <ClInclude Include="vkClassesReWrite\Surface.h" />
+    <ClInclude Include="vkClassesReWrite\VkClassesReWrite.h" />
     <ClInclude Include="vendor\imgui-1.90.4\imgui.h" />
     <ClInclude Include="vendor\imgui-1.90.4\imgui_impl_glfw.h" />
     <ClInclude Include="vendor\imgui-1.90.4\imgui_impl_vulkan.h" />
@@ -174,42 +168,12 @@
     <ClInclude Include="vendor\imgui-1.90.4\imstb_textedit.h" />
     <ClInclude Include="vendor\imgui-1.90.4\imstb_truetype.h" />
     <ClInclude Include="vendor\stb\stb_image.h" />
-    <ClInclude Include="vkClasses\ColorResources.h" />
-    <ClInclude Include="vkClasses\CommandBuffers.h" />
-    <ClInclude Include="vkClasses\CommandPool.h" />
-    <ClInclude Include="vkClasses\DepthResources.h" />
-    <ClInclude Include="vkClasses\DescriptorPool.h" />
-    <ClInclude Include="vkClasses\DescriptorSetLayout.h" />
-    <ClInclude Include="vkClasses\DescriptorSets.h" />
-    <ClInclude Include="vkClasses\FrameBuffers.h" />
-    <ClInclude Include="vkClasses\GraphicsPipeline.h" />
-    <ClInclude Include="vkClasses\ImageViews.h" />
-    <ClInclude Include="vkClasses\IndexBuffer.h" />
-    <ClInclude Include="vkClasses\Instance.h" />
-    <ClInclude Include="vkClasses\LogicalDevice.h" />
-    <ClInclude Include="vkClasses\Model.h" />
-    <ClInclude Include="vkClasses\PhysicalDevice.h" />
-    <ClInclude Include="vkClasses\RenderPass.h" />
-    <ClInclude Include="vkClasses\Surface.h" />
-    <ClInclude Include="vkClasses\SwapChain.h" />
-    <ClInclude Include="vkClasses\SyncObjects.h" />
-    <ClInclude Include="vkClasses\TextureImage.h" />
-    <ClInclude Include="vkClasses\TextureSampler.h" />
-    <ClInclude Include="vkClasses\UniformBuffers.h" />
-    <ClInclude Include="vkClasses\VertexBuffer.h" />
-    <ClInclude Include="vkClasses\VkClasses.h" />
-    <ClInclude Include="GraphicsApp.h" />
     <ClInclude Include="vkUtils\FileUtils.h" />
     <ClInclude Include="vkUtils\SwapChainUtils.h" />
     <ClInclude Include="vkUtils\VkStructs.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Octree.cpp" />
-    <ClCompile Include="Perlin.cpp" />
-    <ClCompile Include="SimplexNoise.cpp" />
-    <ClCompile Include="vkClasses\ComputeGraphicsPipeline.cpp" />
-    <ClCompile Include="vkClasses\DescriptorSetLayoutRays.cpp" />
-    <ClCompile Include="vkClasses\Gui.cpp" />
+    <ClCompile Include="vkClassesReWrite\Instance.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="vendor\imgui-1.90.4\imgui.cpp" />
     <ClCompile Include="vendor\imgui-1.90.4\imgui_demo.cpp" />
@@ -218,29 +182,7 @@
     <ClCompile Include="vendor\imgui-1.90.4\imgui_impl_vulkan.cpp" />
     <ClCompile Include="vendor\imgui-1.90.4\imgui_tables.cpp" />
     <ClCompile Include="vendor\imgui-1.90.4\imgui_widgets.cpp" />
-    <ClCompile Include="vkClasses\ColorResources.cpp" />
-    <ClCompile Include="vkClasses\CommandBuffers.cpp" />
-    <ClCompile Include="vkClasses\CommandPool.cpp" />
-    <ClCompile Include="vkClasses\DepthResources.cpp" />
-    <ClCompile Include="vkClasses\DescriptorPool.cpp" />
-    <ClCompile Include="vkClasses\DescriptorSetLayout.cpp" />
-    <ClCompile Include="vkClasses\DescriptorSets.cpp" />
-    <ClCompile Include="vkClasses\FrameBuffers.cpp" />
-    <ClCompile Include="vkClasses\GraphicsPipeline.cpp" />
-    <ClCompile Include="vkClasses\ImageViews.cpp" />
-    <ClCompile Include="vkClasses\IndexBuffer.cpp" />
-    <ClCompile Include="vkClasses\Instance.cpp" />
-    <ClCompile Include="vkClasses\LogicalDevice.cpp" />
-    <ClCompile Include="vkClasses\Model.cpp" />
-    <ClCompile Include="vkClasses\PhysicalDevice.cpp" />
-    <ClCompile Include="vkClasses\RenderPass.cpp" />
-    <ClCompile Include="vkClasses\Surface.cpp" />
-    <ClCompile Include="vkClasses\SwapChain.cpp" />
-    <ClCompile Include="vkClasses\SyncObjects.cpp" />
-    <ClCompile Include="vkClasses\TextureImage.cpp" />
-    <ClCompile Include="vkClasses\TextureSampler.cpp" />
-    <ClCompile Include="vkClasses\UniformBuffers.cpp" />
-    <ClCompile Include="vkClasses\VertexBuffer.cpp" />
+    <ClCompile Include="vkClassesReWrite\Surface.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
