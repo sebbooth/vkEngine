@@ -1,15 +1,13 @@
 #include "Instance.h"
 
-Instance::Instance(bool enableValidationLayers, std::vector<const char*> validationLayers, std::vector<const char*> deviceExtensions)
+Instance::Instance(std::shared_ptr<RenderingSettings> rs)
 {
-    this->enableValidationLayers = enableValidationLayers;
-    this->validationLayers = validationLayers;
-    this->deviceExtensions = deviceExtensions;
+    m_RS = rs;
 }
 
 void Instance::create()
 {
-    if (enableValidationLayers && !checkValidationLayerSupport()) {
+    if (m_RS->enableValidationLayers && !checkValidationLayerSupport()) {
         throw std::runtime_error("validation layers requested, but not available!");
     }
 
@@ -30,9 +28,9 @@ void Instance::create()
     createInfo.ppEnabledExtensionNames = extensions.data();
 
     VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
-    if (enableValidationLayers) {
-        createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
-        createInfo.ppEnabledLayerNames = validationLayers.data();
+    if (m_RS->enableValidationLayers) {
+        createInfo.enabledLayerCount = static_cast<uint32_t>(m_RS->validationLayers.size());
+        createInfo.ppEnabledLayerNames = m_RS->validationLayers.data();
 
         populateDebugMessengerCreateInfo(debugCreateInfo);
         createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*)&debugCreateInfo;
@@ -46,7 +44,7 @@ void Instance::create()
     if (vkCreateInstance(&createInfo, allocator, &instance) != VK_SUCCESS) {
         throw std::runtime_error("failed to create instance!");
     }
-    if (enableValidationLayers) createDebugMessenger();
+    if (m_RS->enableValidationLayers) createDebugMessenger();
 }
 
 void Instance::destroy()
@@ -62,7 +60,7 @@ std::vector<const char*> Instance::getRequiredExtensions()
 
     std::vector<const char*> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
 
-    if (this->enableValidationLayers) {
+    if (m_RS->enableValidationLayers) {
         extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
     }
 
@@ -77,7 +75,7 @@ bool Instance::checkValidationLayerSupport()
     std::vector<VkLayerProperties> availableLayers(layerCount);
     vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
 
-    for (const char* layerName : validationLayers) {
+    for (const char* layerName : m_RS->validationLayers) {
         bool layerFound = false;
 
         for (const auto& layerProperties : availableLayers) {

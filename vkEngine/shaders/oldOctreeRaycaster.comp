@@ -49,10 +49,6 @@ const int MAX_DEPTH = 100;
 const int MAX_TRAVERSALS = 300;
 const float INF = 1.0 / 0.0;
 
-vec3 sunDir = normalize(ubo.sunDir);
-
-float normals[6];
-float ambient = 0.9;
 
 float intersectRayPlane(vec3 rayOrigin, vec3 rayDirection, vec3 planeNormal, float planeD) {
     float denom = dot(planeNormal, rayDirection);
@@ -111,7 +107,7 @@ ivec3 roundVoxel(vec3 origVoxel, int scaleSize) {
     return scaledVoxel;
 }
 
-bool traverseOctreeShadowRay(vec3 curPos, vec3 dir, int parentVoxelSize, ivec3 curVoxel, ivec3 parentVoxel, int initialIndex, int collType) {
+ivec2 traverseOctree(vec3 curPos, vec3 dir, int parentVoxelSize, ivec3 curVoxel, ivec3 parentVoxel, int initialIndex, int collType) {
     float deltaX;
     float deltaY;
     float deltaZ;
@@ -163,7 +159,7 @@ bool traverseOctreeShadowRay(vec3 curPos, vec3 dir, int parentVoxelSize, ivec3 c
 
 
             if (j++ > MAX_DEPTH) {          // for some reason this fixes framerate drop when entering octree 128x128 or larger
-                return false;
+                return ivec2(-1, -1);
             }
 
             parentVoxels[curDepth] = scaleVoxel(curVoxel, parentVoxelSize);
@@ -206,16 +202,16 @@ bool traverseOctreeShadowRay(vec3 curPos, vec3 dir, int parentVoxelSize, ivec3 c
                 }
             }
 
-            if (subNodeValue < -1) {
-                return true;
-            }
-
-            if (subNodeValue == -1) {
-                break;
-            }
-
             if (curDepth + 1 == MAX_DEPTH) {
-                break;
+                if (subNodeValue < -1) {
+                    return ivec2(subNodeValue, collType);
+                }
+                else {
+                    curDepth++;
+                    parentVoxelSize /= 2;
+                    voxelSize /= 2;
+                    break;
+                }
             }
             nodeIndices[curDepth + 1] = subNodeValue;
 
@@ -234,13 +230,21 @@ bool traverseOctreeShadowRay(vec3 curPos, vec3 dir, int parentVoxelSize, ivec3 c
         //  2. if leaf is a material, return
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // nodeIndices[curDepth] < -1 : leaf node is a material -- RETURN 
-       
+        if (nodeIndices[curDepth] < -1) {
+            return ivec2(nodeIndices[curDepth], collType);
+        }
+
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         //  3. if leaf is air/empty, traverse to next voxel by a step equivalent to the leaf's size
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // nodeIndices[curDepth] = -1 : leaf node is empty -- TRAVERSE
         // get deltas until each plane collision
-        
+        if (curDepth > 0) {
+            curDepth--;
+            parentVoxelSize *= 2;
+            voxelSize *= 2;
+        }
+
         if (parentVoxelSize != 2 * voxelSize) {
             voxelSize = parentVoxelSize / 2;
         }
@@ -305,8 +309,9 @@ bool traverseOctreeShadowRay(vec3 curPos, vec3 dir, int parentVoxelSize, ivec3 c
             }
         }
         else {
-            return false;
+            return ivec2(-10, -10);
         }
+        //return ivec2(10, collType);
 
 
         //curVoxel = roundVoxel(curPosi, 1);
@@ -325,412 +330,22 @@ bool traverseOctreeShadowRay(vec3 curPos, vec3 dir, int parentVoxelSize, ivec3 c
             parentVoxelSize *= 2;
             voxelSize *= 2;
             curParentEnds = parentVoxels[curDepth] + ivec3(parentVoxelSize, parentVoxelSize, parentVoxelSize);
+            //return ivec2(-10, -10);
         }
 
         // if the current voxel is outside of the root voxel, return miss
         if (curDepth < 0) {
-            return false;
+            return ivec2(-1, -1);
+            //return ivec2(111, collType);        // why do I hit this when still in root voxel ???
         }
+        //return ivec2(-10, -10);
         // if we find the parent of the current voxel, continue
 
     }
-    return false;
+    return ivec2(-1, -1);
 }
 
-bool genShadowRay(ivec3 rootNodePos, vec3 rayOrigin, vec3 rayDir, int voxelSize) {
-    float xDir = rayDir.x;
-    float yDir = rayDir.y;
-    float zDir = rayDir.z;
-    vec3 xIntersect;
-    vec3 yIntersect;
-    vec3 zIntersect;
-    float xDist;
-    float yDist;
-    float zDist;
-
-    ivec3 rootNodeEnd = rootNodePos + ivec3(voxelSize, voxelSize, voxelSize);
-
-    if (voxelInParent(rayOrigin, rootNodePos, rootNodeEnd)) {
-        int collType;
-        ivec3 curVoxel = roundVoxel(rayOrigin, 1);
-
-        float deltaX = getDelta(rayOrigin.x, floor(rayOrigin.x), rayDir.x, 1);
-        float deltaY = getDelta(rayOrigin.y, floor(rayOrigin.y), rayDir.y, 1);
-        float deltaZ = getDelta(rayOrigin.z, floor(rayOrigin.z), rayDir.z, 1);
-
-        // find smallest distance to a collision plane
-        float minDelta = min(min(deltaX, deltaY), deltaZ);
-
-        // move to collision position
-        rayOrigin += minDelta * rayDir;
-
-        vec3 curPosi = rayOrigin;
-
-        // increment current voxel position
-        if (minDelta == deltaX) {
-            curPosi.x += 0.01 * rayDir.x;
-            curVoxel = roundVoxel(curPosi, 1);
-
-            //curVoxel.x += int(round(minDelta * rayDir.x));
-            if (rayDir.x > 0) { collType = 0; }
-            else { collType = 1; }
-        }
-        else if (minDelta == deltaY) {
-            curPosi.y += 0.01 * rayDir.y;
-            curVoxel = roundVoxel(curPosi, 1);
-
-            //curVoxel.y += int(round(minDelta * rayDir.y));
-            if (rayDir.y > 0) { collType = 2; }
-            else { collType = 3; }
-        }
-        else if (minDelta == deltaZ) {
-            curPosi.z += 0.01 * rayDir.z;
-            curVoxel = roundVoxel(curPosi, 1);
-
-            //curVoxel.z += int(round(minDelta * rayDir.z));
-            if (rayDir.z > 0) { collType = 4; }
-            else { collType = 5; }
-        }
-        return traverseOctreeShadowRay(rayOrigin, rayDir, voxelSize, curVoxel, rootNodePos, 0, collType);
-    }
-
-    if (xDir > 0) {
-        xDist = intersectRayPlane(rayOrigin, rayDir, vec3(1, 0, 0), rootNodePos.x);
-    }
-    else {
-        xDist = intersectRayPlane(rayOrigin, rayDir, vec3(1, 0, 0), rootNodePos.x + voxelSize);
-    }
-    if (yDir > 0) {
-        yDist = intersectRayPlane(rayOrigin, rayDir, vec3(0, 1, 0), rootNodePos.y);
-    }
-    else {
-        yDist = intersectRayPlane(rayOrigin, rayDir, vec3(0, 1, 0), rootNodePos.y + voxelSize);
-    }
-    if (zDir > 0) {
-        zDist = intersectRayPlane(rayOrigin, rayDir, vec3(0, 0, 1), rootNodePos.z);
-    }
-    else {
-        zDist = intersectRayPlane(rayOrigin, rayDir, vec3(0, 0, 1), rootNodePos.z + voxelSize);
-    }
-
-    if (xDist < 0) { xDist = INF; }
-    if (yDist < 0) { yDist = INF; }
-    if (zDist < 0) { zDist = INF; }
-
-    float minDist = INF;
-
-
-    vec3 xCollision = rayOrigin + xDist * rayDir;
-    vec3 ixCollision = xCollision;
-    ixCollision.x += 0.001 * rayDir.x;
-    if (voxelInParent(ixCollision, rootNodePos, rootNodeEnd)) { minDist = xDist; }
-
-    vec3 yCollision = rayOrigin + yDist * rayDir;
-    vec3 iyCollision = yCollision;
-    iyCollision.y += 0.001 * rayDir.y;
-    if (voxelInParent(iyCollision, rootNodePos, rootNodeEnd)) { minDist = min(minDist, yDist); }
-
-    vec3 zCollision = rayOrigin + zDist * rayDir;
-    vec3 izCollision = zCollision;
-    izCollision.z += 0.001 * rayDir.z;
-    if (voxelInParent(izCollision, rootNodePos, rootNodeEnd)) { minDist = min(minDist, zDist); }
-
-    if (minDist == INF) {
-        return false;
-    }
-    if (minDist == xDist) {
-        if (xDir > 0) {
-            return traverseOctreeShadowRay(xCollision, rayDir, voxelSize, ivec3(floor(ixCollision)), rootNodePos, 0, 0);
-        }
-        else {
-            return traverseOctreeShadowRay(xCollision, rayDir, voxelSize, ivec3(floor(ixCollision)), rootNodePos, 0, 1);
-        }
-    }
-    if (minDist == yDist) {
-        if (yDir > 0) {
-            return traverseOctreeShadowRay(yCollision, rayDir, voxelSize, ivec3(floor(iyCollision)), rootNodePos, 0, 2);
-        }
-        else {
-            return traverseOctreeShadowRay(yCollision, rayDir, voxelSize, ivec3(floor(iyCollision)), rootNodePos, 0, 3);
-        }
-    }
-    if (minDist == zDist) {
-        if (zDir > 0) {
-            return traverseOctreeShadowRay(zCollision, rayDir, voxelSize, ivec3(floor(izCollision)), rootNodePos, 0, 4);
-        }
-        else {
-            return traverseOctreeShadowRay(zCollision, rayDir, voxelSize, ivec3(floor(izCollision)), rootNodePos, 0, 5);
-        }
-    }
-
-    return false;
-}
-
-
-
-vec3 determineRayColor(ivec2 matValue) {
-    vec3 color;
-    // show terain colors
-    if (matValue.x <= -2) {
-        float subVal = 20 + matValue.x + 2 + 5;
-        color = (subVal / 25) * vec3(0, 0.4, 0);
-    }
-    if (matValue.x <= -8) {
-        float subVal = 20 + matValue.x + 8 + 5;
-        color = (subVal / 25) * vec3(0.4, 0.4, 0.4);
-    }
-    if (matValue.x <= -14) {
-        float subVal = 20 + matValue.x + 14 + 5;
-        color = (subVal / 25) * vec3(1, 1, 1);
-    }
-    return color;
-}
-
-vec3 traverseOctree(vec3 curPos, vec3 dir, int parentVoxelSize, ivec3 curVoxel, ivec3 parentVoxel, int initialIndex, int collType) {
-    float deltaX;
-    float deltaY;
-    float deltaZ;
-    float minDelta;
-
-    vec3 curPosi = vec3(0, 0, 0);
-
-    int curDepth = 0;
-
-    int nodeIndices[MAX_DEPTH];
-    nodeIndices[curDepth] = initialIndex;
-
-    ivec3 parentVoxels[MAX_DEPTH];
-    parentVoxels[curDepth] = parentVoxel;
-
-    int voxelSize = parentVoxelSize / 2;
-
-    // INITIAL STATE:
-    //  parent voxel: (0,0,0) -- (64,64,64)
-    //  parent voxel size: 64   
-    //  voxelSize: 32
-    //  
-    //  curVoxel: (x,y,z) -- (x+1,y+1,z+1)
-    //  curPos: (x+-n, y+-n, z+-n)
-    //
-    //  initialIndex: 0
-    // 
-    //  depth: 0
-    //  
-    //  begin loop:
-    // 
-    //
-    //  1. Find leaf octree node of curVoxel
-    //  2. if leaf is a material, return
-    //  3. if leaf is air/empty, traverse to next voxel by a step equivalent to the leaf's size
-    //  4. loop: 
-    //        if the new current voxel is outside of the current parent voxel, reduce depth.
-    //     endloop:
-    //        if the current voxel is outside of the root voxel, return miss
-    //        if we find the parent of the current voxel, continue
-
-    for (int i = 0; i < MAX_TRAVERSALS; i++) {
-
-        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        //  1. Find leaf octree node of curVoxel
-        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-        int subNodeValue = nodeIndices[curDepth];
-        int j = 0;
-        while (subNodeValue >= 0 && curDepth < MAX_DEPTH) {
-
-
-            if (j++ > MAX_DEPTH) {          // for some reason this fixes framerate drop when entering octree 128x128 or larger
-                return vec3(0, 0, 0);
-            }
-
-            parentVoxels[curDepth] = scaleVoxel(curVoxel, parentVoxelSize);
-            ivec3 curVoxelScaled = scaleVoxel(curVoxel, voxelSize);
-
-            if (curVoxelScaled.x == parentVoxels[curDepth].x) {
-                if (curVoxelScaled.y == parentVoxels[curDepth].y) {
-                    if (curVoxelScaled.z == parentVoxels[curDepth].z) {
-                        subNodeValue = octree.octreeArray[nodeIndices[curDepth]].p0; //000
-                    }
-                    else {
-                        subNodeValue = octree.octreeArray[nodeIndices[curDepth]].p1; //001
-                    }
-                }
-                else {
-                    if (curVoxelScaled.z == parentVoxels[curDepth].z) {
-                        subNodeValue = octree.octreeArray[nodeIndices[curDepth]].p2; //010
-                    }
-                    else {
-                        subNodeValue = octree.octreeArray[nodeIndices[curDepth]].p3; //011
-                    }
-                }
-            }
-            else {
-                if (curVoxelScaled.y == parentVoxels[curDepth].y) {
-                    if (curVoxelScaled.z == parentVoxels[curDepth].z) {
-                        subNodeValue = octree.octreeArray[nodeIndices[curDepth]].p4; //100
-                    }
-                    else {
-                        subNodeValue = octree.octreeArray[nodeIndices[curDepth]].p5; //101
-                    }
-                }
-                else {
-                    if (curVoxelScaled.z == parentVoxels[curDepth].z) {
-                        subNodeValue = octree.octreeArray[nodeIndices[curDepth]].p6; //110
-                    }
-                    else {
-                        subNodeValue = octree.octreeArray[nodeIndices[curDepth]].p7; //111
-                    }
-                }
-            }
-
-            if (curDepth + 1 == MAX_DEPTH) {
-                if (subNodeValue < -1) {
-                    float shadowFactor = 1;
-                    if (genShadowRay(ivec3(0, 0, 0), curPos - (curPosi - curPos), -sunDir, OCTREE_SIZE)) { shadowFactor *= 0.3; }
-                    else { shadowFactor *= normals[collType]; }
-                    return (shadowFactor)*determineRayColor(ivec2(subNodeValue, collType));
-                }
-                else {
-                    curDepth++;
-                    parentVoxelSize /= 2;
-                    voxelSize /= 2;
-                    break;
-                }
-            }
-
-            if (subNodeValue == -1) {
-                break;
-            }
-
-            if (subNodeValue < -1) {
-                float shadowFactor = 1;
-                if (genShadowRay(ivec3(0, 0, 0), curPos - (curPosi - curPos), -sunDir, OCTREE_SIZE)) { shadowFactor *= 0.3; }
-                else { shadowFactor *= normals[collType]; }
-                return (shadowFactor)*determineRayColor(ivec2(subNodeValue, collType));
-            }
-
-            nodeIndices[curDepth + 1] = subNodeValue;
-
-            curDepth++;
-            parentVoxelSize /= 2;
-            voxelSize /= 2;
-            // possible states:
-            // nodeIndices[curDepth] > -1 : have not reached leaf node -- CHECK DEEPER NODE
-        }
-
-        // possible states:
-        // nodeIndices[curDepth] < -1 : leaf node is a material -- RETURN 
-        // nodeIndices[curDepth] = -1 : leaf node is empty -- TRAVERSE
-
-        ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        //  2. if leaf is a material, return
-        ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        // nodeIndices[curDepth] < -1 : leaf node is a material -- RETURN 
-        
-
-        ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        //  3. if leaf is air/empty, traverse to next voxel by a step equivalent to the leaf's size
-        ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        // nodeIndices[curDepth] = -1 : leaf node is empty -- TRAVERSE
-        // get deltas until each plane collision
-
-        if (parentVoxelSize != 2 * voxelSize) {
-            voxelSize = parentVoxelSize / 2;
-        }
-
-        deltaX = getDelta(curPos.x, curVoxel.x, dir.x, voxelSize);
-        deltaY = getDelta(curPos.y, curVoxel.y, dir.y, voxelSize);
-        deltaZ = getDelta(curPos.z, curVoxel.z, dir.z, voxelSize);
-
-        // find smallest distance to a collision plane
-        minDelta = min(min(deltaX, deltaY), deltaZ);
-
-        // move to collision position
-        curPos += minDelta * dir;
-
-        curPosi = curPos;
-
-        // increment current voxel position
-        if (minDelta == deltaX) {
-            curPosi.x += 0.01 * dir.x;
-            curVoxel = roundVoxel(curPosi, 1);
-            //curVoxel.x = int(floor(curVoxel.x + minDelta * dir.x));
-            //curVoxel.z = int(floor(curPosi.z));
-
-            if (dir.x > 0) {
-                //curVoxel.x += voxelSize;
-                collType = 0;
-            }
-            else {
-                //curVoxel.x -= voxelSize;
-                collType = 1;
-            }
-        }
-        else if (minDelta == deltaY) {
-            curPosi.y += 0.01 * dir.y;
-            curVoxel = roundVoxel(curPosi, 1);
-
-            //curVoxel.y = int(floor(curVoxel.y + minDelta * dir.y));
-            //curVoxel.y = int(floor(curPosi.y));
-
-            if (dir.y > 0) {
-                //curVoxel.y += voxelSize;
-                collType = 2;
-            }
-            else {
-                //curVoxel.y -= voxelSize;
-                collType = 3;
-            }
-        }
-        else if (minDelta == deltaZ) {
-            curPosi.z += 0.01 * dir.z;
-            curVoxel = roundVoxel(curPosi, 1);
-
-            //curVoxel.z = int(floor(curVoxel.z + minDelta * dir.z));
-            //curVoxel.z = int(floor(curPosi.z));
-            if (dir.z > 0) {
-                //curVoxel.z += voxelSize;
-                collType = 4;
-            }
-            else {
-                //curVoxel.z -= voxelSize;
-                collType = 5;
-            }
-        }
-        else {
-            return vec3(0, 0, 0);
-        }
-
-
-        //curVoxel = roundVoxel(curPosi, 1);
-
-        //  4. loop: 
-        //        if the new current voxel is outside of the current parent voxel, reduce depth.
-        //     endloop:
-        //        if the current voxel is outside of the root voxel, return miss
-        //        if we find the parent of the current voxel, continue
-
-        ivec3 curParentEnds = parentVoxels[curDepth] + ivec3(parentVoxelSize, parentVoxelSize, parentVoxelSize);
-
-
-        while (!voxelInParent(curPosi, parentVoxels[curDepth], curParentEnds) && curDepth >= 0) {
-            curDepth--;
-            parentVoxelSize *= 2;
-            voxelSize *= 2;
-            curParentEnds = parentVoxels[curDepth] + ivec3(parentVoxelSize, parentVoxelSize, parentVoxelSize);
-        }
-
-        // if the current voxel is outside of the root voxel, return miss
-        if (curDepth < 0) {
-            return vec3(0, 0, 0);
-        }
-        // if we find the parent of the current voxel, continue
-
-    }
-    return vec3(0, 0, 0);
-}
-
-vec3 enterOctree(ivec3 rootNodePos, vec3 rayOrigin, vec3 rayDir, int voxelSize) {
+ivec2 enterOctree(ivec3 rootNodePos, vec3 rayOrigin, vec3 rayDir, int voxelSize) {
     float xDir = rayDir.x;
     float yDir = rayDir.y;
     float zDir = rayDir.z;
@@ -829,7 +444,7 @@ vec3 enterOctree(ivec3 rootNodePos, vec3 rayOrigin, vec3 rayDir, int voxelSize) 
     if (voxelInParent(izCollision, rootNodePos, rootNodeEnd)) { minDist = min(minDist, zDist); }
 
     if (minDist == INF) {
-        return vec3(0, 0, 0);
+        return ivec2(-1, -1);
     }
     if (minDist == xDist) {
         if (xDir > 0) {
@@ -856,19 +471,22 @@ vec3 enterOctree(ivec3 rootNodePos, vec3 rayOrigin, vec3 rayDir, int voxelSize) 
         }
     }
 
-    return vec3(0, 0, 0);
+    return ivec2(-1, -1);
 }
-
 
 void main() {
     OctreeNode firstNode = octree.octreeArray[0];
 
-    normals[0] = dot(vec3(1, 0, 0), sunDir);
-    normals[1] = dot(vec3(-1, 0, 0), sunDir);
-    normals[2] = dot(vec3(0, 1, 0), sunDir);
-    normals[3] = dot(vec3(0, -1, 0), sunDir);
-    normals[4] = dot(vec3(0, 0, 1), sunDir);
-    normals[5] = dot(vec3(0, 0, -1), sunDir);
+    vec3 sunDir = normalize(vec3(-1, -2, -3));
+
+    float normals[6];
+    float ambient = 0.9;
+    normals[0] = ambient + dot(vec3(1, 0, 0), sunDir);
+    normals[1] = ambient + dot(vec3(-1, 0, 0), sunDir);
+    normals[2] = ambient + dot(vec3(0, 1, 0), sunDir);
+    normals[3] = ambient + dot(vec3(0, -1, 0), sunDir);
+    normals[4] = ambient + dot(vec3(0, 0, 1), sunDir);
+    normals[5] = ambient + dot(vec3(0, 0, -1), sunDir);
 
     uint index = gl_GlobalInvocationID.x;
 
@@ -887,10 +505,29 @@ void main() {
     vec3 rayDir = normalize(pixelCenter - ubo.camPos);
     vec3 rayOrigin = ubo.camPos;
 
-    vec3 color = enterOctree(ivec3(0, 0, 0), rayOrigin, rayDir, OCTREE_SIZE);
+    ivec2 matValue = enterOctree(ivec3(0, 0, 0), rayOrigin, rayDir, OCTREE_SIZE);
+    vec3 color;
+    if (matValue.x == -1) {
+        color = vec3(0, 0, 0);
+    }
 
+    // show terain colors
+    if (matValue.x <= -2) {
+        float subVal = 20 + matValue.x + 2 + 5;
+        color = (subVal / 25) * vec3(0, 0.4, 0);
+    }
+    if (matValue.x <= -8) {
+        float subVal = 20 + matValue.x + 8 + 5;
+        color = (subVal / 25) * vec3(0.4, 0.4, 0.4);
+    }
+    if (matValue.x <= -14) {
+        float subVal = 20 + matValue.x + 14 + 5;
+        color = (subVal / 25) * vec3(1, 1, 1);
+    }
 
-
+    if (matValue.y < 6) {
+        color *= normals[matValue.y];
+    }
 
 
     imageStore(outputImage, texPos, vec4(color, 1));

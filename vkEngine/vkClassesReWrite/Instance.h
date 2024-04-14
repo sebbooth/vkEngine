@@ -9,42 +9,49 @@
 #include <stdexcept>
 #include <iostream>
 
+#include "RenderingSettings.h"
+
 class Instance
 {
-public:
-	VkInstance instance{};
-	VkDebugUtilsMessengerEXT debugMessenger{};
-	VkAllocationCallbacks* allocator = nullptr;
+	public:
+		VkInstance instance{};
+		VkDebugUtilsMessengerEXT debugMessenger{};
+		VkAllocationCallbacks* allocator = nullptr;
 
-	bool enableValidationLayers;
-	std::vector<const char*> validationLayers;
-	std::vector<const char*> deviceExtensions;
+	private:
+		std::shared_ptr<RenderingSettings> m_RS;
 	
-	Instance(bool enableValidationLayers, std::vector<const char*> validationLayers, std::vector<const char*> deviceExtensions);
-	void create();
-	void destroy();
-
-	void createDebugMessenger();
-
-	void populateDebugMessengerCreateInfo(
-		VkDebugUtilsMessengerCreateInfoEXT& createInfo
-	);
-
-	VkResult CreateDebugUtilsMessengerEXT(
-		const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo,
-		const VkAllocationCallbacks* pAllocator,
-		VkDebugUtilsMessengerEXT* pDebugMessenger
-	);
 
 
-	void DestroyDebugUtilsMessengerEXT(
-		const VkAllocationCallbacks* pAllocator
-	);
 
-private:
-	std::vector<const char*> getRequiredExtensions();
-	bool checkValidationLayerSupport();
+	public:
+		Instance(std::shared_ptr<RenderingSettings> rs);
+		void create();
+		void destroy();
+
+		void createDebugMessenger();
+
+		void populateDebugMessengerCreateInfo(
+			VkDebugUtilsMessengerCreateInfoEXT& createInfo
+		);
+
+		VkResult CreateDebugUtilsMessengerEXT(
+			const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo,
+			const VkAllocationCallbacks* pAllocator,
+			VkDebugUtilsMessengerEXT* pDebugMessenger
+		);
+
+		void DestroyDebugUtilsMessengerEXT(
+			const VkAllocationCallbacks* pAllocator
+		);
+
+	private:
+		std::vector<const char*> getRequiredExtensions();
+		bool checkValidationLayerSupport();
 };
+
+
+
 
 static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
 {

@@ -1,2 +1,5 @@
 #include "Instance.h"
 #include "Surface.h"
+#include "PhysicalDevice.h"
+#include "LogicalDevice.h"
+#include "SwapChain.h"

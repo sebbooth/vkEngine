@@ -15,6 +15,7 @@ layout(binding = 0) uniform ParameterUBO {
     vec3 camPos;
     vec3 camDir;
     vec3 camUp;
+    vec3 sunDir;
 
     float deltaTime;
     int screenWidth;

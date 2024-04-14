@@ -202,13 +202,19 @@ private:
         alignas(16) glm::vec3 camUp = glm::vec3(0, 1, 0);
         */
 
-        alignas(16) glm::vec3 camPos = glm::vec3(577.516724, 565.847046, 484.979584);
-        alignas(16) glm::vec3 camDir = glm::vec3(-0.647795, -0.570642, -0.504715);
-        alignas(16) glm::vec3 camUp = glm::vec3(-0.557979, 0.806464, -0.195643);
+
+
+        alignas(16) glm::vec3 camPos = glm::vec3(262.905243, 270.311707, 282.328888);
+        alignas(16) glm::vec3 camDir = glm::vec3(-0.519135, -0.634374, -0.572781);
+        alignas(16) glm::vec3 camUp = glm::vec3(-0.422386, 0.773021, -0.473317);
         /*
         Cam Pos: vec3(577.516724, 565.847046, 484.979584)
 Cam Dir: vec3(-0.647795, -0.570642, -0.504715)
 Cam Up: vec3(-0.557979, 0.806464, -0.195643)
+
+Cam Pos: vec3(262.905243, 270.311707, 282.328888)
+Cam Dir: vec3(-0.519135, -0.634374, -0.572781)
+Cam Up: vec3(-0.422386, 0.773021, -0.473317)
 */
 
 
@@ -335,11 +341,11 @@ Cam Up: vec3(-0.557979, 0.806464, -0.195643)
     std::vector<VkImageView> storageImageViews;
     std::vector<VkSampler> storageImageSamplers;
     Octree octree;
-    int octreeDepth = 9;
+    int octreeDepth = 7;
     int octreeWidth = pow(2, octreeDepth);
     bool visualizeOctree = false;
     bool terrain = true;
-    bool shadows = true;
+    bool shadows = false;
     void createOctree() {
 
         int depth = octreeDepth;
@@ -617,7 +623,7 @@ Cam Up: vec3(-0.557979, 0.806464, -0.195643)
     }
 
     void createComputePipeline() {
-        auto computeShaderCode = readFile("shaders/raycast_comp.spv");
+        auto computeShaderCode = readFile("shaders/old_raycast_comp.spv");
         if (shadows) computeShaderCode = readFile("shaders/shadowRays.spv");
         if (visualizeOctree) computeShaderCode = readFile("shaders/raycast_vis_comp.spv");
 
