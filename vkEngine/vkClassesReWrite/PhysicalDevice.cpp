@@ -1,10 +1,10 @@
 #include "PhysicalDevice.h"
 
-PhysicalDevice::PhysicalDevice(VkInstance instance, VkSurfaceKHR surface, std::shared_ptr<RenderingSettings> rs)
+PhysicalDevice::PhysicalDevice(VkInstance instance, VkSurfaceKHR surface, std::shared_ptr<RenderingSettings> RS)
 {
     m_Instance = instance;
     m_Surface = surface;
-    m_RS = rs;
+    m_RS = RS;
 }
 
 SwapChainSupportDetails PhysicalDevice::getSwapChainSupportDetails()

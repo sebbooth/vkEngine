@@ -156,6 +156,7 @@
     <None Include="shaders\HelloTriangle.vert" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="vkClassesReWrite\ComputeDescriptorSetLayout.h" />
     <ClInclude Include="ComputeTexRays.h" />
     <ClInclude Include="TestRewrite.h" />
     <ClInclude Include="vendor\imgui-1.90.4\imgui.h" />
@@ -166,10 +167,14 @@
     <ClInclude Include="vendor\imgui-1.90.4\imstb_textedit.h" />
     <ClInclude Include="vendor\imgui-1.90.4\imstb_truetype.h" />
     <ClInclude Include="vendor\stb\stb_image.h" />
+    <ClInclude Include="vkClassesReWrite\DescriptorSetLayout.h" />
+    <ClInclude Include="vkClassesReWrite\GraphicsPipeline.h" />
+    <ClInclude Include="vkClassesReWrite\ImageViews.h" />
     <ClInclude Include="vkClassesReWrite\Instance.h" />
     <ClInclude Include="vkClassesReWrite\LogicalDevice.h" />
     <ClInclude Include="vkClassesReWrite\PhysicalDevice.h" />
     <ClInclude Include="vkClassesReWrite\RenderingSettings.h" />
+    <ClInclude Include="vkClassesReWrite\RenderPass.h" />
     <ClInclude Include="vkClassesReWrite\Surface.h" />
     <ClInclude Include="vkClassesReWrite\SwapChain.h" />
     <ClInclude Include="vkClassesReWrite\VkClassesReWrite.h" />
@@ -179,6 +184,7 @@
     <ClInclude Include="vkUtils\VkStructs.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="vkClassesReWrite\ComputeDescriptorSetLayout.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="vendor\imgui-1.90.4\imgui.cpp" />
     <ClCompile Include="vendor\imgui-1.90.4\imgui_demo.cpp" />
@@ -187,9 +193,13 @@
     <ClCompile Include="vendor\imgui-1.90.4\imgui_impl_vulkan.cpp" />
     <ClCompile Include="vendor\imgui-1.90.4\imgui_tables.cpp" />
     <ClCompile Include="vendor\imgui-1.90.4\imgui_widgets.cpp" />
+    <ClCompile Include="vkClassesReWrite\DescriptorSetLayout.cpp" />
+    <ClCompile Include="vkClassesReWrite\GraphicsPipeline.cpp" />
+    <ClCompile Include="vkClassesReWrite\ImageViews.cpp" />
     <ClCompile Include="vkClassesReWrite\Instance.cpp" />
     <ClCompile Include="vkClassesReWrite\LogicalDevice.cpp" />
     <ClCompile Include="vkClassesReWrite\PhysicalDevice.cpp" />
+    <ClCompile Include="vkClassesReWrite\RenderPass.cpp" />
     <ClCompile Include="vkClassesReWrite\Surface.cpp" />
     <ClCompile Include="vkClassesReWrite\SwapChain.cpp" />
   </ItemGroup>

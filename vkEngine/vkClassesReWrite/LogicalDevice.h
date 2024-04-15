@@ -33,7 +33,7 @@ private:
 public:
 	LogicalDevice(
         std::shared_ptr<PhysicalDevice> p_PhysicalDevice,
-        std::shared_ptr<RenderingSettings> rs
+        std::shared_ptr<RenderingSettings> RS
     );
 
     void create();

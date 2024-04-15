@@ -2,11 +2,11 @@
 
 LogicalDevice::LogicalDevice(
     std::shared_ptr<PhysicalDevice> p_PhysicalDevice,
-    std::shared_ptr<RenderingSettings> rs
+    std::shared_ptr<RenderingSettings> RS
 )
 {
     mp_PhysicalDevice = p_PhysicalDevice;
-    m_RS = rs;
+    m_RS = RS;
 }
 
 void LogicalDevice::create()

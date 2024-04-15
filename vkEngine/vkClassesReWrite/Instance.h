@@ -25,7 +25,7 @@ class Instance
 
 
 	public:
-		Instance(std::shared_ptr<RenderingSettings> rs);
+		Instance(std::shared_ptr<RenderingSettings> RS);
 		void create();
 		void destroy();
 

@@ -12,31 +12,31 @@
 
 class SwapChain
 {
-public:
-	VkSwapchainKHR swapChain{};
-	VkFormat swapChainImageFormat{};
-	VkExtent2D swapChainExtent{};
-	std::vector<VkImage> swapChainImages;
-	std::vector<VkFramebuffer> swapChainFramebuffers;
+	public:
+		VkSwapchainKHR swapChain{};
+		VkFormat swapChainImageFormat{};
+		VkExtent2D swapChainExtent{};
+		std::vector<VkImage> swapChainImages;
+		std::vector<VkFramebuffer> swapChainFramebuffers;
 
-private:
-	GLFWwindow* m_Window;
-	VkSurfaceKHR m_Surface{};
-	VkDevice m_Device{};
-	QueueFamilyIndices m_QueueFamilies{};
-	SwapChainSupportDetails m_SwapChainSupport{};
+	private:
+		GLFWwindow* m_Window;
+		VkSurfaceKHR m_Surface{};
+		VkDevice m_Device{};
+		QueueFamilyIndices m_QueueFamilies{};
+		SwapChainSupportDetails m_SwapChainSupport{};
 
-public:
-	SwapChain(
-		GLFWwindow* window,
-		VkSurfaceKHR surface,
-		VkDevice device,
-		QueueFamilyIndices queueFamilies,
-		SwapChainSupportDetails swapChainSupport
-	);
-	void create();
-	void destroyFramebuffers();
-	void destroySwapChain();
+	public:
+		SwapChain(
+			GLFWwindow* window,
+			VkSurfaceKHR surface,
+			VkDevice device,
+			QueueFamilyIndices queueFamilies,
+			SwapChainSupportDetails swapChainSupport
+		);
+		void create();
+		void destroyFramebuffers();
+		void destroySwapChain();
 };
 
 #endif

@@ -1,8 +1,8 @@
 #include "Instance.h"
 
-Instance::Instance(std::shared_ptr<RenderingSettings> rs)
+Instance::Instance(std::shared_ptr<RenderingSettings> RS)
 {
-    m_RS = rs;
+    m_RS = RS;
 }
 
 void Instance::create()
