@@ -1,13 +1,13 @@
 #include "Instance.h"
 
-Instance::Instance(std::shared_ptr<RenderingSettings> RS)
+Instance::Instance(std::shared_ptr<VkConfig> config)
 {
-    m_RS = RS;
+    m_Config = config;
 }
 
 void Instance::create()
 {
-    if (m_RS->enableValidationLayers && !checkValidationLayerSupport()) {
+    if (m_Config->enableValidationLayers && !checkValidationLayerSupport()) {
         throw std::runtime_error("validation layers requested, but not available!");
     }
 
@@ -28,9 +28,9 @@ void Instance::create()
     createInfo.ppEnabledExtensionNames = extensions.data();
 
     VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
-    if (m_RS->enableValidationLayers) {
-        createInfo.enabledLayerCount = static_cast<uint32_t>(m_RS->validationLayers.size());
-        createInfo.ppEnabledLayerNames = m_RS->validationLayers.data();
+    if (m_Config->enableValidationLayers) {
+        createInfo.enabledLayerCount = static_cast<uint32_t>(m_Config->validationLayers.size());
+        createInfo.ppEnabledLayerNames = m_Config->validationLayers.data();
 
         populateDebugMessengerCreateInfo(debugCreateInfo);
         createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*)&debugCreateInfo;
@@ -44,7 +44,7 @@ void Instance::create()
     if (vkCreateInstance(&createInfo, allocator, &instance) != VK_SUCCESS) {
         throw std::runtime_error("failed to create instance!");
     }
-    if (m_RS->enableValidationLayers) createDebugMessenger();
+    if (m_Config->enableValidationLayers) createDebugMessenger();
 }
 
 void Instance::destroy()
@@ -60,7 +60,7 @@ std::vector<const char*> Instance::getRequiredExtensions()
 
     std::vector<const char*> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
 
-    if (m_RS->enableValidationLayers) {
+    if (m_Config->enableValidationLayers) {
         extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
     }
 
@@ -75,7 +75,7 @@ bool Instance::checkValidationLayerSupport()
     std::vector<VkLayerProperties> availableLayers(layerCount);
     vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
 
-    for (const char* layerName : m_RS->validationLayers) {
+    for (const char* layerName : m_Config->validationLayers) {
         bool layerFound = false;
 
         for (const auto& layerProperties : availableLayers) {

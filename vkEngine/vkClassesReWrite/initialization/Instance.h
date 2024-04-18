@@ -9,7 +9,7 @@
 #include <stdexcept>
 #include <iostream>
 
-#include "RenderingSettings.h"
+#include "initialization/VkConfig.h"
 
 class Instance
 {
@@ -19,13 +19,13 @@ class Instance
 		VkAllocationCallbacks* allocator = nullptr;
 
 	private:
-		std::shared_ptr<RenderingSettings> m_RS;
+		std::shared_ptr<VkConfig> m_Config;
 	
 
 
 
 	public:
-		Instance(std::shared_ptr<RenderingSettings> RS);
+		Instance(std::shared_ptr<VkConfig> config);
 		void create();
 		void destroy();
 
@@ -55,7 +55,7 @@ class Instance
 
 static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
 {
-	std::cerr << std::endl << "\033[1;31m[VALIDATION LAYER]: \033[0m" << pCallbackData->pMessage;
+	std::cerr << "\033[1;31m[VALIDATION LAYER]: \033[0m" << pCallbackData->pMessage << std::endl;
 	return VK_FALSE;
 }
 

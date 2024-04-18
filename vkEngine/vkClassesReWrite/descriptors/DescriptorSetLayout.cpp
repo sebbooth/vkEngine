@@ -2,11 +2,11 @@
 
 DescriptorSetLayout::DescriptorSetLayout(
     VkDevice device,
-    std::shared_ptr<RenderingSettings> RS
+    std::shared_ptr<VkConfig> config
 )
 {
     m_Device = device;
-    m_RS = RS;
+    m_Config = config;
 }
 
 void DescriptorSetLayout::create()
@@ -15,7 +15,7 @@ void DescriptorSetLayout::create()
     uint32_t bindingCount = 0;
 
     VkDescriptorSetLayoutBinding uboLayoutBinding{};
-    if (m_RS->uboEnabled) {
+    if (m_Config->uboEnabled) {
         uboLayoutBinding.binding = bindingCount++;
         uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         uboLayoutBinding.descriptorCount = 1;
@@ -26,7 +26,7 @@ void DescriptorSetLayout::create()
     }
 
     VkDescriptorSetLayoutBinding samplerLayoutBinding{};
-    if (m_RS->samplerEnabled || m_RS->guiEnabled) {
+    if (m_Config->samplerEnabled || m_Config->guiEnabled) {
         samplerLayoutBinding.binding = bindingCount++;
         samplerLayoutBinding.descriptorCount = 1;
         samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;

@@ -6,7 +6,7 @@ GraphicsPipeline::GraphicsPipeline(
     VkExtent2D swapChainExtent,
     VkRenderPass renderPass,
     VkDescriptorSetLayout descriptorSetLayout,
-    std::shared_ptr<RenderingSettings> RS
+    std::shared_ptr<VkConfig> config
 )
 {
     m_MsaaSamples = msaaSamples;
@@ -14,7 +14,7 @@ GraphicsPipeline::GraphicsPipeline(
     m_SwapChainExtent = swapChainExtent;
     m_RenderPass = renderPass;
     m_DescriptorSetLayout = descriptorSetLayout;
-    m_RS = RS;
+    m_Config = config;
 }
 
 void GraphicsPipeline::create(std::string vertexShaderFile, std::string fragmentShaderFile)
@@ -117,11 +117,11 @@ void GraphicsPipeline::create(std::string vertexShaderFile, std::string fragment
     rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
     rasterizer.depthClampEnable = VK_FALSE;
     rasterizer.rasterizerDiscardEnable = VK_FALSE;
-    if (m_RS->wireframeEnabled) rasterizer.polygonMode = VK_POLYGON_MODE_LINE;
+    if (m_Config->wireframeEnabled) rasterizer.polygonMode = VK_POLYGON_MODE_LINE;
     else rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
     rasterizer.lineWidth = 1.0f;
     rasterizer.cullMode = VK_CULL_MODE_NONE;
-    if (m_RS->cullBackFaces) rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
+    if (m_Config->cullBackFaces) rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
     rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
     rasterizer.depthBiasEnable = VK_FALSE;
     rasterizer.depthBiasConstantFactor = 0.0f; // Optional
@@ -135,7 +135,7 @@ void GraphicsPipeline::create(std::string vertexShaderFile, std::string fragment
     // multisampling state /////////////////////////////////////////////////////////////////////
     VkPipelineMultisampleStateCreateInfo multisampling{};
 
-    if (m_RS->msaaEnabled) {
+    if (m_Config->msaaEnabled) {
         multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
         multisampling.sampleShadingEnable = VK_TRUE; // enable sample shading in the pipeline
         multisampling.rasterizationSamples = m_MsaaSamples;
@@ -196,7 +196,7 @@ void GraphicsPipeline::create(std::string vertexShaderFile, std::string fragment
 
     // depth stencil state /////////////////////////////////////////////////////////////////////
     VkPipelineDepthStencilStateCreateInfo depthStencil{};
-    if (m_RS->depthStencilEnabled) {
+    if (m_Config->depthStencilEnabled) {
         depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
         depthStencil.depthTestEnable = VK_TRUE;
         depthStencil.depthWriteEnable = VK_TRUE;

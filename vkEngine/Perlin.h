@@ -27,8 +27,8 @@ private:
     float interpolate(float a0, float a1, float w);
 
 private:
-    float freq;
-    float amp;
+    float freq = init_freq; 
+    float amp = init_amp;
 };
 
 #endif

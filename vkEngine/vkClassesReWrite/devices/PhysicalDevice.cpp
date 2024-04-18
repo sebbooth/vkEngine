@@ -1,10 +1,10 @@
 #include "PhysicalDevice.h"
 
-PhysicalDevice::PhysicalDevice(VkInstance instance, VkSurfaceKHR surface, std::shared_ptr<RenderingSettings> RS)
+PhysicalDevice::PhysicalDevice(VkInstance instance, VkSurfaceKHR surface, std::shared_ptr<VkConfig> config)
 {
     m_Instance = instance;
     m_Surface = surface;
-    m_RS = RS;
+    m_Config = config;
 }
 
 SwapChainSupportDetails PhysicalDevice::getSwapChainSupportDetails()
@@ -42,7 +42,7 @@ void PhysicalDevice::create()
     for (const auto& device : devices) {
         if (isDeviceSuitable(device)) {
             physicalDevice = device;
-            if (m_RS->msaaEnabled) {
+            if (m_Config->msaaEnabled) {
                 msaaSamples = getMaxUsableSampleCount();
             }
             else {
@@ -80,7 +80,7 @@ QueueFamilyIndices PhysicalDevice::findQueueFamilies(VkPhysicalDevice device)
             presentFamily = i;
         }
 
-        if (m_RS->computeEnabled) {
+        if (m_Config->computeEnabled) {
             if ((queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) && (queueFamily.queueFlags & VK_QUEUE_COMPUTE_BIT)) {
                 indices.graphicsAndComputeFamily = i;
                 graphicsAndComputeFamily = i;
@@ -116,7 +116,7 @@ bool PhysicalDevice::checkDeviceExtensionSupport(VkPhysicalDevice device)
     vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, availableExtensions.data());
     
 
-    std::set<std::string> requiredExtensions(m_RS->deviceExtensions.begin(), m_RS->deviceExtensions.end());
+    std::set<std::string> requiredExtensions(m_Config->deviceExtensions.begin(), m_Config->deviceExtensions.end());
 
     for (const auto& extension : availableExtensions) {
         requiredExtensions.erase(extension.extensionName);

@@ -9,7 +9,7 @@
 #include <memory>
 #include <stdexcept>
 
-#include "RenderingSettings.h"
+#include "initialization/VkConfig.h"
 
 class DescriptorSetLayout
 {
@@ -18,12 +18,12 @@ class DescriptorSetLayout
 
 	private:
 		VkDevice m_Device;
-		std::shared_ptr<RenderingSettings> m_RS;
+		std::shared_ptr<VkConfig> m_Config;
 
 	public:
 		DescriptorSetLayout(
 			VkDevice device,
-			std::shared_ptr<RenderingSettings> RS
+			std::shared_ptr<VkConfig> config
 		);
 		void create();
 		void destroy();

@@ -19,7 +19,7 @@
 
 #include <iomanip> // For std::setw
 
-#include "VkClasses.h"
+#include "vkClasses/VkClasses.h"
 #include "Octree.h"
 #include "Perlin.h"
 #include "SimplexNoise.h"
@@ -167,7 +167,7 @@ private:
         p_DescriptorPool = std::make_shared<DescriptorPool>(p_FrameBuffers);
         p_DescriptorPool->create();
         p_DescriptorSets = std::make_shared<DescriptorSets>(p_DescriptorPool);
-        p_DescriptorSets->createWithStorageSampler(storageImageViews, storageImageSamplers);
+        p_DescriptorSets->createWithStorageSampler(storageImageViews, imageSamplers);
         p_CommandBuffer = std::make_shared<CommandBuffers>(p_DescriptorSets);
 
         p_CommandBuffer->attachVertexBuffer(p_VertexBuffer);
@@ -339,13 +339,13 @@ Cam Up: vec3(-0.422386, 0.773021, -0.473317)
     std::vector<VkImage> storageImages;
     std::vector<VkDeviceMemory> storageImageMemories;
     std::vector<VkImageView> storageImageViews;
-    std::vector<VkSampler> storageImageSamplers;
+    std::vector<VkSampler> imageSamplers;
     Octree octree;
     int octreeDepth = 7;
     int octreeWidth = pow(2, octreeDepth);
     bool visualizeOctree = false;
     bool terrain = true;
-    bool shadows = false;
+    bool shadows = true;
     void createOctree() {
 
         int depth = octreeDepth;
@@ -420,7 +420,7 @@ Cam Up: vec3(-0.422386, 0.773021, -0.473317)
         storageImages.resize(MAX_FRAMES_IN_FLIGHT);
         storageImageMemories.resize(MAX_FRAMES_IN_FLIGHT);
         storageImageViews.resize(MAX_FRAMES_IN_FLIGHT);
-        storageImageSamplers.resize(MAX_FRAMES_IN_FLIGHT);
+        imageSamplers.resize(MAX_FRAMES_IN_FLIGHT);
 
         uint32_t width = p_SwapChain->swapChainExtent.width;
         uint32_t height = p_SwapChain->swapChainExtent.height;
@@ -452,14 +452,12 @@ Cam Up: vec3(-0.422386, 0.773021, -0.473317)
                 VK_IMAGE_ASPECT_COLOR_BIT,
                 1
             );
-
-            //createTexSampler(storageImageSamplers[i]);
         }
     }
 
     void destroyStorageImages() {
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-            vkDestroySampler(p_LogicalDevice->device, storageImageSamplers[i], nullptr);
+            vkDestroySampler(p_LogicalDevice->device, imageSamplers[i], nullptr);
             vkDestroyImageView(p_LogicalDevice->device, storageImageViews[i], nullptr);
             vkDestroyImage(p_LogicalDevice->device, storageImages[i], nullptr);
             vkFreeMemory(p_LogicalDevice->device, storageImageMemories[i], nullptr);
@@ -570,7 +568,7 @@ Cam Up: vec3(-0.422386, 0.773021, -0.473317)
         VkPhysicalDeviceProperties  properties{};
         vkGetPhysicalDeviceProperties(p_PhysicalDevice->physicalDevice, &properties);
 
-        storageImageSamplers.resize(MAX_FRAMES_IN_FLIGHT);
+        imageSamplers.resize(MAX_FRAMES_IN_FLIGHT);
 
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
             VkSamplerCreateInfo samplerInfo{};
@@ -591,7 +589,7 @@ Cam Up: vec3(-0.422386, 0.773021, -0.473317)
             samplerInfo.maxLod = static_cast<float>(1);
             samplerInfo.mipLodBias = 0.0f;
 
-            if (vkCreateSampler(p_LogicalDevice->device, &samplerInfo, nullptr, &storageImageSamplers[i]) != VK_SUCCESS) {
+            if (vkCreateSampler(p_LogicalDevice->device, &samplerInfo, nullptr, &imageSamplers[i]) != VK_SUCCESS) {
                 throw std::runtime_error("failed to create texture sampler!");
             }
         }
@@ -926,7 +924,7 @@ Cam Up: vec3(-0.422386, 0.773021, -0.473317)
             vkDestroyBuffer(p_LogicalDevice->device, shaderStorageBuffers[i], nullptr);
             vkFreeMemory(p_LogicalDevice->device, shaderStorageBuffersMemory[i], nullptr);
 
-            vkDestroySampler(p_LogicalDevice->device, storageImageSamplers[i], nullptr);
+            vkDestroySampler(p_LogicalDevice->device, imageSamplers[i], nullptr);
             vkDestroyImageView(p_LogicalDevice->device, storageImageViews[i], nullptr);
             vkDestroyImage(p_LogicalDevice->device, storageImages[i], nullptr);
             vkFreeMemory(p_LogicalDevice->device, storageImageMemories[i], nullptr);
@@ -988,7 +986,7 @@ Cam Up: vec3(-0.422386, 0.773021, -0.473317)
 
 
         p_DescriptorPool->create();
-        p_DescriptorSets->createWithStorageSampler(storageImageViews, storageImageSamplers);
+        p_DescriptorSets->createWithStorageSampler(storageImageViews, imageSamplers);
 
       
         p_CommandBuffer->create();

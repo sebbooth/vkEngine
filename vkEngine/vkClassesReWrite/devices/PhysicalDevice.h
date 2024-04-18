@@ -10,7 +10,7 @@
 #include <memory>
 
 #include "VkStructs.h"
-#include "RenderingSettings.h"
+#include "initialization/VkConfig.h"
 
 class PhysicalDevice
 {
@@ -29,13 +29,13 @@ class PhysicalDevice
 	private:
 		VkInstance m_Instance{};
 		VkSurfaceKHR m_Surface{};
-		std::shared_ptr<RenderingSettings> m_RS;
+		std::shared_ptr<VkConfig> m_Config;
 
 	public:
 		PhysicalDevice(
 			VkInstance instance, 
 			VkSurfaceKHR surface, 
-			std::shared_ptr<RenderingSettings> RS
+			std::shared_ptr<VkConfig> config
 		);
 
 		SwapChainSupportDetails getSwapChainSupportDetails();

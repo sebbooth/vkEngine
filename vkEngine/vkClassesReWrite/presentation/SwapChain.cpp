@@ -68,13 +68,6 @@ void SwapChain::create()
     swapChainExtent = extent;
 }
 
-void SwapChain::destroyFramebuffers()
-{
-    for (auto framebuffer : swapChainFramebuffers) {
-        vkDestroyFramebuffer(m_Device, framebuffer, nullptr);
-    }
-}
-
 void SwapChain::destroySwapChain()
 {
     vkDestroySwapchainKHR(m_Device, swapChain, nullptr);

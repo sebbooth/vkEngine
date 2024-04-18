@@ -2,11 +2,11 @@
 
 LogicalDevice::LogicalDevice(
     std::shared_ptr<PhysicalDevice> p_PhysicalDevice,
-    std::shared_ptr<RenderingSettings> RS
+    std::shared_ptr<VkConfig> config
 )
 {
     mp_PhysicalDevice = p_PhysicalDevice;
-    m_RS = RS;
+    m_Config = config;
 }
 
 void LogicalDevice::create()
@@ -28,7 +28,7 @@ void LogicalDevice::create()
 
     VkPhysicalDeviceFeatures deviceFeatures{};
     deviceFeatures.samplerAnisotropy = VK_TRUE;
-    if (m_RS->msaaEnabled) deviceFeatures.sampleRateShading = VK_TRUE;
+    if (m_Config->msaaEnabled) deviceFeatures.sampleRateShading = VK_TRUE;
     if (wireFrameEnabled) deviceFeatures.fillModeNonSolid = VK_TRUE;
 
     VkDeviceCreateInfo createInfo{};
@@ -36,12 +36,12 @@ void LogicalDevice::create()
     createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
     createInfo.pQueueCreateInfos = queueCreateInfos.data();
     createInfo.pEnabledFeatures = &deviceFeatures;
-    createInfo.enabledExtensionCount = static_cast<uint32_t>(m_RS->deviceExtensions.size());
-    createInfo.ppEnabledExtensionNames = m_RS->deviceExtensions.data();
+    createInfo.enabledExtensionCount = static_cast<uint32_t>(m_Config->deviceExtensions.size());
+    createInfo.ppEnabledExtensionNames = m_Config->deviceExtensions.data();
 
-    if (m_RS->enableValidationLayers) {
-        createInfo.enabledLayerCount = static_cast<uint32_t>(m_RS->validationLayers.size());
-        createInfo.ppEnabledLayerNames = m_RS->validationLayers.data();
+    if (m_Config->enableValidationLayers) {
+        createInfo.enabledLayerCount = static_cast<uint32_t>(m_Config->validationLayers.size());
+        createInfo.ppEnabledLayerNames = m_Config->validationLayers.data();
     }
     else {
         createInfo.enabledLayerCount = 0;
@@ -53,59 +53,12 @@ void LogicalDevice::create()
 
     vkGetDeviceQueue(device, indices.graphicsFamily.value(), 0, &graphicsQueue);
     vkGetDeviceQueue(device, indices.presentFamily.value(), 0, &presentQueue);
-    if (m_RS->computeEnabled) vkGetDeviceQueue(device, indices.graphicsAndComputeFamily.value(), 0, &computeQueue);
+    if (m_Config->computeEnabled) vkGetDeviceQueue(device, indices.graphicsAndComputeFamily.value(), 0, &computeQueue);
 }
 
 void LogicalDevice::destroy()
 {
     vkDestroyDevice(device, nullptr);
-}
-
-void LogicalDevice::createImage(
-    uint32_t width, 
-    uint32_t height,
-    VkFormat format,
-    VkImageTiling tiling,
-    VkImageUsageFlags usage,
-    VkMemoryPropertyFlags properties,
-    VkImage& image,
-    VkDeviceMemory& imageMemory,
-    uint32_t mipLevels,
-    VkSampleCountFlagBits numSamples
-)
-{
-    VkImageCreateInfo imageInfo{};
-    imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-    imageInfo.imageType = VK_IMAGE_TYPE_2D;
-    imageInfo.extent.width = width;
-    imageInfo.extent.height = height;
-    imageInfo.extent.depth = 1;
-    imageInfo.mipLevels = mipLevels;
-    imageInfo.arrayLayers = 1;
-    imageInfo.format = format;
-    imageInfo.tiling = tiling;
-    imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    imageInfo.usage = usage;
-    imageInfo.samples = numSamples;
-    imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-
-    if (vkCreateImage(device, &imageInfo, nullptr, &image) != VK_SUCCESS) {
-        throw std::runtime_error("failed to create image!");
-    }
-
-    VkMemoryRequirements memRequirements;
-    vkGetImageMemoryRequirements(device, image, &memRequirements);
-
-    VkMemoryAllocateInfo allocInfo{};
-    allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-    allocInfo.allocationSize = memRequirements.size;
-    allocInfo.memoryTypeIndex = mp_PhysicalDevice->findMemoryType(memRequirements.memoryTypeBits, properties);
-
-    if (vkAllocateMemory(device, &allocInfo, nullptr, &imageMemory) != VK_SUCCESS) {
-        throw std::runtime_error("failed to allocate image memory!");
-    }
-
-    vkBindImageMemory(device, image, imageMemory, 0);
 }
 
 void LogicalDevice::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory)

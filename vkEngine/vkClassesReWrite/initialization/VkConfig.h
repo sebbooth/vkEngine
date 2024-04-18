@@ -1,11 +1,11 @@
 #pragma once
 
-#ifndef RENDERINGSETTING_H
-#define RENDERINGSETTING_H
+#ifndef VKCONFIG_H
+#define VKCONFIG_H
 
 #include <vector>
 
-struct RenderingSettings {
+struct VkConfig {
 	std::vector<const char*> validationLayers;
 	std::vector<const char*> deviceExtensions;
 	bool enableValidationLayers = false;
@@ -29,4 +29,4 @@ struct RenderingSettings {
 	bool simpleShader = true;
 };
 
-#endif // !RENDERINGSETTING_H
+#endif // !VKCONFIG_H

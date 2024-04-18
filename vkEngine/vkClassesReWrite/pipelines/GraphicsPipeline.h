@@ -8,7 +8,7 @@
 #include <memory>
 
 #include "FileUtils.h"
-#include "RenderingSettings.h"
+#include "initialization/VkConfig.h"
 #include "VkStructs.h"
 
 class GraphicsPipeline
@@ -24,7 +24,7 @@ class GraphicsPipeline
 		VkRenderPass m_RenderPass{};
 		VkDescriptorSetLayout m_DescriptorSetLayout{};
 
-		std::shared_ptr<RenderingSettings> m_RS;
+		std::shared_ptr<VkConfig> m_Config;
 
 	public:
 		GraphicsPipeline(
@@ -33,7 +33,7 @@ class GraphicsPipeline
 			VkExtent2D swapChainExtent,
 			VkRenderPass renderPass,
 			VkDescriptorSetLayout descriptorSetLayout,
-			std::shared_ptr<RenderingSettings> RS
+			std::shared_ptr<VkConfig> config
 		);
 
 		void create(

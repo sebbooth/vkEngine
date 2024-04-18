@@ -17,7 +17,7 @@ class SwapChain
 		VkFormat swapChainImageFormat{};
 		VkExtent2D swapChainExtent{};
 		std::vector<VkImage> swapChainImages;
-		std::vector<VkFramebuffer> swapChainFramebuffers;
+		std::vector<VkImageView> swapChainImageViews;
 
 	private:
 		GLFWwindow* m_Window;
@@ -35,7 +35,6 @@ class SwapChain
 			SwapChainSupportDetails swapChainSupport
 		);
 		void create();
-		void destroyFramebuffers();
 		void destroySwapChain();
 };
 
