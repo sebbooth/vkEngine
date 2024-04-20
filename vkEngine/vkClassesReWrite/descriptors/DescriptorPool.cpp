@@ -14,6 +14,18 @@ void DescriptorPool::bindUniformBuffer(uint32_t binding, uint32_t descriptorCoun
 
 	m_PoolSizes[binding].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 	m_PoolSizes[binding].descriptorCount = descriptorCount;
+	m_PoolSizeCount++;
+}
+
+void DescriptorPool::bindSampler(uint32_t binding, uint32_t descriptorCount)
+{
+	if (binding >= m_PoolSizes.size()) {
+		m_PoolSizes.resize(static_cast<size_t>(binding) + 1);
+	}
+
+	m_PoolSizes[binding].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+	m_PoolSizes[binding].descriptorCount = descriptorCount;
+	m_PoolSizeCount++;
 }
 
 void DescriptorPool::bindStorageBuffer(uint32_t binding, uint32_t descriptorCount)
@@ -24,6 +36,7 @@ void DescriptorPool::bindStorageBuffer(uint32_t binding, uint32_t descriptorCoun
 
 	m_PoolSizes[binding].type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
 	m_PoolSizes[binding].descriptorCount = descriptorCount;
+	m_PoolSizeCount++;
 }
 
 void DescriptorPool::bindStorageImage(uint32_t binding, uint32_t descriptorCount)
@@ -34,13 +47,14 @@ void DescriptorPool::bindStorageImage(uint32_t binding, uint32_t descriptorCount
 
 	m_PoolSizes[binding].type = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
 	m_PoolSizes[binding].descriptorCount = descriptorCount;
+	m_PoolSizeCount++;
 }
 
 void DescriptorPool::create()
 {
 	VkDescriptorPoolCreateInfo poolInfo{};
 	poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-	poolInfo.poolSizeCount = 3;
+	poolInfo.poolSizeCount = m_PoolSizeCount;
 	poolInfo.pPoolSizes = m_PoolSizes.data();
 	poolInfo.maxSets = static_cast<uint32_t>(m_Config->MAX_FRAMES_IN_FLIGHT);
 

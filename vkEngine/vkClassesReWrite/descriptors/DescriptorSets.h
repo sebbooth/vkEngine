@@ -53,6 +53,12 @@ public:
 		uint32_t binding,
 		std::vector<VkImageView> storageImageViews
 	);
+
+	void bindSampler(
+		uint32_t binding, 
+		std::vector<VkImageView> imageViews, 
+		std::vector<VkSampler> imageSamplers
+	);
 };
 
 #endif // !DESCRIPTORSETS_H

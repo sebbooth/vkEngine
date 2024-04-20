@@ -20,6 +20,7 @@ private:
 	std::shared_ptr<VkConfig> m_Config;
 
 	std::vector<VkDescriptorPoolSize> m_PoolSizes;
+	uint32_t m_PoolSizeCount = 0;
 
 public:
 	DescriptorPool(
@@ -27,6 +28,7 @@ public:
 		std::shared_ptr<VkConfig> config
 	);
 	void bindUniformBuffer(uint32_t binding, uint32_t descriptorCount);
+	void bindSampler(uint32_t binding, uint32_t descriptorCount);
 	void bindStorageBuffer(uint32_t binding, uint32_t descriptorCount);
 	void bindStorageImage(uint32_t binding, uint32_t descriptorCount);
 	void create();

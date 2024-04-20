@@ -36,12 +36,8 @@ public:
 		VkRenderPass renderPass,
 		std::shared_ptr<VkConfig> config
 	);
-	void create();
+	void create(VkImageView colorImageView = NULL, VkImageView depthImageView = NULL);
 	void destroy();
-
-	void bindSwapChainImageViews(uint32_t binding);
-	void bindColorReources(uint32_t binding, VkImageView colorImageView);
-	void bindDepthResources(uint32_t binding, VkImageView depthImageView);
 };
 
 #endif

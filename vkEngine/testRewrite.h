@@ -15,6 +15,10 @@
 
 const bool enableValidationLayers = true;
 
+struct  VertexUniformBufferObject {
+    int scale = 1;
+};
+
 struct ComputeUniformBufferObject {
     alignas(16) glm::vec3 camPos = glm::vec3(262.905243, 270.311707, 282.328888);
     alignas(16) glm::vec3 camDir = glm::vec3(-0.519135, -0.634374, -0.572781);
@@ -26,6 +30,18 @@ struct ComputeUniformBufferObject {
     int height = 800;
     int octreeSize;
     int octreeMaxDepth;
+};
+
+const std::vector<Vertex> quadVertices = {
+        {{-1.0f, -1.0f, 0.0f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
+        {{1.0f, -1.0f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
+        {{1.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
+        {{-1.0f, 1.0f, 0.0f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}}
+};
+
+std::vector<uint32_t> quadIndices = {
+    0,1,2,
+    2,3,0
 };
 
 class TestRewrite {
@@ -59,8 +75,10 @@ private:
     uint32_t depthPassBinding;
     uint32_t colorResolveBinding;
 
-    std::shared_ptr<DescriptorSetLayout> p_DescriptorSetLayout;
-    std::shared_ptr<ComputeDescriptorSetLayout> p_ComputeDescriptorSetLayout;
+    std::shared_ptr<DescriptorSetLayout> p_GraphicsDescriptorSetLayout;
+    std::shared_ptr<DescriptorSetLayout> p_ComputeDescriptorSetLayout;
+    uint32_t vertexUniformBinding;
+    uint32_t fragmentSamplerBinding;
     uint32_t computeUniformBinding;
     uint32_t computeSSBOBinding;
     uint32_t computeImageBinding;
@@ -74,9 +92,14 @@ private:
     std::shared_ptr<StorageImage> p_CanvasImage;
     std::shared_ptr<Sampler> p_CanvasSampler;
     std::shared_ptr<UniformBuffer> p_ComputeUBO;
+    std::shared_ptr<UniformBuffer> p_VertexUBO;
+    std::shared_ptr<VertexBuffer> p_VertexBuffer;
+    std::shared_ptr<IndexBuffer> p_IndexBuffer;
 
     std::shared_ptr<DescriptorPool> p_ComputeDescriptorPool;
     std::shared_ptr<DescriptorSets> p_ComputeDescriptorSets;
+    std::shared_ptr<DescriptorPool> p_GraphicsDescriptorPool;
+    std::shared_ptr<DescriptorSets> p_GraphicsDescriptorSets;
 
     std::shared_ptr<DepthResources> p_DepthResources;
     std::shared_ptr<ColorResources> p_ColorResources;
@@ -89,8 +112,8 @@ private:
         config->deviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
         config->validationLayers = { "VK_LAYER_KHRONOS_validation" };
         config->computeEnabled = true;
-        config->msaaEnabled = true;
-        config->depthStencilEnabled = true;
+        config->msaaEnabled = false;
+        config->depthStencilEnabled = false;
     }
 
     void initWindow() {
@@ -111,30 +134,11 @@ private:
         initPresentation();
         initDescriptorSetLayouts();
         initPipelines();
-
-        p_CommandPool = std::make_shared<CommandPool>(
-            p_PhysicalDevice->queueFamilies,
-            p_LogicalDevice->device,
-            p_LogicalDevice->graphicsQueue
-        );
-        p_CommandPool->create();
-
+        initCommandPool();
         initShaderResources();
-        initComputeDescriptorSets();
+        initDescriptorSets();
         initRenderAttachments();
-
-        p_FrameBuffers = std::make_shared<FrameBuffers>(
-            p_LogicalDevice->device,
-            p_ImageViews->swapChainImageViews,
-            p_SwapChain->swapChainExtent,
-            p_RenderPass->renderPass,
-            config
-        );
-        p_FrameBuffers->bindSwapChainImageViews(colorPassBinding);
-        p_FrameBuffers->bindDepthResources(depthPassBinding, p_DepthResources->depthImageView);
-        p_FrameBuffers->bindColorReources(colorResolveBinding, p_ColorResources->colorImageView);
-        p_FrameBuffers->create();
-
+        initFrameBuffers();
     }
 
     void initDevices() {
@@ -189,8 +193,8 @@ private:
             config
         );
         colorPassBinding = p_RenderPass->bindColorPass();
-        depthPassBinding = p_RenderPass->bindDepthPass();
-        colorResolveBinding = p_RenderPass->bindMsaaPass();
+        //depthPassBinding = p_RenderPass->bindDepthPass();
+        //colorResolveBinding = p_RenderPass->bindMsaaPass();
         p_RenderPass->create();
     }
 
@@ -200,20 +204,21 @@ private:
                 1. Create parent "DescriptorSetLayout" class.
                 2. Allow for similar user control in graphics DSL as what is now in compute DSL.
         */
-        p_DescriptorSetLayout = std::make_shared<DescriptorSetLayout>(
-            p_LogicalDevice->device,
-            config
+        p_GraphicsDescriptorSetLayout = std::make_shared<DescriptorSetLayout>(
+            p_LogicalDevice->device
         );
-        p_DescriptorSetLayout->create();
+        vertexUniformBinding = p_GraphicsDescriptorSetLayout->bindVertUniformBuffer();  //0
+        fragmentSamplerBinding = p_GraphicsDescriptorSetLayout->bindFragSampler();      //1
+        p_GraphicsDescriptorSetLayout->create();
 
-        p_ComputeDescriptorSetLayout = std::make_shared<ComputeDescriptorSetLayout>(p_LogicalDevice->device);
+        p_ComputeDescriptorSetLayout = std::make_shared<DescriptorSetLayout>(p_LogicalDevice->device);
 
         // Note: Must do DSL bindings in order of bindings in shader code
         // Should be fine to do bindings in any order for rest of code (Descriptor Pools and Sets)
         // since binding functions will be called with the binding indices returned here
-        computeUniformBinding = p_ComputeDescriptorSetLayout->bindUniformBuffer();  //0
-        computeSSBOBinding = p_ComputeDescriptorSetLayout->bindStorageBuffer();     //1
-        computeImageBinding = p_ComputeDescriptorSetLayout->bindStorageImage();     //2
+        computeUniformBinding = p_ComputeDescriptorSetLayout->bindCompUniformBuffer();  //0
+        computeSSBOBinding = p_ComputeDescriptorSetLayout->bindCompStorageBuffer();     //1
+        computeImageBinding = p_ComputeDescriptorSetLayout->bindCompStorageImage();     //2
         p_ComputeDescriptorSetLayout->create();
     }
 
@@ -229,7 +234,7 @@ private:
             p_LogicalDevice->device,
             p_SwapChain->swapChainExtent,
             p_RenderPass->renderPass,
-            p_DescriptorSetLayout->descriptorSetLayout,
+            p_GraphicsDescriptorSetLayout->descriptorSetLayout,
             config
         );
         std::string vertexShaderFile = "shaders/vertNoUBO.spv";
@@ -245,6 +250,15 @@ private:
         );
         std::string computeShaderFile = "shaders/old_raycast_comp.spv";
         p_ComputePipeline->create(computeShaderFile);
+    }
+
+    void initCommandPool() {
+        p_CommandPool = std::make_shared<CommandPool>(
+            p_PhysicalDevice->queueFamilies,
+            p_LogicalDevice->device,
+            p_LogicalDevice->graphicsQueue
+        );
+        p_CommandPool->create();
     }
 
     void initShaderResources() {
@@ -279,9 +293,27 @@ private:
             config
         );
         p_ComputeUBO->create(sizeof(ComputeUniformBufferObject));
+
+        p_VertexUBO = std::make_shared<UniformBuffer>(
+            p_LogicalDevice,
+            config
+        );
+        p_VertexUBO->create(sizeof(VertexUniformBufferObject));
+
+        p_VertexBuffer = std::make_shared<VertexBuffer>(
+            p_LogicalDevice,
+            p_CommandPool
+        );
+        p_VertexBuffer->create(quadVertices);
+
+        p_IndexBuffer = std::make_shared<IndexBuffer>(
+            p_LogicalDevice,
+            p_CommandPool
+        );
+        p_IndexBuffer->create(quadIndices);
     }
 
-    void initComputeDescriptorSets() {
+    void initDescriptorSets() {
         p_ComputeDescriptorPool = std::make_shared<DescriptorPool>(
             p_LogicalDevice->device,
             config
@@ -312,6 +344,32 @@ private:
             p_CanvasImage->storageImageViews
         );
         p_ComputeDescriptorSets->create();
+
+        p_GraphicsDescriptorPool = std::make_shared<DescriptorPool>(
+            p_LogicalDevice->device,
+            config
+        );
+        p_GraphicsDescriptorPool->bindUniformBuffer(vertexUniformBinding, config->MAX_FRAMES_IN_FLIGHT);
+        p_GraphicsDescriptorPool->bindSampler(fragmentSamplerBinding, config->MAX_FRAMES_IN_FLIGHT);
+        p_GraphicsDescriptorPool->create();
+
+        p_GraphicsDescriptorSets = std::make_shared<DescriptorSets>(
+            p_LogicalDevice->device,
+            p_GraphicsDescriptorSetLayout->descriptorSetLayout,
+            p_GraphicsDescriptorPool->descriptorPool,
+            config
+        );
+        p_GraphicsDescriptorSets->bindUniformBuffer(
+            vertexUniformBinding,
+            p_VertexUBO->uniformBuffers,
+            sizeof(VertexUniformBufferObject)
+        );
+        p_GraphicsDescriptorSets->bindSampler(
+            fragmentSamplerBinding,
+            p_CanvasImage->storageImageViews,
+            p_CanvasSampler->imageSamplers
+        );
+        p_GraphicsDescriptorSets->create();
     }
 
     void initRenderAttachments() {
@@ -336,14 +394,32 @@ private:
         p_ColorResources->create();
     }
 
+    void initFrameBuffers() {
+        p_FrameBuffers = std::make_shared<FrameBuffers>(
+            p_LogicalDevice->device,
+            p_ImageViews->swapChainImageViews,
+            p_SwapChain->swapChainExtent,
+            p_RenderPass->renderPass,
+            config
+        );
+        //p_FrameBuffers->bindDepthResources(depthPassBinding, p_DepthResources->depthImageView);
+        //p_FrameBuffers->bindColorReources(colorResolveBinding, p_ColorResources->colorImageView);
+        //p_FrameBuffers->bindSwapChainImageViews(colorPassBinding);
+        p_FrameBuffers->create(NULL, NULL);
+    }
+
     void cleanup() {
         p_FrameBuffers->destroy();
 
         p_ColorResources->destroy();
         p_DepthResources->destroy();
 
+        p_GraphicsDescriptorPool->destroy();
         p_ComputeDescriptorPool->destroy();
 
+        p_IndexBuffer->destroy();
+        p_VertexBuffer->destroy();
+        p_VertexUBO->destroy();
         p_ComputeUBO->destroy();
         p_CanvasSampler->destroy();
         p_CanvasImage->destroy();
@@ -355,7 +431,7 @@ private:
         p_GraphicsPipeline->destroy();
 
         p_ComputeDescriptorSetLayout->destroy();
-        p_DescriptorSetLayout->destroy();
+        p_GraphicsDescriptorSetLayout->destroy();
 
         p_RenderPass->destroy();
         p_ImageViews->destroySwapChainImageViews();
@@ -368,10 +444,10 @@ private:
     }
 
     Octree octree;
-    int octreeDepth = 5;
+    int octreeDepth = 6;
     int octreeWidth = static_cast<int>(pow(2, octreeDepth));
     bool visualizeOctree = false;
-    bool terrain = false;
+    bool terrain = true;
     bool shadows = false;
 
     void createOctree() {

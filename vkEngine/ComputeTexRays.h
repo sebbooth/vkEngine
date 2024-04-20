@@ -168,8 +168,8 @@ private:
         p_DescriptorPool->create();
         p_DescriptorSets = std::make_shared<DescriptorSets>(p_DescriptorPool);
         p_DescriptorSets->createWithStorageSampler(storageImageViews, imageSamplers);
-        p_CommandBuffer = std::make_shared<CommandBuffers>(p_DescriptorSets);
 
+        p_CommandBuffer = std::make_shared<CommandBuffers>(p_DescriptorSets);
         p_CommandBuffer->attachVertexBuffer(p_VertexBuffer);
         p_CommandBuffer->attachIndexBuffer(p_IndexBuffer);
         p_CommandBuffer->create();

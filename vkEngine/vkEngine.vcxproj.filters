@@ -98,9 +98,6 @@
     <ClInclude Include="vkClassesReWrite\descriptors\DescriptorSetLayout.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="vkClassesReWrite\descriptors\ComputeDescriptorSetLayout.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="vkClassesReWrite\pipelines\GraphicsPipeline.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -150,6 +147,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="vkClassesReWrite\framebuffers\FrameBuffers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vkClassesReWrite\shaderResources\VertexBuffer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vkClassesReWrite\shaderResources\IndexBuffer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -202,9 +205,6 @@
     <ClCompile Include="vkClassesReWrite\descriptors\DescriptorSetLayout.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="vkClassesReWrite\descriptors\ComputeDescriptorSetLayout.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="vkClassesReWrite\pipelines\GraphicsPipeline.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -251,6 +251,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="vkClassesReWrite\framebuffers\FrameBuffers.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vkClassesReWrite\shaderResources\VertexBuffer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vkClassesReWrite\shaderResources\IndexBuffer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

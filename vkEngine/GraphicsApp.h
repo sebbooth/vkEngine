@@ -68,7 +68,7 @@ private:
     std::shared_ptr<SwapChain> p_SwapChain;
     std::shared_ptr<ImageViews> p_ImageViews;
     std::shared_ptr<RenderPass> p_RenderPass;
-    std::shared_ptr<DescriptorSetLayout> p_DescriptorSetLayout;
+    std::shared_ptr<DescriptorSetLayout> p_GraphicsDescriptorSetLayout;
     std::shared_ptr<GraphicsPipeline> p_GraphicsPipeline;
     std::shared_ptr<CommandPool> p_CommandPool;
         //std::shared_ptr<ColorResources> p_ColorResources;
@@ -132,13 +132,13 @@ private:
         p_RenderPass->depthEnabled = true;
         p_RenderPass->create();
 
-        p_DescriptorSetLayout = std::make_shared<DescriptorSetLayout>(p_RenderPass);
-        p_DescriptorSetLayout->guiEnabled = guiEnabled;
-        p_DescriptorSetLayout->uboEnabled = true;
-        p_DescriptorSetLayout->samplerEnabled = true;
-        p_DescriptorSetLayout->create();
+        p_GraphicsDescriptorSetLayout = std::make_shared<DescriptorSetLayout>(p_RenderPass);
+        p_GraphicsDescriptorSetLayout->guiEnabled = guiEnabled;
+        p_GraphicsDescriptorSetLayout->uboEnabled = true;
+        p_GraphicsDescriptorSetLayout->samplerEnabled = true;
+        p_GraphicsDescriptorSetLayout->create();
 
-        p_GraphicsPipeline = std::make_shared<GraphicsPipeline>(p_DescriptorSetLayout);
+        p_GraphicsPipeline = std::make_shared<GraphicsPipeline>(p_GraphicsDescriptorSetLayout);
         p_GraphicsPipeline->cullBackFaces = false;
         p_GraphicsPipeline->displayNormals = false;
         p_GraphicsPipeline->create();
@@ -194,7 +194,7 @@ private:
         p_GraphicsPipeline->destroy();
         p_RenderPass->destroy();
         p_DescriptorPool->destroy();
-        p_DescriptorSetLayout->destroy();
+        p_GraphicsDescriptorSetLayout->destroy();
         p_IndexBuffer->destroy();
         p_VertexBuffer->destroy();
         p_SyncObjects->destroy();
@@ -210,10 +210,10 @@ private:
         p_ImageViews->create();
         p_RenderPass->depthEnabled = prevDepthEnabled;
         p_RenderPass->create();
-        p_DescriptorSetLayout->guiEnabled = guiEnabled;
-        p_DescriptorSetLayout->uboEnabled = true;
-        p_DescriptorSetLayout->samplerEnabled = prevSamplerEnabled;
-        p_DescriptorSetLayout->create();
+        p_GraphicsDescriptorSetLayout->guiEnabled = guiEnabled;
+        p_GraphicsDescriptorSetLayout->uboEnabled = true;
+        p_GraphicsDescriptorSetLayout->samplerEnabled = prevSamplerEnabled;
+        p_GraphicsDescriptorSetLayout->create();
         p_GraphicsPipeline->cullBackFaces = prevCullBackFaces;
         p_GraphicsPipeline->displayNormals = prevDisplayNormals;
         p_GraphicsPipeline->create();
@@ -361,7 +361,7 @@ private:
         p_GraphicsPipeline->destroy();
         p_RenderPass->destroy();
         p_DescriptorPool->destroy();
-        p_DescriptorSetLayout->destroy();
+        p_GraphicsDescriptorSetLayout->destroy();
         p_IndexBuffer->destroy();
         p_VertexBuffer->destroy();
         p_SyncObjects->destroy();

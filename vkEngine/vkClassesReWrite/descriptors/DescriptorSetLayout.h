@@ -9,8 +9,6 @@
 #include <memory>
 #include <stdexcept>
 
-#include "initialization/VkConfig.h"
-
 class DescriptorSetLayout
 {
 	public:
@@ -18,13 +16,20 @@ class DescriptorSetLayout
 
 	private:
 		VkDevice m_Device;
-		std::shared_ptr<VkConfig> m_Config;
+		std::vector<VkDescriptorSetLayoutBinding> m_LayoutBindings{};
+		uint32_t m_Binding = 0;
 
 	public:
 		DescriptorSetLayout(
-			VkDevice device,
-			std::shared_ptr<VkConfig> config
+			VkDevice device
 		);
+
+		uint32_t bindVertUniformBuffer();
+		uint32_t bindFragSampler();
+		uint32_t bindCompUniformBuffer();
+		uint32_t bindCompStorageBuffer();
+		uint32_t bindCompStorageImage();
+
 		void create();
 		void destroy();
 

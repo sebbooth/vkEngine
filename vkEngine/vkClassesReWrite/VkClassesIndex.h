@@ -9,7 +9,6 @@
 #include "presentation/RenderPass.h"
 
 #include "descriptors/DescriptorSetLayout.h"
-#include "descriptors/ComputeDescriptorSetLayout.h"
 #include "descriptors/DescriptorPool.h"
 #include "descriptors/DescriptorSets.h"
 
@@ -22,6 +21,8 @@
 #include "shaderResources/StorageImage.h"
 #include "shaderResources/Sampler.h"
 #include "shaderResources/UniformBuffer.h"
+#include "shaderResources/VertexBuffer.h"
+#include "shaderResources/IndexBuffer.h"
 
 #include "images/Images.h"
 #include "images/ImageViews.h"
