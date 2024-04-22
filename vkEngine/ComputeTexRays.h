@@ -24,11 +24,11 @@
 #include "Perlin.h"
 #include "SimplexNoise.h"
 
-const uint32_t WIDTH = 800;
-const uint32_t HEIGHT = 600;
+const uint32_t screenWidth = 800;
+const uint32_t screenHeight = 600;
 const std::string MODEL_PATH = "assets/models/viking_room/viking_room.obj";
 const std::string TEXTURE_PATH = "assets/models/viking_room/viking_room.png";
-const int MAX_FRAMES_IN_FLIGHT = 2;
+const int maxFramesInFlight = 2;
 
 const std::vector<const char*> validationLayers = {
     "VK_LAYER_KHRONOS_validation",
@@ -87,7 +87,7 @@ private:
     void initWindow() {
         glfwInit();
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-        window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);
+        window = glfwCreateWindow(screenWidth, screenHeight, "Vulkan", nullptr, nullptr);
         glfwSetWindowUserPointer(window, this);
         glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);
     }
@@ -230,19 +230,19 @@ Cam Up: vec3(-0.422386, 0.773021, -0.473317)
     void createComputeDescriptorPool() {
         std::array<VkDescriptorPoolSize, 3> poolSizes{};
         poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        poolSizes[0].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+        poolSizes[0].descriptorCount = static_cast<uint32_t>(maxFramesInFlight);
 
         poolSizes[1].type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-        poolSizes[1].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+        poolSizes[1].descriptorCount = static_cast<uint32_t>(maxFramesInFlight);
 
         poolSizes[2].type = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
-        poolSizes[2].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+        poolSizes[2].descriptorCount = static_cast<uint32_t>(maxFramesInFlight);
 
         VkDescriptorPoolCreateInfo poolInfo{};
         poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
         poolInfo.poolSizeCount = 3;
         poolInfo.pPoolSizes = poolSizes.data();
-        poolInfo.maxSets = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+        poolInfo.maxSets = static_cast<uint32_t>(maxFramesInFlight);
 
         if (vkCreateDescriptorPool(p_LogicalDevice->device, &poolInfo, nullptr, &computeDescriptorPool) != VK_SUCCESS) {
             throw std::runtime_error("failed to create descriptor pool!");
@@ -250,19 +250,19 @@ Cam Up: vec3(-0.422386, 0.773021, -0.473317)
     }
 
     void createComputeDescriptorSets() {
-        std::vector<VkDescriptorSetLayout> layouts(MAX_FRAMES_IN_FLIGHT, computeDescriptorSetLayout);
+        std::vector<VkDescriptorSetLayout> layouts(maxFramesInFlight, computeDescriptorSetLayout);
         VkDescriptorSetAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
         allocInfo.descriptorPool = computeDescriptorPool;
-        allocInfo.descriptorSetCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+        allocInfo.descriptorSetCount = static_cast<uint32_t>(maxFramesInFlight);
         allocInfo.pSetLayouts = layouts.data();
 
-        computeDescriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
+        computeDescriptorSets.resize(maxFramesInFlight);
         if (vkAllocateDescriptorSets(p_LogicalDevice->device, &allocInfo, computeDescriptorSets.data()) != VK_SUCCESS) {
             throw std::runtime_error("failed to allocate descriptor sets!");
         }
 
-        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+        for (size_t i = 0; i < maxFramesInFlight; i++) {
             VkDescriptorBufferInfo uniformBufferInfo{};
             uniformBufferInfo.buffer = computeUniformBuffers[i];
             uniformBufferInfo.offset = 0;
@@ -278,7 +278,7 @@ Cam Up: vec3(-0.422386, 0.773021, -0.473317)
             descriptorWrites[0].pBufferInfo = &uniformBufferInfo;
 
             VkDescriptorBufferInfo storageBufferInfoLastFrame{};
-            storageBufferInfoLastFrame.buffer = shaderStorageBuffers[(i - 1) % MAX_FRAMES_IN_FLIGHT];
+            storageBufferInfoLastFrame.buffer = shaderStorageBuffers[(i - 1) % maxFramesInFlight];
             storageBufferInfoLastFrame.offset = 0;
             storageBufferInfoLastFrame.range = sizeof(OctreeNode) * octree.octreeArray.size();
 
@@ -417,15 +417,15 @@ Cam Up: vec3(-0.422386, 0.773021, -0.473317)
     }
 
     void createStorageImages() {
-        storageImages.resize(MAX_FRAMES_IN_FLIGHT);
-        storageImageMemories.resize(MAX_FRAMES_IN_FLIGHT);
-        storageImageViews.resize(MAX_FRAMES_IN_FLIGHT);
-        imageSamplers.resize(MAX_FRAMES_IN_FLIGHT);
+        storageImages.resize(maxFramesInFlight);
+        storageImageMemories.resize(maxFramesInFlight);
+        storageImageViews.resize(maxFramesInFlight);
+        imageSamplers.resize(maxFramesInFlight);
 
         uint32_t width = p_SwapChain->swapChainExtent.width;
         uint32_t height = p_SwapChain->swapChainExtent.height;
 
-        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+        for (size_t i = 0; i < maxFramesInFlight; i++) {
             p_LogicalDevice->createImage(
                 width,
                 height,
@@ -456,7 +456,7 @@ Cam Up: vec3(-0.422386, 0.773021, -0.473317)
     }
 
     void destroyStorageImages() {
-        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+        for (size_t i = 0; i < maxFramesInFlight; i++) {
             vkDestroySampler(p_LogicalDevice->device, imageSamplers[i], nullptr);
             vkDestroyImageView(p_LogicalDevice->device, storageImageViews[i], nullptr);
             vkDestroyImage(p_LogicalDevice->device, storageImages[i], nullptr);
@@ -568,9 +568,9 @@ Cam Up: vec3(-0.422386, 0.773021, -0.473317)
         VkPhysicalDeviceProperties  properties{};
         vkGetPhysicalDeviceProperties(p_PhysicalDevice->physicalDevice, &properties);
 
-        imageSamplers.resize(MAX_FRAMES_IN_FLIGHT);
+        imageSamplers.resize(maxFramesInFlight);
 
-        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+        for (size_t i = 0; i < maxFramesInFlight; i++) {
             VkSamplerCreateInfo samplerInfo{};
             samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
             samplerInfo.magFilter = VK_FILTER_LINEAR;
@@ -596,8 +596,8 @@ Cam Up: vec3(-0.422386, 0.773021, -0.473317)
     }
 
     void createSSBOs() {
-        shaderStorageBuffers.resize(MAX_FRAMES_IN_FLIGHT);
-        shaderStorageBuffersMemory.resize(MAX_FRAMES_IN_FLIGHT);
+        shaderStorageBuffers.resize(maxFramesInFlight);
+        shaderStorageBuffersMemory.resize(maxFramesInFlight);
 
         VkDeviceSize bufferSize = sizeof(OctreeNode) * octree.octreeArray.size();
 
@@ -611,7 +611,7 @@ Cam Up: vec3(-0.422386, 0.773021, -0.473317)
         memcpy(data, octree.octreeArray.data(), (size_t)bufferSize);
         vkUnmapMemory(p_LogicalDevice->device, stagingBufferMemory);
 
-        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+        for (size_t i = 0; i < maxFramesInFlight; i++) {
             p_LogicalDevice->createBuffer(bufferSize, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, shaderStorageBuffers[i], shaderStorageBuffersMemory[i]);
             // Copy data from the staging buffer (host) to the shader storage buffer (GPU)
             p_CommandPool->copyBuffer(stagingBuffer, shaderStorageBuffers[i], bufferSize);
@@ -657,11 +657,11 @@ Cam Up: vec3(-0.422386, 0.773021, -0.473317)
     void createComputeUniformBuffers() {
         VkDeviceSize bufferSize = sizeof(ComputeUniformBufferObject);
 
-        computeUniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
-        computeUniformBuffersMemory.resize(MAX_FRAMES_IN_FLIGHT);
-        computeUniformBuffersMapped.resize(MAX_FRAMES_IN_FLIGHT);
+        computeUniformBuffers.resize(maxFramesInFlight);
+        computeUniformBuffersMemory.resize(maxFramesInFlight);
+        computeUniformBuffersMapped.resize(maxFramesInFlight);
 
-        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+        for (size_t i = 0; i < maxFramesInFlight; i++) {
             p_LogicalDevice->createBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, computeUniformBuffers[i], computeUniformBuffersMemory[i]);
 
             vkMapMemory(p_LogicalDevice->device, computeUniformBuffersMemory[i], 0, bufferSize, 0, &computeUniformBuffersMapped[i]);
@@ -669,7 +669,7 @@ Cam Up: vec3(-0.422386, 0.773021, -0.473317)
     }
 
     void createComputeCommandBuffers() {
-        computeCommandBuffers.resize(MAX_FRAMES_IN_FLIGHT);
+        computeCommandBuffers.resize(maxFramesInFlight);
 
         VkCommandBufferAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -895,7 +895,7 @@ Cam Up: vec3(-0.422386, 0.773021, -0.473317)
         }
         transitionImageLayout(storageImages[currentFrame], VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_LAYOUT_GENERAL);
 
-        currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
+        currentFrame = (currentFrame + 1) % maxFramesInFlight;
     }
 
     void cleanup() {
@@ -906,7 +906,7 @@ Cam Up: vec3(-0.422386, 0.773021, -0.473317)
         vkDestroyPipeline(p_LogicalDevice->device, computePipeline, nullptr);
         vkDestroyPipelineLayout(p_LogicalDevice->device, computePipelineLayout, nullptr);
         p_RenderPass->destroy();
-        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+        for (size_t i = 0; i < maxFramesInFlight; i++) {
             vkDestroyBuffer(p_LogicalDevice->device, computeUniformBuffers[i], nullptr);
             vkFreeMemory(p_LogicalDevice->device, computeUniformBuffersMemory[i], nullptr);
         }
@@ -920,7 +920,7 @@ Cam Up: vec3(-0.422386, 0.773021, -0.473317)
         p_IndexBuffer->destroy();
         p_VertexBuffer->destroy();
 
-        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+        for (size_t i = 0; i < maxFramesInFlight; i++) {
             vkDestroyBuffer(p_LogicalDevice->device, shaderStorageBuffers[i], nullptr);
             vkFreeMemory(p_LogicalDevice->device, shaderStorageBuffersMemory[i], nullptr);
 

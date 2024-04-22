@@ -33,7 +33,6 @@ void ColorResources::create()
         );
 
         colorImageView = mp_ImageViews->createImageView(colorImage, m_ColorFormat, VK_IMAGE_ASPECT_COLOR_BIT, 1);
-    
 }
 
 void ColorResources::destroy()

@@ -2,47 +2,69 @@
 
 DescriptorSets::DescriptorSets(
 	VkDevice device, 
-	VkDescriptorSetLayout descriptorSetLayout,
-	VkDescriptorPool descriptorPool,
+	std::shared_ptr<DescriptorSetLayout> p_DescriptorSetLayout, 
+	std::shared_ptr<DescriptorPool> p_DescriptorPool, 
 	std::shared_ptr<VkConfig> config
 )
 {
 	m_Device = device;
-	m_DescriptorSetLayout = descriptorSetLayout;
-	m_DescriptorPool = descriptorPool;
+	mp_DescriptorSetLayout = p_DescriptorSetLayout;
+	mp_DescriptorPool = p_DescriptorPool;
 	m_Config = config;
 
-	descriptorSets.resize(m_Config->MAX_FRAMES_IN_FLIGHT);
-	m_DescriptorWrites.resize(m_Config->MAX_FRAMES_IN_FLIGHT);
+	descriptorSets.resize(m_Config->maxFramesInFlight);
+	m_DescriptorWrites.resize(m_Config->maxFramesInFlight);
 
-	std::vector<VkDescriptorSetLayout> layouts(m_Config->MAX_FRAMES_IN_FLIGHT, m_DescriptorSetLayout);
+	std::vector<VkDescriptorSetLayout> layouts(m_Config->maxFramesInFlight, mp_DescriptorSetLayout->descriptorSetLayout);
 	VkDescriptorSetAllocateInfo allocInfo{};
 	allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-	allocInfo.descriptorPool = m_DescriptorPool;
-	allocInfo.descriptorSetCount = static_cast<uint32_t>(m_Config->MAX_FRAMES_IN_FLIGHT);
+	allocInfo.descriptorPool = mp_DescriptorPool->descriptorPool;
+	allocInfo.descriptorSetCount = static_cast<uint32_t>(m_Config->maxFramesInFlight);
+	allocInfo.pSetLayouts = layouts.data();
+
+	if (vkAllocateDescriptorSets(m_Device, &allocInfo, descriptorSets.data()) != VK_SUCCESS) {
+		throw std::runtime_error("failed to allocate descriptor sets!");
+	} 
+}
+
+void DescriptorSets::create()
+{
+	for (size_t i = 0; i < m_Config->maxFramesInFlight; i++) {
+		vkUpdateDescriptorSets(m_Device, static_cast<uint32_t>(m_DescriptorWrites[i].size()), m_DescriptorWrites[i].data(), 0, nullptr);
+	}
+}
+
+void DescriptorSets::reInit()
+{
+	descriptorSets.resize(m_Config->maxFramesInFlight);
+	m_DescriptorWrites.resize(m_Config->maxFramesInFlight);
+
+	std::vector<VkDescriptorSetLayout> layouts(m_Config->maxFramesInFlight, mp_DescriptorSetLayout->descriptorSetLayout);
+	VkDescriptorSetAllocateInfo allocInfo{};
+	allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+	allocInfo.descriptorPool = mp_DescriptorPool->descriptorPool;
+	allocInfo.descriptorSetCount = static_cast<uint32_t>(m_Config->maxFramesInFlight);
 	allocInfo.pSetLayouts = layouts.data();
 
 	if (vkAllocateDescriptorSets(m_Device, &allocInfo, descriptorSets.data()) != VK_SUCCESS) {
 		throw std::runtime_error("failed to allocate descriptor sets!");
 	}
-
 }
 
-void DescriptorSets::create()
+void DescriptorSets::destroy()
 {
-	
-	for (size_t i = 0; i < m_Config->MAX_FRAMES_IN_FLIGHT; i++) {
-		vkUpdateDescriptorSets(m_Device, static_cast<uint32_t>(m_DescriptorWrites[i].size()), m_DescriptorWrites[i].data(), 0, nullptr);
-	}
+	m_UniformBufferInfoSets.resize(0);
+	m_StorageBufferInfoSets.resize(0);
+	m_StorageImageInfoSets.resize(0);
 }
 
 void DescriptorSets::bindUniformBuffer(uint32_t binding, std::vector<VkBuffer> uniformBuffers, VkDeviceSize size)
 {
 	size_t j = m_UniformBufferInfoSets.size();
 	m_UniformBufferInfoSets.resize(j + 1);
-	m_UniformBufferInfoSets[j].resize(m_Config->MAX_FRAMES_IN_FLIGHT);
+	m_UniformBufferInfoSets[j].resize(m_Config->maxFramesInFlight);
 
-	for (size_t i = 0; i < m_Config->MAX_FRAMES_IN_FLIGHT; i++) {
+	for (size_t i = 0; i < m_Config->maxFramesInFlight; i++) {
 		if (binding >= m_DescriptorWrites[i].size()) {
 			m_DescriptorWrites[i].resize(static_cast<size_t>(binding) + 1);
 		}
@@ -66,9 +88,9 @@ void DescriptorSets::bindStorageBuffer(uint32_t binding, std::vector<VkBuffer> s
 {
 	size_t j = m_StorageBufferInfoSets.size();
 	m_StorageBufferInfoSets.resize(j + 1);
-	m_StorageBufferInfoSets[j].resize(m_Config->MAX_FRAMES_IN_FLIGHT);
+	m_StorageBufferInfoSets[j].resize(m_Config->maxFramesInFlight);
 
-	for (size_t i = 0; i < m_Config->MAX_FRAMES_IN_FLIGHT; i++) {
+	for (size_t i = 0; i < m_Config->maxFramesInFlight; i++) {
 		if (binding >= m_DescriptorWrites[i].size()) {
 			m_DescriptorWrites[i].resize(static_cast<size_t>(binding) + 1);
 		}
@@ -91,9 +113,9 @@ void DescriptorSets::bindStorageImage(uint32_t binding, std::vector<VkImageView>
 {
 	size_t j = m_StorageImageInfoSets.size();
 	m_StorageImageInfoSets.resize(j + 1);
-	m_StorageImageInfoSets[j].resize(m_Config->MAX_FRAMES_IN_FLIGHT);
+	m_StorageImageInfoSets[j].resize(m_Config->maxFramesInFlight);
 
-	for (size_t i = 0; i < m_Config->MAX_FRAMES_IN_FLIGHT; i++) {
+	for (size_t i = 0; i < m_Config->maxFramesInFlight; i++) {
 		if (binding >= m_DescriptorWrites[i].size()) {
 			m_DescriptorWrites[i].resize(static_cast<size_t>(binding) + 1);
 		}
@@ -115,9 +137,9 @@ void DescriptorSets::bindSampler(uint32_t binding, std::vector<VkImageView> imag
 {
 	size_t j = m_StorageImageInfoSets.size();
 	m_StorageImageInfoSets.resize(j + 1);
-	m_StorageImageInfoSets[j].resize(m_Config->MAX_FRAMES_IN_FLIGHT);
+	m_StorageImageInfoSets[j].resize(m_Config->maxFramesInFlight);
 
-	for (size_t i = 0; i < m_Config->MAX_FRAMES_IN_FLIGHT; i++) {
+	for (size_t i = 0; i < m_Config->maxFramesInFlight; i++) {
 		if (binding >= m_DescriptorWrites[i].size()) {
 			m_DescriptorWrites[i].resize(static_cast<size_t>(binding) + 1);
 		}

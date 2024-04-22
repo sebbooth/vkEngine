@@ -56,7 +56,7 @@ void DescriptorPool::create()
 	poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
 	poolInfo.poolSizeCount = m_PoolSizeCount;
 	poolInfo.pPoolSizes = m_PoolSizes.data();
-	poolInfo.maxSets = static_cast<uint32_t>(m_Config->MAX_FRAMES_IN_FLIGHT);
+	poolInfo.maxSets = static_cast<uint32_t>(m_Config->maxFramesInFlight);
 
 	if (vkCreateDescriptorPool(m_Device, &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS) {
 		throw std::runtime_error("failed to create descriptor pool!");
@@ -65,5 +65,7 @@ void DescriptorPool::create()
 
 void DescriptorPool::destroy()
 {
+	m_PoolSizes.resize(0);
+	m_PoolSizeCount = 0;
 	vkDestroyDescriptorPool(m_Device, descriptorPool, nullptr);
 }

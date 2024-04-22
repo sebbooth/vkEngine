@@ -9,6 +9,9 @@
 #include <stdexcept>
 
 #include "initialization/VkConfig.h"
+#include "descriptors/DescriptorSetLayout.h"
+#include "descriptors/DescriptorPool.h"
+
 
 class DescriptorSets
 {
@@ -17,8 +20,8 @@ public:
 
 private:
 	VkDevice m_Device;
-	VkDescriptorSetLayout m_DescriptorSetLayout;
-	VkDescriptorPool m_DescriptorPool;
+	std::shared_ptr<DescriptorSetLayout> mp_DescriptorSetLayout;
+	std::shared_ptr<DescriptorPool> mp_DescriptorPool;
 	std::shared_ptr<VkConfig> m_Config;
 
 	std::vector<std::vector<VkWriteDescriptorSet>> m_DescriptorWrites;
@@ -30,12 +33,14 @@ private:
 public:
 	DescriptorSets(
 		VkDevice device,
-		VkDescriptorSetLayout descriptorSetLayout,
-		VkDescriptorPool descriptorPool,
+		std::shared_ptr<DescriptorSetLayout> p_DescriptorSetLayout,
+		std::shared_ptr<DescriptorPool> p_DescriptorPool,
 		std::shared_ptr<VkConfig> config
 	);
 
 	void create();
+	void reInit();
+	void destroy();
 
 	void bindUniformBuffer(
 		uint32_t binding, 

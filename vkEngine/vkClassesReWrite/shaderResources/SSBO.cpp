@@ -13,8 +13,8 @@ SSBO::SSBO(
 
 void SSBO::uploadData(VkDeviceSize bufferSize, const void* uploadData)
 {
-    shaderStorageBuffers.resize(m_Config->MAX_FRAMES_IN_FLIGHT);
-    shaderStorageBuffersMemory.resize(m_Config->MAX_FRAMES_IN_FLIGHT);
+    shaderStorageBuffers.resize(m_Config->maxFramesInFlight);
+    shaderStorageBuffersMemory.resize(m_Config->maxFramesInFlight);
 
     // Create a staging buffer used to upload data to the gpu
     VkBuffer stagingBuffer;
@@ -32,7 +32,7 @@ void SSBO::uploadData(VkDeviceSize bufferSize, const void* uploadData)
     memcpy(data, uploadData, (size_t)bufferSize);
     vkUnmapMemory(m_LogicalDevice->device, stagingBufferMemory);
 
-    for (size_t i = 0; i < m_Config->MAX_FRAMES_IN_FLIGHT; i++) {
+    for (size_t i = 0; i < m_Config->maxFramesInFlight; i++) {
         m_LogicalDevice->createBuffer(
             bufferSize, 
             VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, 
@@ -49,7 +49,7 @@ void SSBO::uploadData(VkDeviceSize bufferSize, const void* uploadData)
 
 void SSBO::destroy()
 {
-    for (size_t i = 0; i < m_Config->MAX_FRAMES_IN_FLIGHT; i++) {
+    for (size_t i = 0; i < m_Config->maxFramesInFlight; i++) {
         vkDestroyBuffer(m_LogicalDevice->device, shaderStorageBuffers[i], nullptr);
         vkFreeMemory(m_LogicalDevice->device, shaderStorageBuffersMemory[i], nullptr);
     }

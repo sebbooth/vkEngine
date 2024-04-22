@@ -22,7 +22,7 @@ public:
 	std::shared_ptr<ColorResources> p_ColorResources;
 	std::shared_ptr<DepthResources> p_DepthResources;
 
-	const int MAX_FRAMES_IN_FLIGHT = 2;
+	const int maxFramesInFlight = 2;
 
 	FrameBuffers(std::shared_ptr<CommandPool> p_CommandPool);
 	void create();

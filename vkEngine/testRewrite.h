@@ -15,10 +15,6 @@
 
 const bool enableValidationLayers = true;
 
-struct  VertexUniformBufferObject {
-    int scale = 1;
-};
-
 struct ComputeUniformBufferObject {
     alignas(16) glm::vec3 camPos = glm::vec3(262.905243, 270.311707, 282.328888);
     alignas(16) glm::vec3 camDir = glm::vec3(-0.519135, -0.634374, -0.572781);
@@ -49,9 +45,13 @@ class TestRewrite {
 public:
     void run() {
         initSettings();
-        createOctree();
+        for (int i = 0; i < 1; i++) {
+            createOctree();
+
+        }
         initWindow();
         initVulkan();
+        mainLoop();
         cleanup();
     }
 
@@ -106,6 +106,13 @@ private:
 
     std::shared_ptr<FrameBuffers> p_FrameBuffers;
 
+    std::shared_ptr<CommandBuffers> p_CommandBuffers;
+    std::shared_ptr<ComputeCommandBuffers> p_ComputeCommandBuffers;
+
+    std::shared_ptr<SyncObjects> p_SyncObjects;
+
+    ComputeUniformBufferObject ubo{};
+
     void initSettings() {
         config = std::make_shared<VkConfig>();
         config->enableValidationLayers = enableValidationLayers;
@@ -114,12 +121,13 @@ private:
         config->computeEnabled = true;
         config->msaaEnabled = false;
         config->depthStencilEnabled = false;
+        config->downScaleFactor = 4;
     }
 
     void initWindow() {
         glfwInit();
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-        window = glfwCreateWindow(config->WIDTH, config->HEIGHT, "VkEngine", nullptr, nullptr);
+        window = glfwCreateWindow(config->screenWidth, config->screenHeight, "VkEngine", nullptr, nullptr);
         glfwSetWindowUserPointer(window, this);
         glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);
     }
@@ -137,8 +145,10 @@ private:
         initCommandPool();
         initShaderResources();
         initDescriptorSets();
-        initRenderAttachments();
+        //initRenderAttachments();
         initFrameBuffers();
+        initCommandBuffers();
+        initSyncObjects();
     }
 
     void initDevices() {
@@ -207,7 +217,7 @@ private:
         p_GraphicsDescriptorSetLayout = std::make_shared<DescriptorSetLayout>(
             p_LogicalDevice->device
         );
-        vertexUniformBinding = p_GraphicsDescriptorSetLayout->bindVertUniformBuffer();  //0
+        //vertexUniformBinding = p_GraphicsDescriptorSetLayout->bindVertUniformBuffer();  //0
         fragmentSamplerBinding = p_GraphicsDescriptorSetLayout->bindFragSampler();      //1
         p_GraphicsDescriptorSetLayout->create();
 
@@ -237,8 +247,8 @@ private:
             p_GraphicsDescriptorSetLayout->descriptorSetLayout,
             config
         );
-        std::string vertexShaderFile = "shaders/vertNoUBO.spv";
-        std::string fragmentShaderFile = "shaders/frag.spv";
+        std::string vertexShaderFile = "shaders/simple_vert.spv";
+        std::string fragmentShaderFile = "shaders/simple_frag.spv";
         p_GraphicsPipeline->create(
             vertexShaderFile,
             fragmentShaderFile
@@ -293,13 +303,13 @@ private:
             config
         );
         p_ComputeUBO->create(sizeof(ComputeUniformBufferObject));
-
+        /*
         p_VertexUBO = std::make_shared<UniformBuffer>(
             p_LogicalDevice,
             config
         );
         p_VertexUBO->create(sizeof(VertexUniformBufferObject));
-
+        */
         p_VertexBuffer = std::make_shared<VertexBuffer>(
             p_LogicalDevice,
             p_CommandPool
@@ -318,15 +328,15 @@ private:
             p_LogicalDevice->device,
             config
         );
-        p_ComputeDescriptorPool->bindUniformBuffer(computeUniformBinding, config->MAX_FRAMES_IN_FLIGHT);
-        p_ComputeDescriptorPool->bindStorageBuffer(computeSSBOBinding, config->MAX_FRAMES_IN_FLIGHT);
-        p_ComputeDescriptorPool->bindStorageImage(computeImageBinding, config->MAX_FRAMES_IN_FLIGHT);
+        p_ComputeDescriptorPool->bindUniformBuffer(computeUniformBinding, config->maxFramesInFlight);
+        p_ComputeDescriptorPool->bindStorageBuffer(computeSSBOBinding, config->maxFramesInFlight);
+        p_ComputeDescriptorPool->bindStorageImage(computeImageBinding, config->maxFramesInFlight);
         p_ComputeDescriptorPool->create();
 
         p_ComputeDescriptorSets = std::make_shared<DescriptorSets>(
             p_LogicalDevice->device,
-            p_ComputeDescriptorSetLayout->descriptorSetLayout,
-            p_ComputeDescriptorPool->descriptorPool,
+            p_ComputeDescriptorSetLayout,
+            p_ComputeDescriptorPool,
             config
         );
         p_ComputeDescriptorSets->bindUniformBuffer(
@@ -349,21 +359,23 @@ private:
             p_LogicalDevice->device,
             config
         );
-        p_GraphicsDescriptorPool->bindUniformBuffer(vertexUniformBinding, config->MAX_FRAMES_IN_FLIGHT);
-        p_GraphicsDescriptorPool->bindSampler(fragmentSamplerBinding, config->MAX_FRAMES_IN_FLIGHT);
+        //p_GraphicsDescriptorPool->bindUniformBuffer(vertexUniformBinding, config->maxFramesInFlight);
+        p_GraphicsDescriptorPool->bindSampler(fragmentSamplerBinding, config->maxFramesInFlight);
         p_GraphicsDescriptorPool->create();
 
         p_GraphicsDescriptorSets = std::make_shared<DescriptorSets>(
             p_LogicalDevice->device,
-            p_GraphicsDescriptorSetLayout->descriptorSetLayout,
-            p_GraphicsDescriptorPool->descriptorPool,
+            p_GraphicsDescriptorSetLayout,
+            p_GraphicsDescriptorPool,
             config
         );
+        /*
         p_GraphicsDescriptorSets->bindUniformBuffer(
             vertexUniformBinding,
             p_VertexUBO->uniformBuffers,
             sizeof(VertexUniformBufferObject)
         );
+        */
         p_GraphicsDescriptorSets->bindSampler(
             fragmentSamplerBinding,
             p_CanvasImage->storageImageViews,
@@ -393,12 +405,12 @@ private:
         );
         p_ColorResources->create();
     }
-
+     
     void initFrameBuffers() {
         p_FrameBuffers = std::make_shared<FrameBuffers>(
             p_LogicalDevice->device,
-            p_ImageViews->swapChainImageViews,
-            p_SwapChain->swapChainExtent,
+            p_SwapChain,
+            p_ImageViews,
             p_RenderPass->renderPass,
             config
         );
@@ -408,18 +420,329 @@ private:
         p_FrameBuffers->create(NULL, NULL);
     }
 
+    void initCommandBuffers() {
+        p_CommandBuffers = std::make_shared<CommandBuffers>(
+            p_LogicalDevice->device,
+            p_CommandPool->commandPool,
+            config
+        );
+        p_CommandBuffers->attachAllResources(
+            p_RenderPass->renderPass,
+            p_GraphicsPipeline->graphicsPipeline,
+            p_GraphicsPipeline->pipelineLayout,
+            p_FrameBuffers->frameBuffers,
+            p_GraphicsDescriptorSets->descriptorSets,
+            p_VertexBuffer->vertexBuffer,
+            p_IndexBuffer->indexBuffer
+        );
+        p_CommandBuffers->setExtent(p_SwapChain->swapChainExtent);
+        p_CommandBuffers->create();
+
+        p_ComputeCommandBuffers = std::make_shared<ComputeCommandBuffers>(
+            p_LogicalDevice->device,
+            p_CommandPool->commandPool,
+            config
+        );
+        p_ComputeCommandBuffers->attachComputePipeline(p_ComputePipeline->computePipeline, p_ComputePipeline->computePipelineLayout);
+        p_ComputeCommandBuffers->attachDescriptorSets(p_ComputeDescriptorSets->descriptorSets);
+        p_ComputeCommandBuffers->setExtent(p_SwapChain->swapChainExtent);
+        p_ComputeCommandBuffers->create();
+    }
+
+    void initSyncObjects() {
+        p_SyncObjects = std::make_shared<SyncObjects>(
+            p_LogicalDevice->device,
+            config
+        );
+        p_SyncObjects->create();
+    }
+
+    void mainLoop() {
+        while (!glfwWindowShouldClose(window)) {
+            glfwPollEvents();
+            drawFrame();
+            double currentTime = glfwGetTime();
+            config->lastFrameTime = (currentTime - config->lastTime) * 1000.0;
+            config->lastTime = currentTime;
+        }
+        p_LogicalDevice->waitIdle();
+    }
+
+    void drawFrame() {
+        VkSubmitInfo submitInfo{};
+        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+
+        // Compute submission        
+                vkWaitForFences(p_LogicalDevice->device, 1, &p_SyncObjects->computeInFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
+
+                updateComputeUniformBuffer(currentFrame);
+
+                vkResetFences(p_LogicalDevice->device, 1, &p_SyncObjects->computeInFlightFences[currentFrame]);
+
+                vkResetCommandBuffer(p_ComputeCommandBuffers->commandBuffers[currentFrame], /*VkCommandBufferResetFlagBits*/ 0);
+                p_ComputeCommandBuffers->recordBuffer(
+                    p_ComputeCommandBuffers->commandBuffers[currentFrame], 
+                    currentFrame
+                );
+
+                submitInfo.commandBufferCount = 1;
+                submitInfo.pCommandBuffers = &p_ComputeCommandBuffers->commandBuffers[currentFrame];
+                submitInfo.signalSemaphoreCount = 1;
+                submitInfo.pSignalSemaphores = &p_SyncObjects->computeFinishedSemaphores[currentFrame];
+
+                if (vkQueueSubmit(p_LogicalDevice->computeQueue, 1, &submitInfo, p_SyncObjects->computeInFlightFences[currentFrame]) != VK_SUCCESS) {
+                    throw std::runtime_error("failed to submit compute command buffer!");
+                };
+
+        // Graphics submission
+        vkWaitForFences(p_LogicalDevice->device, 1, &p_SyncObjects->inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
+
+        uint32_t imageIndex;
+        VkResult result = vkAcquireNextImageKHR(
+            p_LogicalDevice->device, 
+            p_SwapChain->swapChain, 
+            UINT64_MAX, 
+            p_SyncObjects->imageAvailableSemaphores[currentFrame], 
+            VK_NULL_HANDLE, 
+            &imageIndex
+        );
+
+        if (result == VK_ERROR_OUT_OF_DATE_KHR) {
+            recreateSwapChain();
+            return;
+        }
+        else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
+            throw std::runtime_error("failed to acquire swap chain image!");
+        }
+
+        vkResetFences(p_LogicalDevice->device, 1, &p_SyncObjects->inFlightFences[currentFrame]);
+        
+        /*
+        p_CanvasImage->transitionImageLayout(
+            p_CanvasImage->storageImages[currentFrame], 
+            VK_FORMAT_R8G8B8A8_UNORM, 
+            VK_IMAGE_LAYOUT_GENERAL, 
+            VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+        );
+        */
+
+        //p_DescriptorPool->update(currentFrame);
+        p_CommandBuffers->recordBufferIndexed(currentFrame, imageIndex, p_IndexBuffer->indices.size());
+
+            VkSemaphore waitSemaphores[] = { p_SyncObjects->computeFinishedSemaphores[currentFrame], p_SyncObjects->imageAvailableSemaphores[currentFrame] };
+            VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_VERTEX_INPUT_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+            submitInfo = {};
+            submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+
+            submitInfo.waitSemaphoreCount = 2;
+            submitInfo.pWaitSemaphores = waitSemaphores;
+            submitInfo.pWaitDstStageMask = waitStages;
+            submitInfo.commandBufferCount = 1;
+            submitInfo.pCommandBuffers = &p_CommandBuffers->commandBuffers[currentFrame];
+            submitInfo.signalSemaphoreCount = 1;
+            submitInfo.pSignalSemaphores = &p_SyncObjects->renderFinishedSemaphores[currentFrame];
+
+            if (vkQueueSubmit(p_LogicalDevice->graphicsQueue, 1, &submitInfo, p_SyncObjects->inFlightFences[currentFrame]) != VK_SUCCESS) {
+                throw std::runtime_error("failed to submit draw command buffer!");
+            }
+ 
+        VkPresentInfoKHR presentInfo{};
+        presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+
+        presentInfo.waitSemaphoreCount = 1;
+        presentInfo.pWaitSemaphores = &p_SyncObjects->renderFinishedSemaphores[currentFrame];
+
+        VkSwapchainKHR swapChains[] = { p_SwapChain->swapChain };
+        presentInfo.swapchainCount = 1;
+        presentInfo.pSwapchains = swapChains;
+
+        presentInfo.pImageIndices = &imageIndex;
+
+        result = vkQueuePresentKHR(p_LogicalDevice->presentQueue, &presentInfo);
+
+        
+        if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || framebufferResized) {
+            framebufferResized = false;
+            recreateSwapChain();
+        }
+        else if (result != VK_SUCCESS) {
+            throw std::runtime_error("failed to present swap chain image!");
+        }
+        /*
+        p_CanvasImage->transitionImageLayout(
+            p_CanvasImage->storageImages[currentFrame],
+            VK_FORMAT_R8G8B8A8_UNORM,
+            VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+            VK_IMAGE_LAYOUT_GENERAL
+        );
+        */
+        currentFrame = (currentFrame + 1) % config->maxFramesInFlight;
+    }
+
+    void updateComputeUniformBuffer(uint32_t currentImage) {
+        ubo.octreeSize = config->octreeWidth;
+        ubo.octreeMaxDepth = config->octreeDepth;
+        ubo.deltaTime = config->lastFrameTime * 2.0f;
+
+        glm::mat4 rotationMat(1);
+        rotationMat = glm::rotate(rotationMat, 0.0001f * ubo.deltaTime, glm::vec3(0, 1, 0));
+        ubo.sunDir = glm::vec3(rotationMat * glm::vec4(ubo.sunDir, 1.0));
+
+        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+            glm::vec3 camLeft = glm::cross(ubo.camUp, ubo.camDir);
+            ubo.camPos += ubo.deltaTime * config->moveSpeed * camLeft;
+        }
+        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+            glm::vec3 camLeft = glm::cross(ubo.camUp, ubo.camDir);
+            ubo.camPos -= ubo.deltaTime * config->moveSpeed * camLeft;
+        }
+        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+            ubo.camPos += ubo.deltaTime * config->moveSpeed * ubo.camDir;
+        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+            ubo.camPos -= ubo.deltaTime * config->moveSpeed * ubo.camDir;
+        if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
+            ubo.camPos += ubo.deltaTime * config->moveSpeed * ubo.camUp;
+        if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS)
+            ubo.camPos -= ubo.deltaTime * config->moveSpeed * ubo.camUp;
+
+        if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+            float deltaX = 0;
+            float deltaY = 0;
+
+            glfwGetCursorPos(window, &config->cursorX, &config->cursorY);
+            if (!(config->prevCursorX == -999 && config->prevCursorY == -999)) {
+                deltaX = config->prevCursorX - config->cursorX;
+                deltaY = config->prevCursorY - config->cursorY;
+            }
+            config->prevCursorX = config->cursorX;
+            config->prevCursorY = config->cursorY;
+
+            glm::mat4 rotationMat(1);
+            rotationMat = glm::rotate(rotationMat, config->rotateSpeed * deltaX, ubo.camUp);
+            ubo.camDir = glm::vec3(rotationMat * glm::vec4(ubo.camDir, 1.0));
+
+            rotationMat = glm::mat4(1);
+            glm::vec3 camLeft = glm::cross(ubo.camUp, ubo.camDir);
+            rotationMat = glm::rotate(rotationMat, -config->rotateSpeed * deltaY, camLeft);
+            ubo.camDir = glm::vec3(rotationMat * glm::vec4(ubo.camDir, 1.0));
+            ubo.camUp = glm::vec3(rotationMat * glm::vec4(ubo.camUp, 1.0));
+        }
+        else {
+            config->prevCursorX = -999;
+            config->prevCursorY = -999;
+        }
+
+        ubo.height = p_SwapChain->swapChainExtent.height / config->downScaleFactor;
+        ubo.width = p_SwapChain->swapChainExtent.width / config->downScaleFactor;
+        p_ComputeUBO->update(currentImage, &ubo);
+    }
+
+    void cleanupSwapChain() {
+        p_FrameBuffers->destroy();
+        p_ImageViews->destroySwapChainImageViews();
+        p_SwapChain->destroySwapChain();
+    }
+
+    void recreateSwapChain() {
+        int width = 0, height = 0;
+        while (width == 0 || height == 0) {
+            glfwGetFramebufferSize(window, &width, &height);
+            glfwWaitEvents();
+        }
+        p_LogicalDevice->waitIdle();
+
+        cleanupSwapChain();
+        
+        p_ComputeDescriptorSets->destroy();
+        p_ComputeDescriptorPool->destroy();
+
+        p_GraphicsDescriptorSets->destroy();
+        p_GraphicsDescriptorPool->destroy();
+
+        p_CanvasImage->destroy();
+        p_CanvasSampler->destroy();
+
+        p_SwapChain->updateSwapChainSupport(
+            p_PhysicalDevice->getSwapChainSupportDetails()
+        );
+        p_SwapChain->create();
+        p_ImageViews->createSwapChainImageViews(
+            p_SwapChain->swapChainImages, 
+            p_SwapChain->swapChainImageFormat
+        );
+       
+        p_FrameBuffers->create(NULL, NULL);
+        
+        p_CanvasImage->create(p_SwapChain->swapChainExtent);
+        p_CanvasSampler->create();
+
+        p_ComputeDescriptorPool->bindUniformBuffer(computeUniformBinding, config->maxFramesInFlight);
+        p_ComputeDescriptorPool->bindStorageBuffer(computeSSBOBinding, config->maxFramesInFlight);
+        p_ComputeDescriptorPool->bindStorageImage(computeImageBinding, config->maxFramesInFlight);
+        p_ComputeDescriptorPool->create();
+
+        p_ComputeDescriptorSets->reInit();
+        p_ComputeDescriptorSets->bindUniformBuffer(
+            computeUniformBinding,
+            p_ComputeUBO->uniformBuffers,
+            sizeof(ComputeUniformBufferObject)
+        );
+        p_ComputeDescriptorSets->bindStorageBuffer(
+            computeSSBOBinding,
+            p_OctreeSSBO->shaderStorageBuffers,
+            sizeof(OctreeNode) * octree.octreeArray.size()
+        );
+        p_ComputeDescriptorSets->bindStorageImage(
+            computeImageBinding,
+            p_CanvasImage->storageImageViews
+        );
+        p_ComputeDescriptorSets->create();
+
+        p_GraphicsDescriptorPool->bindSampler(fragmentSamplerBinding, config->maxFramesInFlight);
+        p_GraphicsDescriptorPool->create();
+
+        p_GraphicsDescriptorSets->reInit();
+        p_GraphicsDescriptorSets->bindSampler(
+            fragmentSamplerBinding,
+            p_CanvasImage->storageImageViews,
+            p_CanvasSampler->imageSamplers
+        );
+        p_GraphicsDescriptorSets->create();
+
+        p_CommandBuffers->attachFrameBuffers(p_FrameBuffers->frameBuffers);
+        p_CommandBuffers->attachDescriptorSets(p_GraphicsDescriptorSets->descriptorSets);
+        p_CommandBuffers->setExtent(p_SwapChain->swapChainExtent);
+        p_CommandBuffers->create();
+
+        p_ComputeCommandBuffers->attachDescriptorSets(p_ComputeDescriptorSets->descriptorSets);
+        p_ComputeCommandBuffers->setExtent(p_SwapChain->swapChainExtent);
+        p_ComputeCommandBuffers->create();
+        
+        /*
+        p_CanvasImage->transitionImageLayout(
+            p_CanvasImage->storageImages[currentFrame],
+            VK_FORMAT_R8G8B8A8_UNORM,
+            VK_IMAGE_LAYOUT_GENERAL,
+            VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+        );
+        */
+    }
+
     void cleanup() {
+        p_LogicalDevice->waitIdle();
+
+        p_SyncObjects->destroy();
+
         p_FrameBuffers->destroy();
 
-        p_ColorResources->destroy();
-        p_DepthResources->destroy();
+        //p_ColorResources->destroy();
+        //p_DepthResources->destroy();
 
         p_GraphicsDescriptorPool->destroy();
         p_ComputeDescriptorPool->destroy();
 
         p_IndexBuffer->destroy();
         p_VertexBuffer->destroy();
-        p_VertexUBO->destroy();
         p_ComputeUBO->destroy();
         p_CanvasSampler->destroy();
         p_CanvasImage->destroy();
@@ -444,18 +767,13 @@ private:
     }
 
     Octree octree;
-    int octreeDepth = 6;
-    int octreeWidth = static_cast<int>(pow(2, octreeDepth));
-    bool visualizeOctree = false;
-    bool terrain = true;
-    bool shadows = false;
-
+   
     void createOctree() {
-        int depth = octreeDepth;
-        int width = octreeWidth;
+        int depth = config->octreeDepth;
+        int width = config->octreeWidth;
 
         Perlin perlinGenerator;
-        perlinGenerator.layers = octreeDepth - 1;
+        perlinGenerator.layers = config->octreeDepth - 1;
         perlinGenerator.init_amp = 2;
         perlinGenerator.grid_size = width * 2;
 
@@ -463,7 +781,7 @@ private:
 
         std::random_device rd;  // Seed for random number engine
         std::mt19937 gen(rd()); // Mersenne Twister random number engine
-        std::uniform_int_distribution<> distribution(-octreeWidth / 20, octreeWidth / 20); // Range from 1 to 100
+        std::uniform_int_distribution<> distribution(-config->octreeWidth / 20, config->octreeWidth / 20); // Range from 1 to 100
         std::uniform_int_distribution<> materialDist(0, 5); // Range from 1 to 100
 
         std::vector<Voxel> testRandomVoxels;
@@ -474,7 +792,7 @@ private:
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < width; y++) {
                 for (int z = 0; z < width; z++) {
-                    if (terrain) {
+                    if (config->terrain) {
                         float perlinVal = perlinGenerator.perlin2D(x, z);
                         float simplex = simplexNoiseGenerator.fractal(5, (float)x / width, (float)y / width, (float)z / width);
 

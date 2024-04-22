@@ -24,6 +24,8 @@
     <None Include="shaders\compile.bat">
       <Filter>Source Files</Filter>
     </None>
+    <None Include="shaders\simple_shader.vert" />
+    <None Include="shaders\simple_shader.frag" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="vendor\stb\stb_image.h">
@@ -155,6 +157,15 @@
     <ClInclude Include="vkClassesReWrite\shaderResources\IndexBuffer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="vkClassesReWrite\commands\CommandBuffers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vkClassesReWrite\commands\ComputeCommandBuffers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vkClassesReWrite\syncObjects\SyncObjects.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -257,6 +268,15 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="vkClassesReWrite\shaderResources\IndexBuffer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vkClassesReWrite\commands\CommandBuffers.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vkClassesReWrite\commands\ComputeCommandBuffers.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vkClassesReWrite\syncObjects\SyncObjects.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

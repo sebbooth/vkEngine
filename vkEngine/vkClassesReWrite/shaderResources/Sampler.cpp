@@ -12,13 +12,13 @@ void Sampler::create()
     VkPhysicalDeviceProperties  properties{};
     vkGetPhysicalDeviceProperties(m_PhysicalDevice, &properties);
 
-    imageSamplers.resize(m_Config->MAX_FRAMES_IN_FLIGHT);
+    imageSamplers.resize(m_Config->maxFramesInFlight);
 
-    for (size_t i = 0; i < m_Config->MAX_FRAMES_IN_FLIGHT; i++) {
+    for (size_t i = 0; i < m_Config->maxFramesInFlight; i++) {
         VkSamplerCreateInfo samplerInfo{};
         samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-        samplerInfo.magFilter = VK_FILTER_LINEAR;
-        samplerInfo.minFilter = VK_FILTER_LINEAR;
+        samplerInfo.magFilter = VK_FILTER_NEAREST;
+        samplerInfo.minFilter = VK_FILTER_NEAREST;
         samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
         samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
         samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
@@ -41,7 +41,7 @@ void Sampler::create()
 
 void Sampler::destroy()
 {
-    for (size_t i = 0; i < m_Config->MAX_FRAMES_IN_FLIGHT; i++) {
+    for (size_t i = 0; i < m_Config->maxFramesInFlight; i++) {
         vkDestroySampler(m_Device, imageSamplers[i], nullptr);
     }
 }

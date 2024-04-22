@@ -20,11 +20,11 @@
 #include "VkClasses.h"
 
 
-const uint32_t WIDTH = 800;
-const uint32_t HEIGHT = 600;
+const uint32_t screenWidth = 800;
+const uint32_t screenHeight = 600;
 const std::string MODEL_PATH = "assets/models/viking_room/viking_room.obj";
 const std::string TEXTURE_PATH = "assets/models/viking_room/viking_room.png";
-const int MAX_FRAMES_IN_FLIGHT = 2;
+const int maxFramesInFlight = 2;
 
 const std::vector<const char*> validationLayers = {
     "VK_LAYER_KHRONOS_validation",
@@ -96,7 +96,7 @@ private:
 
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
-        window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);
+        window = glfwCreateWindow(screenWidth, screenHeight, "Vulkan", nullptr, nullptr);
         glfwSetWindowUserPointer(window, this);
         glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);
        
@@ -349,7 +349,7 @@ private:
             throw std::runtime_error("failed to present swap chain image!");
         }
 
-        currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
+        currentFrame = (currentFrame + 1) % maxFramesInFlight;
     }
 
     void cleanup() {

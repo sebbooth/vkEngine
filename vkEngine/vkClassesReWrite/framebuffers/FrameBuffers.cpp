@@ -2,47 +2,48 @@
 
 FrameBuffers::FrameBuffers(
     VkDevice device,
-    std::vector<VkImageView> swapChainImageViews,
-    VkExtent2D swapChainExtent,
-    VkRenderPass renderPass,
+    std::shared_ptr<SwapChain> p_SwapChain,
+    std::shared_ptr<ImageViews> p_ImageViews,
+    VkRenderPass renderPass, 
     std::shared_ptr<VkConfig> config
 )
 {
     m_Device = device;
-    m_SwapChainImageViews = swapChainImageViews;
-    m_SwapChainExtent = swapChainExtent;
+    mp_SwapChain = p_SwapChain;
+    mp_ImageViews = p_ImageViews;
     m_RenderPass = renderPass;
     m_Config = config;
-
-    attachmentViewSets.resize(m_SwapChainImageViews.size());
 }
 
-void FrameBuffers::create(VkImageView colorImageView, VkImageView depthImageView)
+void FrameBuffers::create(
+    VkImageView colorImageView, 
+    VkImageView depthImageView
+)
 {
-    frameBuffers.resize(m_SwapChainImageViews.size());
+    frameBuffers.resize(mp_ImageViews->swapChainImageViews.size());
 
-    for (size_t i = 0; i < m_SwapChainImageViews.size(); i++) {
+    for (size_t i = 0; i < mp_ImageViews->swapChainImageViews.size(); i++) {
 
         std::vector<VkImageView> attachments = {
-                 m_SwapChainImageViews[i]
+                 mp_ImageViews->swapChainImageViews[i]
         };
 
         if (colorImageView != NULL && depthImageView != NULL) {
             attachments = {
                 colorImageView,
                 depthImageView,
-                m_SwapChainImageViews[i]
+                mp_ImageViews->swapChainImageViews[i]
             };
         }
         else if (colorImageView != NULL) {
             attachments = {
                 colorImageView,
-                m_SwapChainImageViews[i]
+                mp_ImageViews->swapChainImageViews[i]
             };
         }
         else if (depthImageView != NULL) {
             attachments = {
-                m_SwapChainImageViews[i],
+                mp_ImageViews->swapChainImageViews[i],
                 depthImageView
             };
         }
@@ -52,8 +53,8 @@ void FrameBuffers::create(VkImageView colorImageView, VkImageView depthImageView
         framebufferInfo.renderPass = m_RenderPass;
         framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
         framebufferInfo.pAttachments = attachments.data();
-        framebufferInfo.width = m_SwapChainExtent.width;
-        framebufferInfo.height = m_SwapChainExtent.height;
+        framebufferInfo.width = mp_SwapChain->swapChainExtent.width;
+        framebufferInfo.height = mp_SwapChain->swapChainExtent.height;
         framebufferInfo.layers = 1;
 
         if (vkCreateFramebuffer(m_Device, &framebufferInfo, nullptr, &frameBuffers[i]) != VK_SUCCESS) {

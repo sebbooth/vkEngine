@@ -16,6 +16,8 @@
 #include "pipelines/ComputePipeline.h"
 
 #include "commands/CommandPool.h"
+#include "commands/CommandBuffers.h"
+#include "commands/ComputeCommandBuffers.h"
 
 #include "shaderResources/SSBO.h"
 #include "shaderResources/StorageImage.h"
@@ -31,3 +33,5 @@
 #include "renderAttachments/ColorResources.h"
 
 #include "framebuffers/FrameBuffers.h"
+
+#include "syncObjects/SyncObjects.h"

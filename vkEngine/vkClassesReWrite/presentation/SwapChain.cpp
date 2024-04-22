@@ -72,3 +72,8 @@ void SwapChain::destroySwapChain()
 {
     vkDestroySwapchainKHR(m_Device, swapChain, nullptr);
 }
+
+void SwapChain::updateSwapChainSupport(SwapChainSupportDetails swapChainSupport)
+{
+    m_SwapChainSupport = swapChainSupport;
+}

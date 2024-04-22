@@ -17,15 +17,15 @@ StorageImage::StorageImage(
 
 void StorageImage::create(VkExtent2D extent)
 {
-    storageImages.resize(m_Config->MAX_FRAMES_IN_FLIGHT);
-    storageImageMemories.resize(m_Config->MAX_FRAMES_IN_FLIGHT);
-    storageImageViews.resize(m_Config->MAX_FRAMES_IN_FLIGHT);
-    imageSamplers.resize(m_Config->MAX_FRAMES_IN_FLIGHT);
+    storageImages.resize(m_Config->maxFramesInFlight);
+    storageImageMemories.resize(m_Config->maxFramesInFlight);
+    storageImageViews.resize(m_Config->maxFramesInFlight);
+    imageSamplers.resize(m_Config->maxFramesInFlight);
 
-    uint32_t width = extent.width;
-    uint32_t height = extent.height;
+    uint32_t width = extent.width / m_Config->downScaleFactor;
+    uint32_t height = extent.height / m_Config->downScaleFactor;
 
-    for (size_t i = 0; i < m_Config->MAX_FRAMES_IN_FLIGHT; i++) {
+    for (size_t i = 0; i < m_Config->maxFramesInFlight; i++) {
         mp_Images->createImage(
             width,
             height,
@@ -57,7 +57,7 @@ void StorageImage::create(VkExtent2D extent)
 
 void StorageImage::destroy()
 {
-    for (size_t i = 0; i < m_Config->MAX_FRAMES_IN_FLIGHT; i++) {
+    for (size_t i = 0; i < m_Config->maxFramesInFlight; i++) {
         vkDestroySampler(m_Device, imageSamplers[i], nullptr);
         vkDestroyImageView(m_Device, storageImageViews[i], nullptr);
         vkDestroyImage(m_Device, storageImages[i], nullptr);
