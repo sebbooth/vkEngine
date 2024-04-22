@@ -166,6 +166,9 @@
     <ClInclude Include="vkClassesReWrite\syncObjects\SyncObjects.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="vkClassesReWrite\gui\Gui.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -277,6 +280,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="vkClassesReWrite\syncObjects\SyncObjects.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vkClassesReWrite\gui\Gui.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

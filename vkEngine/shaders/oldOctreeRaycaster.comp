@@ -18,6 +18,8 @@ layout(binding = 0) uniform ParameterUBO {
     vec3 sunDir;
 
     float deltaTime;
+    float focalLength;
+    float viewportHeight;
     int screenWidth;
     int screenHeight;
     int octreeSize;
@@ -33,15 +35,14 @@ layout(binding = 2, rgba8) uniform writeonly image2D outputImage;
 layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
 
 float aspectRatio = float(ubo.screenWidth) / float(ubo.screenHeight);
-float focalLength = 4.0;
-float viewportHeight = 2.0;
-float viewportWidth = viewportHeight * aspectRatio;
-float viewportV = viewportHeight / float(ubo.screenHeight);
+
+float viewportWidth = ubo.viewportHeight * aspectRatio;
+float viewportV = ubo.viewportHeight / float(ubo.screenHeight);
 float viewportU = viewportWidth / float(ubo.screenWidth);
 
 vec3 camRight = -normalize(cross(ubo.camDir, ubo.camUp));
-vec3 viewportCenter = ubo.camPos + ubo.camDir * focalLength;
-vec3 topLeft = viewportCenter + ubo.camUp * 0.5 * viewportHeight - camRight * 0.5 * viewportWidth;
+vec3 viewportCenter = ubo.camPos + ubo.camDir * ubo.focalLength;
+vec3 topLeft = viewportCenter + ubo.camUp * 0.5 * ubo.viewportHeight - camRight * 0.5 * viewportWidth;
 
 int OCTREE_SIZE = ubo.octreeSize;
 int max_depth = ubo.octreeMaxDepth;

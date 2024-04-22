@@ -15,6 +15,7 @@ void DescriptorPool::bindUniformBuffer(uint32_t binding, uint32_t descriptorCoun
 	m_PoolSizes[binding].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 	m_PoolSizes[binding].descriptorCount = descriptorCount;
 	m_PoolSizeCount++;
+	m_MaxSets += descriptorCount;
 }
 
 void DescriptorPool::bindSampler(uint32_t binding, uint32_t descriptorCount)
@@ -26,6 +27,7 @@ void DescriptorPool::bindSampler(uint32_t binding, uint32_t descriptorCount)
 	m_PoolSizes[binding].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 	m_PoolSizes[binding].descriptorCount = descriptorCount;
 	m_PoolSizeCount++;
+	m_MaxSets += descriptorCount;
 }
 
 void DescriptorPool::bindStorageBuffer(uint32_t binding, uint32_t descriptorCount)
@@ -37,6 +39,7 @@ void DescriptorPool::bindStorageBuffer(uint32_t binding, uint32_t descriptorCoun
 	m_PoolSizes[binding].type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
 	m_PoolSizes[binding].descriptorCount = descriptorCount;
 	m_PoolSizeCount++;
+	m_MaxSets += descriptorCount;
 }
 
 void DescriptorPool::bindStorageImage(uint32_t binding, uint32_t descriptorCount)
@@ -48,15 +51,17 @@ void DescriptorPool::bindStorageImage(uint32_t binding, uint32_t descriptorCount
 	m_PoolSizes[binding].type = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
 	m_PoolSizes[binding].descriptorCount = descriptorCount;
 	m_PoolSizeCount++;
+	m_MaxSets += descriptorCount;
 }
 
 void DescriptorPool::create()
 {
 	VkDescriptorPoolCreateInfo poolInfo{};
 	poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+	poolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
 	poolInfo.poolSizeCount = m_PoolSizeCount;
 	poolInfo.pPoolSizes = m_PoolSizes.data();
-	poolInfo.maxSets = static_cast<uint32_t>(m_Config->maxFramesInFlight);
+	poolInfo.maxSets = m_MaxSets;
 
 	if (vkCreateDescriptorPool(m_Device, &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS) {
 		throw std::runtime_error("failed to create descriptor pool!");

@@ -11,6 +11,7 @@
 #include <stdexcept>
 
 #include "initialization/VkConfig.h"
+#include "gui/Gui.h"
 
 class CommandBuffers
 {
@@ -32,6 +33,8 @@ class CommandBuffers
 		VkBuffer m_IndexBuffer;
 
 		VkExtent2D m_Extent;
+
+		std::shared_ptr<Gui> mp_Gui;
 
 	public:
 		CommandBuffers(
@@ -57,7 +60,7 @@ class CommandBuffers
 		void attachVertexBuffer(VkBuffer vertexBuffer);
 		void attachIndexBuffer(VkBuffer indexBuffer);
 		void setExtent(VkExtent2D extent);
-		void attachGui();
+		void attachGui(std::shared_ptr<Gui> p_Gui);
 
 		void recordBufferVertices(
 			VkCommandBuffer commandBuffer,

@@ -21,6 +21,7 @@ private:
 
 	std::vector<VkDescriptorPoolSize> m_PoolSizes;
 	uint32_t m_PoolSizeCount = 0;
+	uint32_t m_MaxSets = 0;
 
 public:
 	DescriptorPool(

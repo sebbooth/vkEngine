@@ -82,9 +82,9 @@ void CommandBuffers::setExtent(VkExtent2D extent)
     m_Extent = extent;
 }
 
-void CommandBuffers::attachGui()
+void CommandBuffers::attachGui(std::shared_ptr<Gui> p_Gui)
 {
-    
+    mp_Gui = p_Gui;
 }
 
 void CommandBuffers::recordBufferVertices(
@@ -213,10 +213,9 @@ void CommandBuffers::recordBufferIndexed(uint32_t currentFrame, uint32_t imageIn
         0
     );
 
-    // GUI
-    //if (guiEnabled) {
-    //    p_Gui->draw(commandBuffer);
-    //}
+    if (m_Config->guiEnabled) {
+        mp_Gui->draw(commandBuffer);
+    }
 
     vkCmdEndRenderPass(commandBuffer);
 
@@ -275,10 +274,10 @@ void CommandBuffers::recordComputeBuffer(
 
     vkCmdDraw(commandBuffer, vertexCount, 1, 0, 0);
 
-    // GUI
-    //if (guiEnabled) {
-    //    p_Gui->draw(commandBuffer);
-    //}
+    
+    if (m_Config->guiEnabled) {
+        mp_Gui->draw(commandBuffer);
+    }
 
     vkCmdEndRenderPass(commandBuffer);
 

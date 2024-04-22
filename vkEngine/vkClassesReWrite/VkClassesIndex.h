@@ -35,3 +35,5 @@
 #include "framebuffers/FrameBuffers.h"
 
 #include "syncObjects/SyncObjects.h"
+
+#include "gui/Gui.h"

@@ -2,6 +2,12 @@
 
 (name for now cause naming things is hard)
 
+## 2024-04-22
+
+Finally reaching the end of restructuring all of the Vulkan code, still plenty of cleaning up to do though. I've also brought back the gui and started adding some features for debugging and adjustments. I implemented controls for the resolution as well, which adjusts the size of the texture that the compute shader writes to.
+
+![New Debug Gui](readme/imgui3.png)
+
 ## 2024-04-12
 
 With the now functional raycaster, I implemented some terrain generation with perlin noise, and added colours to the voxels. Also made a shader for visualizing the octree structure, and one with simple ray-traced shadows.

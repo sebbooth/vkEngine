@@ -15,19 +15,6 @@
 
 const bool enableValidationLayers = true;
 
-struct ComputeUniformBufferObject {
-    alignas(16) glm::vec3 camPos = glm::vec3(262.905243, 270.311707, 282.328888);
-    alignas(16) glm::vec3 camDir = glm::vec3(-0.519135, -0.634374, -0.572781);
-    alignas(16) glm::vec3 camUp = glm::vec3(-0.422386, 0.773021, -0.473317);
-    alignas(16) glm::vec3 sunDir = glm::vec3(-1, -2, -3);
-
-    float deltaTime = 1.0f;
-    int width = 600;
-    int height = 800;
-    int octreeSize;
-    int octreeMaxDepth;
-};
-
 const std::vector<Vertex> quadVertices = {
         {{-1.0f, -1.0f, 0.0f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
         {{1.0f, -1.0f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
@@ -79,6 +66,7 @@ private:
     std::shared_ptr<DescriptorSetLayout> p_ComputeDescriptorSetLayout;
     uint32_t vertexUniformBinding;
     uint32_t fragmentSamplerBinding;
+    uint32_t imguiSamplerBinding;
     uint32_t computeUniformBinding;
     uint32_t computeSSBOBinding;
     uint32_t computeImageBinding;
@@ -106,12 +94,12 @@ private:
 
     std::shared_ptr<FrameBuffers> p_FrameBuffers;
 
+    std::shared_ptr<Gui> p_Gui;
+
     std::shared_ptr<CommandBuffers> p_CommandBuffers;
     std::shared_ptr<ComputeCommandBuffers> p_ComputeCommandBuffers;
 
     std::shared_ptr<SyncObjects> p_SyncObjects;
-
-    ComputeUniformBufferObject ubo{};
 
     void initSettings() {
         config = std::make_shared<VkConfig>();
@@ -121,7 +109,7 @@ private:
         config->computeEnabled = true;
         config->msaaEnabled = false;
         config->depthStencilEnabled = false;
-        config->downScaleFactor = 4;
+        config->downScaleFactor = 1;
     }
 
     void initWindow() {
@@ -219,6 +207,7 @@ private:
         );
         //vertexUniformBinding = p_GraphicsDescriptorSetLayout->bindVertUniformBuffer();  //0
         fragmentSamplerBinding = p_GraphicsDescriptorSetLayout->bindFragSampler();      //1
+        imguiSamplerBinding = p_GraphicsDescriptorSetLayout->bindFragSampler();
         p_GraphicsDescriptorSetLayout->create();
 
         p_ComputeDescriptorSetLayout = std::make_shared<DescriptorSetLayout>(p_LogicalDevice->device);
@@ -361,6 +350,7 @@ private:
         );
         //p_GraphicsDescriptorPool->bindUniformBuffer(vertexUniformBinding, config->maxFramesInFlight);
         p_GraphicsDescriptorPool->bindSampler(fragmentSamplerBinding, config->maxFramesInFlight);
+        p_GraphicsDescriptorPool->bindSampler(imguiSamplerBinding, config->maxFramesInFlight);
         p_GraphicsDescriptorPool->create();
 
         p_GraphicsDescriptorSets = std::make_shared<DescriptorSets>(
@@ -421,6 +411,21 @@ private:
     }
 
     void initCommandBuffers() {
+        p_Gui = std::make_shared<Gui>(
+            p_Surface->window,
+            p_Instance->instance,
+            p_Instance->allocator,
+            p_PhysicalDevice->physicalDevice,
+            p_PhysicalDevice->msaaSamples,
+            p_PhysicalDevice->graphicsAndComputeFamily,
+            p_LogicalDevice->device,
+            p_LogicalDevice->graphicsQueue,
+            p_GraphicsDescriptorPool->descriptorPool,
+            p_RenderPass->renderPass,
+            config
+        );
+        p_Gui->init();
+
         p_CommandBuffers = std::make_shared<CommandBuffers>(
             p_LogicalDevice->device,
             p_CommandPool->commandPool,
@@ -436,6 +441,7 @@ private:
             p_IndexBuffer->indexBuffer
         );
         p_CommandBuffers->setExtent(p_SwapChain->swapChainExtent);
+        p_CommandBuffers->attachGui(p_Gui);
         p_CommandBuffers->create();
 
         p_ComputeCommandBuffers = std::make_shared<ComputeCommandBuffers>(
@@ -561,9 +567,15 @@ private:
         result = vkQueuePresentKHR(p_LogicalDevice->presentQueue, &presentInfo);
 
         
-        if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || framebufferResized) {
+        if (
+            result == VK_ERROR_OUT_OF_DATE_KHR || 
+            result == VK_SUBOPTIMAL_KHR || 
+            framebufferResized ||
+            config->newSwapChainNeeded
+            ) {
             framebufferResized = false;
             recreateSwapChain();
+            config->newSwapChainNeeded = false;
         }
         else if (result != VK_SUCCESS) {
             throw std::runtime_error("failed to present swap chain image!");
@@ -580,32 +592,32 @@ private:
     }
 
     void updateComputeUniformBuffer(uint32_t currentImage) {
-        ubo.octreeSize = config->octreeWidth;
-        ubo.octreeMaxDepth = config->octreeDepth;
-        ubo.deltaTime = config->lastFrameTime * 2.0f;
+        config->ubo.octreeSize = config->octreeWidth;
+        config->ubo.octreeMaxDepth = config->octreeDepth;
+        config->ubo.deltaTime = config->lastFrameTime * 2.0f;
 
         glm::mat4 rotationMat(1);
-        rotationMat = glm::rotate(rotationMat, 0.0001f * ubo.deltaTime, glm::vec3(0, 1, 0));
-        ubo.sunDir = glm::vec3(rotationMat * glm::vec4(ubo.sunDir, 1.0));
+        rotationMat = glm::rotate(rotationMat, 0.0001f * config->ubo.deltaTime, glm::vec3(0, 1, 0));
+        config->ubo.sunDir = glm::vec3(rotationMat * glm::vec4(config->ubo.sunDir, 1.0));
 
         if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-            glm::vec3 camLeft = glm::cross(ubo.camUp, ubo.camDir);
-            ubo.camPos += ubo.deltaTime * config->moveSpeed * camLeft;
+            glm::vec3 camLeft = glm::cross(config->ubo.camUp, config->ubo.camDir);
+            config->ubo.camPos += config->ubo.deltaTime * config->moveSpeed * camLeft;
         }
         if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-            glm::vec3 camLeft = glm::cross(ubo.camUp, ubo.camDir);
-            ubo.camPos -= ubo.deltaTime * config->moveSpeed * camLeft;
+            glm::vec3 camLeft = glm::cross(config->ubo.camUp, config->ubo.camDir);
+            config->ubo.camPos -= config->ubo.deltaTime * config->moveSpeed * camLeft;
         }
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-            ubo.camPos += ubo.deltaTime * config->moveSpeed * ubo.camDir;
+            config->ubo.camPos += config->ubo.deltaTime * config->moveSpeed * config->ubo.camDir;
         if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-            ubo.camPos -= ubo.deltaTime * config->moveSpeed * ubo.camDir;
+            config->ubo.camPos -= config->ubo.deltaTime * config->moveSpeed * config->ubo.camDir;
         if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
-            ubo.camPos += ubo.deltaTime * config->moveSpeed * ubo.camUp;
+            config->ubo.camPos += config->ubo.deltaTime * config->moveSpeed * config->ubo.camUp;
         if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS)
-            ubo.camPos -= ubo.deltaTime * config->moveSpeed * ubo.camUp;
+            config->ubo.camPos -= config->ubo.deltaTime * config->moveSpeed * config->ubo.camUp;
 
-        if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+        if (config->cursorActive && glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
             float deltaX = 0;
             float deltaY = 0;
 
@@ -618,23 +630,23 @@ private:
             config->prevCursorY = config->cursorY;
 
             glm::mat4 rotationMat(1);
-            rotationMat = glm::rotate(rotationMat, config->rotateSpeed * deltaX, ubo.camUp);
-            ubo.camDir = glm::vec3(rotationMat * glm::vec4(ubo.camDir, 1.0));
+            rotationMat = glm::rotate(rotationMat, config->rotateSpeed * deltaX, config->ubo.camUp);
+            config->ubo.camDir = glm::vec3(rotationMat * glm::vec4(config->ubo.camDir, 1.0));
 
             rotationMat = glm::mat4(1);
-            glm::vec3 camLeft = glm::cross(ubo.camUp, ubo.camDir);
+            glm::vec3 camLeft = glm::cross(config->ubo.camUp, config->ubo.camDir);
             rotationMat = glm::rotate(rotationMat, -config->rotateSpeed * deltaY, camLeft);
-            ubo.camDir = glm::vec3(rotationMat * glm::vec4(ubo.camDir, 1.0));
-            ubo.camUp = glm::vec3(rotationMat * glm::vec4(ubo.camUp, 1.0));
+            config->ubo.camDir = glm::vec3(rotationMat * glm::vec4(config->ubo.camDir, 1.0));
+            config->ubo.camUp = glm::vec3(rotationMat * glm::vec4(config->ubo.camUp, 1.0));
         }
         else {
             config->prevCursorX = -999;
             config->prevCursorY = -999;
         }
 
-        ubo.height = p_SwapChain->swapChainExtent.height / config->downScaleFactor;
-        ubo.width = p_SwapChain->swapChainExtent.width / config->downScaleFactor;
-        p_ComputeUBO->update(currentImage, &ubo);
+        config->ubo.height = p_SwapChain->swapChainExtent.height / config->downScaleFactor;
+        config->ubo.width = p_SwapChain->swapChainExtent.width / config->downScaleFactor;
+        p_ComputeUBO->update(currentImage, &config->ubo);
     }
 
     void cleanupSwapChain() {
@@ -651,8 +663,9 @@ private:
         }
         p_LogicalDevice->waitIdle();
 
+        p_Gui->vulkanShutdown();
         cleanupSwapChain();
-        
+
         p_ComputeDescriptorSets->destroy();
         p_ComputeDescriptorPool->destroy();
 
@@ -699,6 +712,7 @@ private:
         p_ComputeDescriptorSets->create();
 
         p_GraphicsDescriptorPool->bindSampler(fragmentSamplerBinding, config->maxFramesInFlight);
+        p_GraphicsDescriptorPool->bindSampler(imguiSamplerBinding, config->maxFramesInFlight);
         p_GraphicsDescriptorPool->create();
 
         p_GraphicsDescriptorSets->reInit();
@@ -709,6 +723,8 @@ private:
         );
         p_GraphicsDescriptorSets->create();
 
+        p_Gui->reInit(p_GraphicsDescriptorPool->descriptorPool);
+        
         p_CommandBuffers->attachFrameBuffers(p_FrameBuffers->frameBuffers);
         p_CommandBuffers->attachDescriptorSets(p_GraphicsDescriptorSets->descriptorSets);
         p_CommandBuffers->setExtent(p_SwapChain->swapChainExtent);
@@ -730,6 +746,8 @@ private:
 
     void cleanup() {
         p_LogicalDevice->waitIdle();
+
+        p_Gui->destroy();
 
         p_SyncObjects->destroy();
 

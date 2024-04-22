@@ -161,6 +161,7 @@
     <ClInclude Include="vkClassesReWrite\commands\ComputeCommandBuffers.h" />
     <ClInclude Include="vkClassesReWrite\commands\CommandBuffers.h" />
     <ClInclude Include="vkClassesReWrite\framebuffers\FrameBuffers.h" />
+    <ClInclude Include="vkClassesReWrite\gui\Gui.h" />
     <ClInclude Include="vkClassesReWrite\images\Images.h" />
     <ClInclude Include="vkClassesReWrite\descriptors\DescriptorSets.h" />
     <ClInclude Include="vkClassesReWrite\descriptors\DescriptorPool.h" />
@@ -209,6 +210,7 @@
     <ClCompile Include="vkClassesReWrite\commands\ComputeCommandBuffers.cpp" />
     <ClCompile Include="vkClassesReWrite\commands\CommandBuffers.cpp" />
     <ClCompile Include="vkClassesReWrite\framebuffers\FrameBuffers.cpp" />
+    <ClCompile Include="vkClassesReWrite\gui\Gui.cpp" />
     <ClCompile Include="vkClassesReWrite\images\Images.cpp" />
     <ClCompile Include="vkClassesReWrite\descriptors\DescriptorSets.cpp" />
     <ClCompile Include="vkClassesReWrite\descriptors\DescriptorPool.cpp" />
