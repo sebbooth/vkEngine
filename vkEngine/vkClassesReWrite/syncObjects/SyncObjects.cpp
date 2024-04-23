@@ -46,7 +46,15 @@ void SyncObjects::destroy()
     }
 }
 
-void SyncObjects::waitForFences(uint32_t currentFrame, VkBool32 waitAll, uint64_t timeout)
+void SyncObjects::waitForGraphicsFence(uint32_t currentFrame, VkBool32 waitAll, uint64_t timeout)
 {
     vkWaitForFences(m_Device, 1, &inFlightFences[currentFrame], waitAll, timeout);
+    vkResetFences(m_Device, 1, &inFlightFences[currentFrame]);
 }
+
+void SyncObjects::waitForComputeFence(uint32_t currentFrame, VkBool32 waitAll, uint64_t timeout)
+{
+    vkWaitForFences(m_Device, 1, &computeInFlightFences[currentFrame], waitAll, timeout);
+    vkResetFences(m_Device, 1, &computeInFlightFences[currentFrame]);
+}
+

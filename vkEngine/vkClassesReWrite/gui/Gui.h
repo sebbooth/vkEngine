@@ -7,6 +7,7 @@
 #include <GLFW/glfw3.h>
 #include <memory>
 #include <iostream>
+#include <string> 
 
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include "imgui.h"

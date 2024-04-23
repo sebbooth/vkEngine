@@ -29,7 +29,8 @@ public:
 	SyncObjects(VkDevice device, std::shared_ptr<VkConfig> config);
 	void create();
 	void destroy();
-	void waitForFences(uint32_t currentFrame, VkBool32 waitAll, uint64_t timeout);
+	void waitForGraphicsFence(uint32_t currentFrame, VkBool32 waitAll, uint64_t timeout);
+	void waitForComputeFence(uint32_t currentFrame, VkBool32 waitAll, uint64_t timeout);
 };
 
 #endif

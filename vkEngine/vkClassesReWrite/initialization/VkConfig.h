@@ -64,7 +64,7 @@ struct VkConfig {
 	bool cursorActive = true;
 
 	// Octree
-	int octreeDepth = 5;
+	int octreeDepth = 7;
 	int octreeWidth = static_cast<int>(pow(2, octreeDepth));
 	bool terrain = true;
 

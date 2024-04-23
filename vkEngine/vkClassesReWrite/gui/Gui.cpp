@@ -29,8 +29,6 @@ Gui::Gui(
 
 void Gui::draw(VkCommandBuffer commandBuffer)
 {
-   
-
     ImGuiIO& io = ImGui::GetIO();
     if (io.WantCaptureMouse) {
         m_Config->cursorActive = false;
@@ -43,23 +41,32 @@ void Gui::draw(VkCommandBuffer commandBuffer)
     ImGui::NewFrame();
     ImGui::Begin("Debugger");
 
-    static float frameTimes[512] = { 0 }; // Array to store frame times
+
+    static float accumulateFrameTime = 0;
+    static float averageFrameTime = 0;
+    static float frameTimes[256] = { 0 }; // Array to store frame times
     static int frameIndex = 0; // Index to keep track of the current frame
     static float updateInterval = 0.01f; // Update interval in seconds
     static float timeAccumulator = 0.0f; // Time accumulator
+    
 
     // Add current frame time to the array when the time accumulator exceeds the update interval
     timeAccumulator += ImGui::GetIO().DeltaTime;
     if (timeAccumulator >= updateInterval) {
+        frameIndex = (frameIndex + 1) % 256;
+        accumulateFrameTime -= frameTimes[frameIndex];
         frameTimes[frameIndex] = ImGui::GetIO().DeltaTime * 1000.0f; // GetIO().DeltaTime gives the time between frames in seconds
-        frameIndex = (frameIndex + 1) % IM_ARRAYSIZE(frameTimes);
+        accumulateFrameTime += frameTimes[frameIndex];
         timeAccumulator -= updateInterval; // Subtract update interval from the accumulator
+        averageFrameTime = accumulateFrameTime / 256;
     }
 
     if (ImGui::CollapsingHeader("Performance")) {
         ImGui::Text("Application average %.3f ms/frame (%5.1f FPS) (source: ImGui)", 1000.0f / io.Framerate, io.Framerate);
         ImGui::Text("Application average %.3f ms/frame (%5.1f FPS) (source: GLFW)", m_Config->lastFrameTime, 1000.0f / m_Config->lastFrameTime);
-        ImGui::PlotLines("Frame Times", frameTimes, IM_ARRAYSIZE(frameTimes), frameIndex, "ms", 0.0f, 20.0f, ImVec2(0, 80));
+
+        std::string averageText = "Average: " + std::to_string(averageFrameTime) + " ms";
+        ImGui::PlotLines("Frame Times (ms)", frameTimes, IM_ARRAYSIZE(frameTimes), frameIndex, averageText.c_str(), 0.0f, 20.0f, ImVec2(0, 80));
 
     }
     
@@ -72,6 +79,11 @@ void Gui::draw(VkCommandBuffer commandBuffer)
     }
 
     if (ImGui::CollapsingHeader("Controls")) {
+        ImGui::SliderFloat("Rotation Speed", &m_Config->rotateSpeed, 0.0f, 0.03f);
+        ImGui::SliderFloat("Movement Speed", &m_Config->moveSpeed, 0.0f, 0.50f);
+    }
+
+    if (ImGui::CollapsingHeader("Octree Generation")) {
         ImGui::SliderFloat("Rotation Speed", &m_Config->rotateSpeed, 0.0f, 0.03f);
         ImGui::SliderFloat("Movement Speed", &m_Config->moveSpeed, 0.0f, 0.50f);
     }

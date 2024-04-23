@@ -37,3 +37,5 @@
 #include "syncObjects/SyncObjects.h"
 
 #include "gui/Gui.h"
+
+#include "queueSubmit/QueueSubmitter.h"

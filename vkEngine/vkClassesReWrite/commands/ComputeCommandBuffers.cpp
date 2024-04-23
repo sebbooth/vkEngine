@@ -44,6 +44,11 @@ void ComputeCommandBuffers::setExtent(VkExtent2D extent)
 
 void ComputeCommandBuffers::recordBuffer(VkCommandBuffer commandBuffer, uint32_t currentFrame)
 {
+    vkResetCommandBuffer(
+        commandBuffers[currentFrame],
+        /*VkCommandBufferResetFlagBits*/ 0
+    );
+
     VkCommandBufferBeginInfo beginInfo{};
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
@@ -70,3 +75,4 @@ void ComputeCommandBuffers::recordBuffer(VkCommandBuffer commandBuffer, uint32_t
         throw std::runtime_error("failed to record compute command buffer!");
     }
 }
+

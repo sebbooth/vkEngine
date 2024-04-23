@@ -17,6 +17,17 @@ GraphicsPipeline::GraphicsPipeline(
     m_Config = config;
 }
 
+std::vector<char> charPtrToVector(const char* charArray) {
+    std::vector<char> result;
+
+    // Iterate through the char* until the null terminator is reached
+    for (int i = 0; charArray[i] != '\0'; ++i) {
+        result.push_back(charArray[i]); // Push each character into the vector
+    }
+
+    return result;
+}
+
 void GraphicsPipeline::create(std::string vertexShaderFile, std::string fragmentShaderFile)
 {
     VkGraphicsPipelineCreateInfo pipelineInfo{};
@@ -25,6 +36,7 @@ void GraphicsPipeline::create(std::string vertexShaderFile, std::string fragment
     // shader stages /////////////////////////////////////////////////////////////////////
     auto vertShaderCode = readFile(vertexShaderFile);
     auto fragShaderCode = readFile(fragmentShaderFile);
+
     VkShaderModule vertShaderModule = createShaderModule(vertShaderCode);
     VkShaderModule fragShaderModule = createShaderModule(fragShaderCode);
 

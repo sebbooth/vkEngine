@@ -6,6 +6,8 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 #include <memory>
+#include <shaderc/shaderc.h>
+#include <string>
 
 #include "FileUtils.h"
 #include "initialization/VkConfig.h"

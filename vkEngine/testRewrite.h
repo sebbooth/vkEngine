@@ -1,13 +1,13 @@
 #pragma once
 
 #define GLFW_INCLUDE_VULKAN
+
 #include <GLFW/glfw3.h>
 
 #define STB_IMAGE_IMPLEMENTATION
 #define TINYOBJLOADER_IMPLEMENTATION
 
 #include "VkClassesIndex.h"
-
 #include <random>
 #include "Octree.h"
 #include "Perlin.h"
@@ -27,15 +27,14 @@ std::vector<uint32_t> quadIndices = {
     2,3,0
 };
 
+
 class TestRewrite {
 
 public:
     void run() {
+  
         initSettings();
-        for (int i = 0; i < 1; i++) {
-            createOctree();
-
-        }
+        createOctree();
         initWindow();
         initVulkan();
         mainLoop();
@@ -100,6 +99,8 @@ private:
     std::shared_ptr<ComputeCommandBuffers> p_ComputeCommandBuffers;
 
     std::shared_ptr<SyncObjects> p_SyncObjects;
+
+    QueueSubmitter queuesubmit;
 
     void initSettings() {
         config = std::make_shared<VkConfig>();
@@ -475,98 +476,74 @@ private:
     }
 
     void drawFrame() {
-        VkSubmitInfo submitInfo{};
-        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        
 
         // Compute submission        
-                vkWaitForFences(p_LogicalDevice->device, 1, &p_SyncObjects->computeInFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
+                p_SyncObjects->waitForComputeFence(currentFrame, VK_TRUE, UINT64_MAX);
 
                 updateComputeUniformBuffer(currentFrame);
 
-                vkResetFences(p_LogicalDevice->device, 1, &p_SyncObjects->computeInFlightFences[currentFrame]);
-
-                vkResetCommandBuffer(p_ComputeCommandBuffers->commandBuffers[currentFrame], /*VkCommandBufferResetFlagBits*/ 0);
                 p_ComputeCommandBuffers->recordBuffer(
                     p_ComputeCommandBuffers->commandBuffers[currentFrame], 
                     currentFrame
                 );
 
-                submitInfo.commandBufferCount = 1;
-                submitInfo.pCommandBuffers = &p_ComputeCommandBuffers->commandBuffers[currentFrame];
-                submitInfo.signalSemaphoreCount = 1;
-                submitInfo.pSignalSemaphores = &p_SyncObjects->computeFinishedSemaphores[currentFrame];
-
-                if (vkQueueSubmit(p_LogicalDevice->computeQueue, 1, &submitInfo, p_SyncObjects->computeInFlightFences[currentFrame]) != VK_SUCCESS) {
-                    throw std::runtime_error("failed to submit compute command buffer!");
-                };
+                queuesubmit.submit(
+                    p_LogicalDevice->computeQueue,
+                    p_SyncObjects->computeInFlightFences[currentFrame],
+                    &p_ComputeCommandBuffers->commandBuffers[currentFrame],
+                    &p_SyncObjects->computeFinishedSemaphores[currentFrame]
+                );
 
         // Graphics submission
-        vkWaitForFences(p_LogicalDevice->device, 1, &p_SyncObjects->inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
+                p_SyncObjects->waitForGraphicsFence(currentFrame, VK_TRUE, UINT64_MAX);
 
-        uint32_t imageIndex;
-        VkResult result = vkAcquireNextImageKHR(
-            p_LogicalDevice->device, 
-            p_SwapChain->swapChain, 
-            UINT64_MAX, 
-            p_SyncObjects->imageAvailableSemaphores[currentFrame], 
-            VK_NULL_HANDLE, 
-            &imageIndex
-        );
+                uint32_t imageIndex;
+                VkResult result = vkAcquireNextImageKHR(
+                    p_LogicalDevice->device, 
+                    p_SwapChain->swapChain, 
+                    UINT64_MAX, 
+                    p_SyncObjects->imageAvailableSemaphores[currentFrame], 
+                    VK_NULL_HANDLE, 
+                    &imageIndex
+                );
 
-        if (result == VK_ERROR_OUT_OF_DATE_KHR) {
-            recreateSwapChain();
-            return;
-        }
-        else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
-            throw std::runtime_error("failed to acquire swap chain image!");
-        }
-
-        vkResetFences(p_LogicalDevice->device, 1, &p_SyncObjects->inFlightFences[currentFrame]);
+                if (result == VK_ERROR_OUT_OF_DATE_KHR) {
+                    recreateSwapChain();
+                    return;
+                }
+                else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
+                    throw std::runtime_error("failed to acquire swap chain image!");
+                }
         
-        /*
-        p_CanvasImage->transitionImageLayout(
-            p_CanvasImage->storageImages[currentFrame], 
-            VK_FORMAT_R8G8B8A8_UNORM, 
-            VK_IMAGE_LAYOUT_GENERAL, 
-            VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
-        );
-        */
+                p_CommandBuffers->recordBufferIndexed(currentFrame, imageIndex, p_IndexBuffer->indices.size());
 
-        //p_DescriptorPool->update(currentFrame);
-        p_CommandBuffers->recordBufferIndexed(currentFrame, imageIndex, p_IndexBuffer->indices.size());
+                VkSemaphore waitSemaphores[] = {
+                    p_SyncObjects->computeFinishedSemaphores[currentFrame], 
+                    p_SyncObjects->imageAvailableSemaphores[currentFrame] 
+                };
+                VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_VERTEX_INPUT_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
 
-            VkSemaphore waitSemaphores[] = { p_SyncObjects->computeFinishedSemaphores[currentFrame], p_SyncObjects->imageAvailableSemaphores[currentFrame] };
-            VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_VERTEX_INPUT_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-            submitInfo = {};
-            submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+                queuesubmit.submit(
+                    p_LogicalDevice->graphicsQueue,
+                    p_SyncObjects->inFlightFences[currentFrame],
+                    &p_CommandBuffers->commandBuffers[currentFrame],
+                    &p_SyncObjects->renderFinishedSemaphores[currentFrame],
+                    2,
+                    waitSemaphores,
+                    waitStages
+                );
 
-            submitInfo.waitSemaphoreCount = 2;
-            submitInfo.pWaitSemaphores = waitSemaphores;
-            submitInfo.pWaitDstStageMask = waitStages;
-            submitInfo.commandBufferCount = 1;
-            submitInfo.pCommandBuffers = &p_CommandBuffers->commandBuffers[currentFrame];
-            submitInfo.signalSemaphoreCount = 1;
-            submitInfo.pSignalSemaphores = &p_SyncObjects->renderFinishedSemaphores[currentFrame];
-
-            if (vkQueueSubmit(p_LogicalDevice->graphicsQueue, 1, &submitInfo, p_SyncObjects->inFlightFences[currentFrame]) != VK_SUCCESS) {
-                throw std::runtime_error("failed to submit draw command buffer!");
-            }
- 
-        VkPresentInfoKHR presentInfo{};
+          VkPresentInfoKHR presentInfo{};
         presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-
         presentInfo.waitSemaphoreCount = 1;
         presentInfo.pWaitSemaphores = &p_SyncObjects->renderFinishedSemaphores[currentFrame];
-
-        VkSwapchainKHR swapChains[] = { p_SwapChain->swapChain };
         presentInfo.swapchainCount = 1;
+        VkSwapchainKHR swapChains[] = { p_SwapChain->swapChain };
         presentInfo.pSwapchains = swapChains;
-
         presentInfo.pImageIndices = &imageIndex;
-
         result = vkQueuePresentKHR(p_LogicalDevice->presentQueue, &presentInfo);
 
-        
         if (
             result == VK_ERROR_OUT_OF_DATE_KHR || 
             result == VK_SUBOPTIMAL_KHR || 
@@ -580,14 +557,7 @@ private:
         else if (result != VK_SUCCESS) {
             throw std::runtime_error("failed to present swap chain image!");
         }
-        /*
-        p_CanvasImage->transitionImageLayout(
-            p_CanvasImage->storageImages[currentFrame],
-            VK_FORMAT_R8G8B8A8_UNORM,
-            VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-            VK_IMAGE_LAYOUT_GENERAL
-        );
-        */
+      
         currentFrame = (currentFrame + 1) % config->maxFramesInFlight;
     }
 
@@ -786,6 +756,22 @@ private:
 
     Octree octree;
    
+    /* 
+    * 
+    * 2^32 : 4,294,967,296 nodes
+    * 34,359,738,368 bytes
+    * 34.359 GB
+    * 
+    * 8 depth octree:
+    * 16,777,216
+    * 
+    * 2 ^ 25 = 33,554,432
+    * 268.43 MB
+    * 
+       00 00 00 00 11 11 11 11  00 00 00 00 11 11 11 11 00 00 00 00 11 11 11 11  00 00 00 00 11 11 11 11
+       8 bytes
+    */
+
     void createOctree() {
         int depth = config->octreeDepth;
         int width = config->octreeWidth;

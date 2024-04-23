@@ -2,7 +2,6 @@
 
 int main() {
     TestRewrite app;
-
     try {
         app.run();
     }

@@ -2,6 +2,8 @@
 
 Octree::Octree(std::vector<Voxel> voxelArray, int depth)
 {
+    bitMaskArray.resize(19174545);
+
     int layerSize = 2;
 
     for (int layer = 0; layer < depth; layer++) {
