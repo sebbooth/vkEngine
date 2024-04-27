@@ -14,7 +14,9 @@ struct ComputeUniformBufferObject {
 	alignas(16) glm::vec3 camDir = glm::vec3(-0.519135, -0.634374, -0.572781);
 	alignas(16) glm::vec3 camUp = glm::vec3(-0.422386, 0.773021, -0.473317);
 	alignas(16) glm::vec3 sunDir = glm::vec3(-1, -2, -3);
-
+	alignas(16) glm::vec3 fogColor = glm::vec3(0, 0, 0);
+	float fogMinDistance = 1.0f;
+	float fogMaxDistance = 100.0f;
 	float deltaTime = 1.0f;
 	float focalLength = 4.0f;
 	float viewportHeight = 1.0f;
@@ -32,7 +34,7 @@ struct VkConfig {
 	const int maxFramesInFlight = 2;
 	const uint32_t screenWidth = 800;
 	const uint32_t screenHeight = 600;
-	int downScaleFactor = 1;
+	int downScaleFactor = 2;
 	
 	bool newSwapChainNeeded = false;
 

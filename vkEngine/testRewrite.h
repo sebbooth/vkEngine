@@ -1,5 +1,6 @@
 #pragma once
 
+#define VK_EXT_debug_utils
 #define GLFW_INCLUDE_VULKAN
 
 #include <GLFW/glfw3.h>
@@ -12,14 +13,15 @@
 #include "Octree.h"
 #include "Perlin.h"
 #include "SimplexNoise.h"
+#include "BitmaskOctree.h"
 
 const bool enableValidationLayers = true;
 
 const std::vector<Vertex> quadVertices = {
-        {{-1.0f, -1.0f, 0.0f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-        {{1.0f, -1.0f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
-        {{1.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
-        {{-1.0f, 1.0f, 0.0f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}}
+        {{-1.0f, -1.0f, 0.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 1.0f}},
+        {{1.0f, -1.0f, 0.0f}, {0.0f, 1.0f, 0.0f}, {1.0f, 1.0f}},
+        {{1.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 0.0f}},
+        {{-1.0f, 1.0f, 0.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f}}
 };
 
 std::vector<uint32_t> quadIndices = {
@@ -105,8 +107,8 @@ private:
     void initSettings() {
         config = std::make_shared<VkConfig>();
         config->enableValidationLayers = enableValidationLayers;
-        config->deviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
-        config->validationLayers = { "VK_LAYER_KHRONOS_validation" };
+        config->deviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME, VK_KHR_SHADER_NON_SEMANTIC_INFO_EXTENSION_NAME };
+        config->validationLayers = { "VK_LAYER_KHRONOS_validation"};
         config->computeEnabled = true;
         config->msaaEnabled = false;
         config->depthStencilEnabled = false;
@@ -248,7 +250,7 @@ private:
             p_LogicalDevice->device,
             p_ComputeDescriptorSetLayout->descriptorSetLayout
         );
-        std::string computeShaderFile = "shaders/old_raycast_comp.spv";
+        std::string computeShaderFile = "shaders/bitmask.spv";
         p_ComputePipeline->create(computeShaderFile);
     }
 
@@ -268,8 +270,8 @@ private:
             config
         );
         p_OctreeSSBO->uploadData(
-            sizeof(OctreeNode) * octree.octreeArray.size(),
-            octree.octreeArray.data()
+            sizeof(unsigned int) * bitmaskOctree.bitMaskArray.size(),
+            bitmaskOctree.bitMaskArray.data()
         );
 
         p_CanvasImage = std::make_shared<StorageImage>(
@@ -337,7 +339,7 @@ private:
         p_ComputeDescriptorSets->bindStorageBuffer(
             computeSSBOBinding,
             p_OctreeSSBO->shaderStorageBuffers,
-            sizeof(OctreeNode) * octree.octreeArray.size()
+            sizeof(unsigned int) * bitmaskOctree.bitMaskArray.size()
         );
         p_ComputeDescriptorSets->bindStorageImage(
             computeImageBinding,
@@ -673,7 +675,7 @@ private:
         p_ComputeDescriptorSets->bindStorageBuffer(
             computeSSBOBinding,
             p_OctreeSSBO->shaderStorageBuffers,
-            sizeof(OctreeNode) * octree.octreeArray.size()
+            sizeof(unsigned int) * bitmaskOctree.bitMaskArray.size()
         );
         p_ComputeDescriptorSets->bindStorageImage(
             computeImageBinding,
@@ -754,25 +756,12 @@ private:
         p_Instance->destroy();
     }
 
-    Octree octree;
-   
-    /* 
-    * 
-    * 2^32 : 4,294,967,296 nodes
-    * 34,359,738,368 bytes
-    * 34.359 GB
-    * 
-    * 8 depth octree:
-    * 16,777,216
-    * 
-    * 2 ^ 25 = 33,554,432
-    * 268.43 MB
-    * 
-       00 00 00 00 11 11 11 11  00 00 00 00 11 11 11 11 00 00 00 00 11 11 11 11  00 00 00 00 11 11 11 11
-       8 bytes
-    */
-
+    //Octree octree;
+    BitmaskOctree bitmaskOctree;
     void createOctree() {
+        bitmaskOctree = BitmaskOctree(0, 0, 7, 0);
+
+        /*
         int depth = config->octreeDepth;
         int width = config->octreeWidth;
 
@@ -794,27 +783,29 @@ private:
 
 
         for (int x = 0; x < width; x++) {
-            for (int y = 0; y < width; y++) {
-                for (int z = 0; z < width; z++) {
+
+            for (int z = 0; z < width; z++) {
+                float perlinVal = perlinGenerator.perlin2D(x, z);
+                int yThreshold = (int)(perlinVal * width);
+
+                for (int y = 0; y < width; y++) {
                     if (config->terrain) {
-                        float perlinVal = perlinGenerator.perlin2D(x, z);
                         float simplex = simplexNoiseGenerator.fractal(5, (float)x / width, (float)y / width, (float)z / width);
 
-                        int yThreshold = (int)(perlinVal * width);
                         if (y < yThreshold && simplex < 0.5f) {
                             Voxel voxel{};
                             voxel.x = x;
                             voxel.y = y;
                             voxel.z = z;
-                            voxel.mat = -2 - materialDist(gen);   // -2 - -7 grass
+                            voxel.mat = -2;// -materialDist(gen);   // -2 - -7 grass
                             if (y < yThreshold - 6) {
-                                voxel.mat = -8 - materialDist(gen);   // -8 - -13 stone
+                                voxel.mat = -8;// -materialDist(gen);   // -8 - -13 stone
                             }
                             if (y > distribution(gen) + (width * 0.55)) {
-                                voxel.mat = -8 - materialDist(gen);
+                                voxel.mat = -8;// -materialDist(gen);
                             }
                             if (y > distribution(gen) + (width * 0.70)) {
-                                voxel.mat = -14 - materialDist(gen);  // -14 - -19 snow
+                                voxel.mat = -14;// -materialDist(gen);  // -14 - -19 snow
                             }
                             testRandomVoxels.push_back(voxel);
                         }
@@ -836,6 +827,7 @@ private:
 
         std::cout << "Generating SVO Chunk Size: " << width << " x " << width << " x " << width << std::endl;
         octree = Octree(testRandomVoxels, depth);
-        std::cout << "Octree Size: " << octree.octreeArray.size() << std::endl;
+        std::cout << "Octree Size: " << octree.octreeArray.size() * sizeof(OctreeNode) << std::endl;
+        */
     }
 };

@@ -83,9 +83,10 @@ void Gui::draw(VkCommandBuffer commandBuffer)
         ImGui::SliderFloat("Movement Speed", &m_Config->moveSpeed, 0.0f, 0.50f);
     }
 
-    if (ImGui::CollapsingHeader("Octree Generation")) {
-        ImGui::SliderFloat("Rotation Speed", &m_Config->rotateSpeed, 0.0f, 0.03f);
-        ImGui::SliderFloat("Movement Speed", &m_Config->moveSpeed, 0.0f, 0.50f);
+    if (ImGui::CollapsingHeader("Fog")) {
+        ImGui::SliderFloat("Min Fog Distance", &m_Config->ubo.fogMinDistance, 0.0f, 100.0f);
+        ImGui::SliderFloat("Max Fog Distance", &m_Config->ubo.fogMaxDistance, 0.0f, 1000.0f);
+        ImGui::ColorEdit3("Fog Color", &m_Config->ubo.fogColor.r);
     }
 
     static const char* items[] = { "1/1", "1/2", "1/4", "1/8", "1/16", "1/32" };

@@ -26,6 +26,7 @@
     </None>
     <None Include="shaders\simple_shader.vert" />
     <None Include="shaders\simple_shader.frag" />
+    <None Include="shaders\bitmaskOctree.comp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="vendor\stb\stb_image.h">
@@ -50,9 +51,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="vendor\imgui-1.90.4\imstb_truetype.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ComputeTexRays.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="vkClassesReWrite\initialization\Instance.h">
@@ -172,6 +170,9 @@
     <ClInclude Include="vkClassesReWrite\queueSubmit\QueueSubmitter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="BitmaskOctree.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -289,6 +290,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="vkClassesReWrite\queueSubmit\QueueSubmitter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="BitmaskOctree.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

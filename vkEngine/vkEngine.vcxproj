@@ -80,13 +80,13 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
       <PreprocessToFile>false</PreprocessToFile>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>C:\VulkanSDK\1.3.275.0\Lib;$(SolutionDir)vkEngine\vendor\glfw-3.4.bin.WIN64\lib-vc2022</AdditionalLibraryDirectories>
-      <AdditionalDependencies>vulkan-1.lib;glfw3.lib;shaderc_combined.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>vulkan-1.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -109,7 +109,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>C:\VulkanSDK\1.3.275.0\Lib;$(SolutionDir)vkEngine\vendor\glfw-3.4.bin.WIN64\lib-vc2022</AdditionalLibraryDirectories>
-      <AdditionalDependencies>vulkan-1.lib;glfw3.lib;shaderc_combined.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>vulkan-1.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -122,13 +122,13 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
       <PreprocessToFile>false</PreprocessToFile>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>C:\VulkanSDK\1.3.275.0\Lib;$(SolutionDir)vkEngine\vendor\glfw-3.4.bin.WIN64\lib-vc2022</AdditionalLibraryDirectories>
-      <AdditionalDependencies>vulkan-1.lib;glfw3.lib;shaderc_combined.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>vulkan-1.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -151,10 +151,11 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>C:\VulkanSDK\1.3.275.0\Lib;$(SolutionDir)vkEngine\vendor\glfw-3.4.bin.WIN64\lib-vc2022</AdditionalLibraryDirectories>
-      <AdditionalDependencies>vulkan-1.lib;glfw3.lib;shaderc_combined.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>vulkan-1.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <None Include="shaders\bitmaskOctree.comp" />
     <None Include="shaders\compile.bat" />
     <None Include="shaders\HelloTriangle.frag" />
     <None Include="shaders\HelloTriangle.vert" />
@@ -162,6 +163,7 @@
     <None Include="shaders\simple_shader.vert" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="BitmaskOctree.h" />
     <ClInclude Include="vkClassesReWrite\queueSubmit\QueueSubmitter.h" />
     <ClInclude Include="vkClassesReWrite\commands\ComputeCommandBuffers.h" />
     <ClInclude Include="vkClassesReWrite\commands\CommandBuffers.h" />
@@ -183,7 +185,6 @@
     <ClInclude Include="vkClassesReWrite\shaderResources\SSBO.h" />
     <ClInclude Include="vkClassesReWrite\commands\CommandPool.h" />
     <ClInclude Include="vkClassesReWrite\pipelines\ComputePipeline.h" />
-    <ClInclude Include="ComputeTexRays.h" />
     <ClInclude Include="TestRewrite.h" />
     <ClInclude Include="vendor\imgui-1.90.4\imgui.h" />
     <ClInclude Include="vendor\imgui-1.90.4\imgui_impl_glfw.h" />
@@ -212,6 +213,7 @@
     <ClInclude Include="vkUtils\VkStructs.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="BitmaskOctree.cpp" />
     <ClCompile Include="vkClassesReWrite\queueSubmit\QueueSubmitter.cpp" />
     <ClCompile Include="vkClassesReWrite\commands\ComputeCommandBuffers.cpp" />
     <ClCompile Include="vkClassesReWrite\commands\CommandBuffers.cpp" />

@@ -39,7 +39,7 @@ void ComputeCommandBuffers::attachDescriptorSets(std::vector<VkDescriptorSet> de
 
 void ComputeCommandBuffers::setExtent(VkExtent2D extent)
 {
-    groupSizeX = std::ceil(((extent.width / m_Config->downScaleFactor) * (extent.height / m_Config->downScaleFactor)) / 256 + 1);
+    groupSizeX = std::ceil(((extent.width / m_Config->downScaleFactor) * (extent.height / m_Config->downScaleFactor) + extent.width) / 256 + 1);
 }
 
 void ComputeCommandBuffers::recordBuffer(VkCommandBuffer commandBuffer, uint32_t currentFrame)

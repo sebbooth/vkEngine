@@ -1,16 +1,5 @@
 #version 450
 
-struct OctreeNode {
-    int p0;
-    int p1;
-    int p2;
-    int p3;
-    int p4;
-    int p5;
-    int p6;
-    int p7;
-};
-
 layout(binding = 0) uniform ParameterUBO {
     vec3 camPos;
     vec3 camDir;
@@ -29,7 +18,7 @@ layout(binding = 0) uniform ParameterUBO {
 } ubo;
 
 layout(std140, binding = 1) readonly buffer OctreeSSBO {
-    OctreeNode octreeArray[];
+    uint octreeArray[];
 } octree;
 
 layout(binding = 2, rgba8) uniform writeonly image2D outputImage;
@@ -46,11 +35,13 @@ vec3 camRight = -normalize(cross(ubo.camDir, ubo.camUp));
 vec3 viewportCenter = ubo.camPos + ubo.camDir * ubo.focalLength;
 vec3 topLeft = viewportCenter + ubo.camUp * 0.5 * ubo.viewportHeight - camRight * 0.5 * viewportWidth;
 
-int OCTREE_SIZE = ubo.octreeSize;
-int max_depth = ubo.octreeMaxDepth;
+int OCTREE_SIZE = 128;
+int max_depth = 8;
 const int MAX_DEPTH = 100;
 const int MAX_TRAVERSALS = 300;
 const float INF = 1.0 / 0.0;
+
+uint sliceIndices[9] = { 0,  1,  9,  73,  585,  5265,  38033,  300177, 2397329 };
 
 
 float intersectRayPlane(vec3 rayOrigin, vec3 rayDirection, vec3 planeNormal, float planeD) {
@@ -118,9 +109,6 @@ ivec2 traverseOctree(vec3 curPos, vec3 dir, int parentVoxelSize, ivec3 curVoxel,
 
     int curDepth = 0;
 
-    int nodeIndices[MAX_DEPTH];
-    nodeIndices[curDepth] = initialIndex;
-
     ivec3 parentVoxels[MAX_DEPTH];
     parentVoxels[curDepth] = parentVoxel;
 
@@ -149,6 +137,7 @@ ivec2 traverseOctree(vec3 curPos, vec3 dir, int parentVoxelSize, ivec3 curVoxel,
     //     endloop:
     //        if the current voxel is outside of the root voxel, return miss
     //        if we find the parent of the current voxel, continue
+    uint childIndex = 0;
 
     for (int i = 0; i < MAX_TRAVERSALS; i++) {
 
@@ -156,93 +145,41 @@ ivec2 traverseOctree(vec3 curPos, vec3 dir, int parentVoxelSize, ivec3 curVoxel,
         //  1. Find leaf octree node of curVoxel
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-        int subNodeValue = nodeIndices[curDepth];
         int j = 0;
-        while (subNodeValue >= 0 && curDepth < MAX_DEPTH) {
+        while (curDepth < 8) {
+            uint curNode = octree.octreeArray[childIndex + sliceIndices[curDepth]];
 
-
-            if (j++ > MAX_DEPTH) {          // for some reason this fixes framerate drop when entering octree 128x128 or larger
-                return ivec2(-1, -1);
+            if (curNode != 0 && (curNode & 255) == 0) {
+                return ivec2(curNode >> 8, collType);
             }
 
             parentVoxels[curDepth] = scaleVoxel(curVoxel, parentVoxelSize);
             ivec3 curVoxelScaled = scaleVoxel(curVoxel, voxelSize);
 
-            if (curVoxelScaled.x == parentVoxels[curDepth].x) {
-                if (curVoxelScaled.y == parentVoxels[curDepth].y) {
-                    if (curVoxelScaled.z == parentVoxels[curDepth].z) {
-                        subNodeValue = octree.octreeArray[nodeIndices[curDepth]].p0; //000
-                    }
-                    else {
-                        subNodeValue = octree.octreeArray[nodeIndices[curDepth]].p1; //001
-                    }
-                }
-                else {
-                    if (curVoxelScaled.z == parentVoxels[curDepth].z) {
-                        subNodeValue = octree.octreeArray[nodeIndices[curDepth]].p2; //010
-                    }
-                    else {
-                        subNodeValue = octree.octreeArray[nodeIndices[curDepth]].p3; //011
-                    }
-                }
-            }
-            else {
-                if (curVoxelScaled.y == parentVoxels[curDepth].y) {
-                    if (curVoxelScaled.z == parentVoxels[curDepth].z) {
-                        subNodeValue = octree.octreeArray[nodeIndices[curDepth]].p4; //100
-                    }
-                    else {
-                        subNodeValue = octree.octreeArray[nodeIndices[curDepth]].p5; //101
-                    }
-                }
-                else {
-                    if (curVoxelScaled.z == parentVoxels[curDepth].z) {
-                        subNodeValue = octree.octreeArray[nodeIndices[curDepth]].p6; //110
-                    }
-                    else {
-                        subNodeValue = octree.octreeArray[nodeIndices[curDepth]].p7; //111
-                    }
-                }
-            }
+            childIndex = childIndex << 3;
+            if (curVoxelScaled.x != parentVoxels[curDepth].x)
+                childIndex += 4;
+                
+            if (curVoxelScaled.y != parentVoxels[curDepth].y)
+                childIndex += 2;
+            
+            if (curVoxelScaled.z != parentVoxels[curDepth].z)
+                childIndex += 1;
 
-            if (curDepth + 1 == MAX_DEPTH) {
-                if (subNodeValue < -1) {
-                    return ivec2(subNodeValue, collType);
-                }
-                else {
-                    curDepth++;
-                    parentVoxelSize /= 2;
-                    voxelSize /= 2;
-                    break;
-                }
+            if (((curNode) & (1 << (childIndex & 7))) == 0) {
+                curDepth++;
+                parentVoxelSize /= 2;
+                voxelSize /= 2;
+                break;
             }
-            nodeIndices[curDepth + 1] = subNodeValue;
-
             curDepth++;
             parentVoxelSize /= 2;
             voxelSize /= 2;
-            // possible states:
-            // nodeIndices[curDepth] > -1 : have not reached leaf node -- CHECK DEEPER NODE
         }
 
-        // possible states:
-        // nodeIndices[curDepth] < -1 : leaf node is a material -- RETURN 
-        // nodeIndices[curDepth] = -1 : leaf node is empty -- TRAVERSE
 
-        ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        //  2. if leaf is a material, return
-        ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        // nodeIndices[curDepth] < -1 : leaf node is a material -- RETURN 
-        if (nodeIndices[curDepth] < -1) {
-            return ivec2(nodeIndices[curDepth], collType);
-        }
-
-        ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        //  3. if leaf is air/empty, traverse to next voxel by a step equivalent to the leaf's size
-        ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        // nodeIndices[curDepth] = -1 : leaf node is empty -- TRAVERSE
-        // get deltas until each plane collision
         if (curDepth > 0) {
+            childIndex = childIndex >> 3;
             curDepth--;
             parentVoxelSize *= 2;
             voxelSize *= 2;
@@ -268,15 +205,11 @@ ivec2 traverseOctree(vec3 curPos, vec3 dir, int parentVoxelSize, ivec3 curVoxel,
         if (minDelta == deltaX) {
             curPosi.x += 0.01 * dir.x;
             curVoxel = roundVoxel(curPosi, 1);
-            //curVoxel.x = int(floor(curVoxel.x + minDelta * dir.x));
-            //curVoxel.z = int(floor(curPosi.z));
 
             if (dir.x > 0) {
-                //curVoxel.x += voxelSize;
                 collType = 0;
             }
             else {
-                //curVoxel.x -= voxelSize;
                 collType = 1;
             }
         }
@@ -284,15 +217,10 @@ ivec2 traverseOctree(vec3 curPos, vec3 dir, int parentVoxelSize, ivec3 curVoxel,
             curPosi.y += 0.01 * dir.y;
             curVoxel = roundVoxel(curPosi, 1);
 
-            //curVoxel.y = int(floor(curVoxel.y + minDelta * dir.y));
-            //curVoxel.y = int(floor(curPosi.y));
-
             if (dir.y > 0) {
-                //curVoxel.y += voxelSize;
                 collType = 2;
             }
             else {
-                //curVoxel.y -= voxelSize;
                 collType = 3;
             }
         }
@@ -300,24 +228,17 @@ ivec2 traverseOctree(vec3 curPos, vec3 dir, int parentVoxelSize, ivec3 curVoxel,
             curPosi.z += 0.01 * dir.z;
             curVoxel = roundVoxel(curPosi, 1);
 
-            //curVoxel.z = int(floor(curVoxel.z + minDelta * dir.z));
-            //curVoxel.z = int(floor(curPosi.z));
             if (dir.z > 0) {
-                //curVoxel.z += voxelSize;
                 collType = 4;
             }
             else {
-                //curVoxel.z -= voxelSize;
                 collType = 5;
             }
         }
         else {
             return ivec2(-10, -10);
         }
-        //return ivec2(10, collType);
-
-
-        //curVoxel = roundVoxel(curPosi, 1);
+  
 
         //  4. loop: 
         //        if the new current voxel is outside of the current parent voxel, reduce depth.
@@ -327,23 +248,19 @@ ivec2 traverseOctree(vec3 curPos, vec3 dir, int parentVoxelSize, ivec3 curVoxel,
 
         ivec3 curParentEnds = parentVoxels[curDepth] + ivec3(parentVoxelSize, parentVoxelSize, parentVoxelSize);
 
-
         while (!voxelInParent(curPosi, parentVoxels[curDepth], curParentEnds) && curDepth >= 0) {
+            childIndex = childIndex >> 3;
             curDepth--;
             parentVoxelSize *= 2;
             voxelSize *= 2;
             curParentEnds = parentVoxels[curDepth] + ivec3(parentVoxelSize, parentVoxelSize, parentVoxelSize);
-            //return ivec2(-10, -10);
         }
 
         // if the current voxel is outside of the root voxel, return miss
         if (curDepth < 0) {
-            return ivec2(-1, -1);
-            //return ivec2(111, collType);        // why do I hit this when still in root voxel ???
+            return ivec2(-10, -10);
         }
-        //return ivec2(-10, -10);
         // if we find the parent of the current voxel, continue
-
     }
     return ivec2(-1, -1);
 }
@@ -376,13 +293,11 @@ ivec2 enterOctree(ivec3 rootNodePos, vec3 rayOrigin, vec3 rayDir, int voxelSize)
         rayOrigin += minDelta * rayDir;
 
         vec3 curPosi = rayOrigin;
-
         // increment current voxel position
         if (minDelta == deltaX) {
             curPosi.x += 0.01 * rayDir.x;
             curVoxel = roundVoxel(curPosi, 1);
 
-            //curVoxel.x += int(round(minDelta * rayDir.x));
             if (rayDir.x > 0) { collType = 0; }
             else { collType = 1; }
         }
@@ -390,7 +305,6 @@ ivec2 enterOctree(ivec3 rootNodePos, vec3 rayOrigin, vec3 rayDir, int voxelSize)
             curPosi.y += 0.01 * rayDir.y;
             curVoxel = roundVoxel(curPosi, 1);
 
-            //curVoxel.y += int(round(minDelta * rayDir.y));
             if (rayDir.y > 0) { collType = 2; }
             else { collType = 3; }
         }
@@ -398,26 +312,26 @@ ivec2 enterOctree(ivec3 rootNodePos, vec3 rayOrigin, vec3 rayDir, int voxelSize)
             curPosi.z += 0.01 * rayDir.z;
             curVoxel = roundVoxel(curPosi, 1);
 
-            //curVoxel.z += int(round(minDelta * rayDir.z));
             if (rayDir.z > 0) { collType = 4; }
             else { collType = 5; }
         }
+
         return traverseOctree(rayOrigin, rayDir, voxelSize, curVoxel, rootNodePos, 0, collType);
     }
 
     if (xDir > 0)
         xDist = intersectRayPlane(rayOrigin, rayDir, vec3(1, 0, 0), rootNodePos.x);
-    else 
+    else
         xDist = intersectRayPlane(rayOrigin, rayDir, vec3(1, 0, 0), rootNodePos.x + voxelSize);
 
-    if (yDir > 0) 
+    if (yDir > 0)
         yDist = intersectRayPlane(rayOrigin, rayDir, vec3(0, 1, 0), rootNodePos.y);
-    else 
+    else
         yDist = intersectRayPlane(rayOrigin, rayDir, vec3(0, 1, 0), rootNodePos.y + voxelSize);
 
-    if (zDir > 0) 
+    if (zDir > 0)
         zDist = intersectRayPlane(rayOrigin, rayDir, vec3(0, 0, 1), rootNodePos.z);
-    else 
+    else
         zDist = intersectRayPlane(rayOrigin, rayDir, vec3(0, 0, 1), rootNodePos.z + voxelSize);
 
     if (xDist < 0) { xDist = INF; }
@@ -446,33 +360,31 @@ ivec2 enterOctree(ivec3 rootNodePos, vec3 rayOrigin, vec3 rayDir, int voxelSize)
         return ivec2(-1, -1);
     }
     if (minDist == xDist) {
-        if (xDir > 0) 
+        if (xDir > 0)
             return traverseOctree(xCollision, rayDir, voxelSize, ivec3(floor(ixCollision)), rootNodePos, 0, 0);
-        else 
+        else
             return traverseOctree(xCollision, rayDir, voxelSize, ivec3(floor(ixCollision)), rootNodePos, 0, 1);
     }
     if (minDist == yDist) {
-        if (yDir > 0) 
+        if (yDir > 0)
             return traverseOctree(yCollision, rayDir, voxelSize, ivec3(floor(iyCollision)), rootNodePos, 0, 2);
-        else 
+        else
             return traverseOctree(yCollision, rayDir, voxelSize, ivec3(floor(iyCollision)), rootNodePos, 0, 3);
     }
     if (minDist == zDist) {
-        if (zDir > 0) 
+        if (zDir > 0)
             return traverseOctree(zCollision, rayDir, voxelSize, ivec3(floor(izCollision)), rootNodePos, 0, 4);
-        else 
+        else
             return traverseOctree(zCollision, rayDir, voxelSize, ivec3(floor(izCollision)), rootNodePos, 0, 5);
     }
     return ivec2(-1, -1);
 }
 
 void main() {
-    OctreeNode firstNode = octree.octreeArray[0];
-
-    vec3 sunDir = normalize(vec3(-1, -2, -3));
+    vec3 sunDir = normalize(ubo.sunDir);
 
     float normals[6];
-    float ambient = 0.9;
+    float ambient = 0.5;
     normals[0] = ambient + dot(vec3(1, 0, 0), sunDir);
     normals[1] = ambient + dot(vec3(-1, 0, 0), sunDir);
     normals[2] = ambient + dot(vec3(0, 1, 0), sunDir);
@@ -499,24 +411,20 @@ void main() {
 
     ivec2 matValue = enterOctree(ivec3(0, 0, 0), rayOrigin, rayDir, OCTREE_SIZE);
     vec3 color;
-    if (matValue.x == -1) {
-        color = vec3(0, 0, 0);
+    if (matValue.x == -10) {
+        color = vec3(0, 1, 1);
     }
 
     // show terain colors
-    if (matValue.x <= -2) {
-        float subVal = 20 + matValue.x + 2 + 5;
-        color = (subVal / 25) * vec3(0, 0.4, 0);
+    if (matValue.x == 1) {
+        color = vec3(1, 0, 0);
     }
-    if (matValue.x <= -8) {
-        float subVal = 20 + matValue.x + 8 + 5;
-        color = (subVal / 25) * vec3(0.4, 0.4, 0.4);
+    if (matValue.x == 2) {
+        color = vec3(0, 1, 0);
     }
-    if (matValue.x <= -14) {
-        float subVal = 20 + matValue.x + 14 + 5;
-        color = (subVal / 25) * vec3(1, 1, 1);
+    if (matValue.x == 3) {
+        color = vec3(0, 0, 1);
     }
-
     if (matValue.y < 6) {
         color *= normals[matValue.y];
     }
