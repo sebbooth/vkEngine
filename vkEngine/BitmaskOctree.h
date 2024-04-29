@@ -10,6 +10,7 @@
 #include <iostream>
 #include <bitset>
 #include <unordered_map>
+#include <algorithm>
 
 #include "OctreeStructs.h"
 #include "SimplexNoise.h"
@@ -89,10 +90,13 @@ for (int i = 1; i < 8; i++) {
 
 public:
 	BitmaskOctree(
-		int xCoord, int zCoord, 
+		int xCoord, 
+		int yCoord, 
+		int zCoord, 
 		unsigned int maxDepth, 
 		unsigned int LODLevel
 	);
+
 	BitmaskOctree() = default;
 
 public:

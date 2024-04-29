@@ -15,13 +15,20 @@
 #include "SimplexNoise.h"
 #include "BitmaskOctree.h"
 
-const bool enableValidationLayers = true;
+const bool enableValidationLayers = false;
 
 const std::vector<Vertex> quadVertices = {
         {{-1.0f, -1.0f, 0.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 1.0f}},
         {{1.0f, -1.0f, 0.0f}, {0.0f, 1.0f, 0.0f}, {1.0f, 1.0f}},
         {{1.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 0.0f}},
         {{-1.0f, 1.0f, 0.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f}}
+};
+
+struct ChunkInfo {
+    int x;
+    int y;
+    int z;
+    int index;
 };
 
 std::vector<uint32_t> quadIndices = {
@@ -34,7 +41,6 @@ class TestRewrite {
 
 public:
     void run() {
-  
         initSettings();
         createOctree();
         initWindow();
@@ -70,6 +76,7 @@ private:
     uint32_t imguiSamplerBinding;
     uint32_t computeUniformBinding;
     uint32_t computeSSBOBinding;
+    uint32_t computeChunkInfoSSBOBinding;
     uint32_t computeImageBinding;
 
     std::shared_ptr<GraphicsPipeline> p_GraphicsPipeline;
@@ -78,6 +85,7 @@ private:
     std::shared_ptr<CommandPool> p_CommandPool;
 
     std::shared_ptr<SSBO> p_OctreeSSBO;
+    std::shared_ptr<SSBO> p_ChunkInfoSSBO;
     std::shared_ptr<StorageImage> p_CanvasImage;
     std::shared_ptr<Sampler> p_CanvasSampler;
     std::shared_ptr<UniformBuffer> p_ComputeUBO;
@@ -112,7 +120,7 @@ private:
         config->computeEnabled = true;
         config->msaaEnabled = false;
         config->depthStencilEnabled = false;
-        config->downScaleFactor = 1;
+        config->downScaleFactor = 4;
     }
 
     void initWindow() {
@@ -220,7 +228,8 @@ private:
         // since binding functions will be called with the binding indices returned here
         computeUniformBinding = p_ComputeDescriptorSetLayout->bindCompUniformBuffer();  //0
         computeSSBOBinding = p_ComputeDescriptorSetLayout->bindCompStorageBuffer();     //1
-        computeImageBinding = p_ComputeDescriptorSetLayout->bindCompStorageImage();     //2
+        computeChunkInfoSSBOBinding = p_ComputeDescriptorSetLayout->bindCompStorageBuffer();     //2
+        computeImageBinding = p_ComputeDescriptorSetLayout->bindCompStorageImage();     //3
         p_ComputeDescriptorSetLayout->create();
     }
 
@@ -270,8 +279,18 @@ private:
             config
         );
         p_OctreeSSBO->uploadData(
-            sizeof(unsigned int) * bitmaskOctree.bitMaskArray.size(),
-            bitmaskOctree.bitMaskArray.data()
+            sizeof(unsigned int) * octreeArray.size(),
+            octreeArray.data()
+        );
+
+        p_ChunkInfoSSBO = std::make_shared<SSBO>(
+            p_LogicalDevice,
+            p_CommandPool,
+            config
+        );
+        p_ChunkInfoSSBO->uploadData(
+            sizeof(ChunkInfo) * config->ubo.numChunks,
+            chunkInfos.data()
         );
 
         p_CanvasImage = std::make_shared<StorageImage>(
@@ -294,7 +313,8 @@ private:
             p_LogicalDevice,
             config
         );
-        p_ComputeUBO->create(sizeof(ComputeUniformBufferObject));
+        p_ComputeUBO->create(2*sizeof(ComputeUniformBufferObject));
+
         /*
         p_VertexUBO = std::make_shared<UniformBuffer>(
             p_LogicalDevice,
@@ -322,6 +342,7 @@ private:
         );
         p_ComputeDescriptorPool->bindUniformBuffer(computeUniformBinding, config->maxFramesInFlight);
         p_ComputeDescriptorPool->bindStorageBuffer(computeSSBOBinding, config->maxFramesInFlight);
+        p_ComputeDescriptorPool->bindStorageBuffer(computeChunkInfoSSBOBinding, config->maxFramesInFlight);
         p_ComputeDescriptorPool->bindStorageImage(computeImageBinding, config->maxFramesInFlight);
         p_ComputeDescriptorPool->create();
 
@@ -334,12 +355,17 @@ private:
         p_ComputeDescriptorSets->bindUniformBuffer(
             computeUniformBinding,
             p_ComputeUBO->uniformBuffers,
-            sizeof(ComputeUniformBufferObject)
+            2*sizeof(ComputeUniformBufferObject)
         );
         p_ComputeDescriptorSets->bindStorageBuffer(
             computeSSBOBinding,
             p_OctreeSSBO->shaderStorageBuffers,
-            sizeof(unsigned int) * bitmaskOctree.bitMaskArray.size()
+            sizeof(unsigned int) * octreeArray.size()
+        );
+        p_ComputeDescriptorSets->bindStorageBuffer(
+            computeChunkInfoSSBOBinding,
+            p_ChunkInfoSSBO->shaderStorageBuffers,
+            sizeof(ChunkInfo) * config->ubo.numChunks
         );
         p_ComputeDescriptorSets->bindStorageImage(
             computeImageBinding,
@@ -569,7 +595,7 @@ private:
         config->ubo.deltaTime = config->lastFrameTime * 2.0f;
 
         glm::mat4 rotationMat(1);
-        rotationMat = glm::rotate(rotationMat, 0.0001f * config->ubo.deltaTime, glm::vec3(0, 1, 0));
+        rotationMat = glm::rotate(rotationMat, 0.0001f * config->ubo.deltaTime, glm::vec3(0, 1, 1));
         config->ubo.sunDir = glm::vec3(rotationMat * glm::vec4(config->ubo.sunDir, 1.0));
 
         if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
@@ -602,12 +628,16 @@ private:
             config->prevCursorY = config->cursorY;
 
             glm::mat4 rotationMat(1);
-            rotationMat = glm::rotate(rotationMat, config->rotateSpeed * deltaX, config->ubo.camUp);
-            config->ubo.camDir = glm::vec3(rotationMat * glm::vec4(config->ubo.camDir, 1.0));
-
-            rotationMat = glm::mat4(1);
             glm::vec3 camLeft = glm::cross(config->ubo.camUp, config->ubo.camDir);
+
+            rotationMat = glm::rotate(rotationMat, config->rotateSpeed * deltaX, glm::vec3(0, 1, 0));
+
             rotationMat = glm::rotate(rotationMat, -config->rotateSpeed * deltaY, camLeft);
+
+            //config->ubo.camDir = glm::vec3(rotationMat * glm::vec4(config->ubo.camDir, 1.0));
+            //config->ubo.camUp = glm::vec3(rotationMat * glm::vec4(config->ubo.camUp, 1.0));
+
+            //rotationMat = glm::mat4(1);
             config->ubo.camDir = glm::vec3(rotationMat * glm::vec4(config->ubo.camDir, 1.0));
             config->ubo.camUp = glm::vec3(rotationMat * glm::vec4(config->ubo.camUp, 1.0));
         }
@@ -663,6 +693,7 @@ private:
 
         p_ComputeDescriptorPool->bindUniformBuffer(computeUniformBinding, config->maxFramesInFlight);
         p_ComputeDescriptorPool->bindStorageBuffer(computeSSBOBinding, config->maxFramesInFlight);
+        p_ComputeDescriptorPool->bindStorageBuffer(computeChunkInfoSSBOBinding, config->maxFramesInFlight);
         p_ComputeDescriptorPool->bindStorageImage(computeImageBinding, config->maxFramesInFlight);
         p_ComputeDescriptorPool->create();
 
@@ -670,12 +701,17 @@ private:
         p_ComputeDescriptorSets->bindUniformBuffer(
             computeUniformBinding,
             p_ComputeUBO->uniformBuffers,
-            sizeof(ComputeUniformBufferObject)
+            2*sizeof(ComputeUniformBufferObject)
         );
         p_ComputeDescriptorSets->bindStorageBuffer(
             computeSSBOBinding,
             p_OctreeSSBO->shaderStorageBuffers,
-            sizeof(unsigned int) * bitmaskOctree.bitMaskArray.size()
+            sizeof(unsigned int) * octreeArray.size()
+        );
+        p_ComputeDescriptorSets->bindStorageBuffer(
+            computeChunkInfoSSBOBinding,
+            p_ChunkInfoSSBO->shaderStorageBuffers,
+            sizeof(ChunkInfo) * chunkInfos.size()
         );
         p_ComputeDescriptorSets->bindStorageImage(
             computeImageBinding,
@@ -737,6 +773,7 @@ private:
         p_CanvasSampler->destroy();
         p_CanvasImage->destroy();
         p_OctreeSSBO->destroy();
+        p_ChunkInfoSSBO->destroy();
 
         p_CommandPool->destroy();
 
@@ -757,77 +794,52 @@ private:
     }
 
     //Octree octree;
-    BitmaskOctree bitmaskOctree;
+    BitmaskOctree bitmaskOctree00;
+    BitmaskOctree bitmaskOctree01;
+    BitmaskOctree bitmaskOctree10;
+    BitmaskOctree bitmaskOctree11;
+
+    std::vector<unsigned int> octreeArray;
+    std::vector<ChunkInfo> chunkInfos;
+
     void createOctree() {
-        bitmaskOctree = BitmaskOctree(0, 0, 7, 0);
 
-        /*
-        int depth = config->octreeDepth;
-        int width = config->octreeWidth;
-
-        Perlin perlinGenerator;
-        perlinGenerator.layers = config->octreeDepth - 1;
-        perlinGenerator.init_amp = 2;
-        perlinGenerator.grid_size = width * 2;
-
-        SimplexNoise simplexNoiseGenerator = SimplexNoise(8.0f, 3.0f, 3.0f, 0.1f);
-
-        std::random_device rd;  // Seed for random number engine
-        std::mt19937 gen(rd()); // Mersenne Twister random number engine
-        std::uniform_int_distribution<> distribution(-config->octreeWidth / 20, config->octreeWidth / 20); // Range from 1 to 100
-        std::uniform_int_distribution<> materialDist(0, 5); // Range from 1 to 100
-
-        std::vector<Voxel> testRandomVoxels;
-
-        std::cout << "Generating Random Voxels... " << std::endl;
-
-
-        for (int x = 0; x < width; x++) {
-
-            for (int z = 0; z < width; z++) {
-                float perlinVal = perlinGenerator.perlin2D(x, z);
-                int yThreshold = (int)(perlinVal * width);
-
-                for (int y = 0; y < width; y++) {
-                    if (config->terrain) {
-                        float simplex = simplexNoiseGenerator.fractal(5, (float)x / width, (float)y / width, (float)z / width);
-
-                        if (y < yThreshold && simplex < 0.5f) {
-                            Voxel voxel{};
-                            voxel.x = x;
-                            voxel.y = y;
-                            voxel.z = z;
-                            voxel.mat = -2;// -materialDist(gen);   // -2 - -7 grass
-                            if (y < yThreshold - 6) {
-                                voxel.mat = -8;// -materialDist(gen);   // -8 - -13 stone
-                            }
-                            if (y > distribution(gen) + (width * 0.55)) {
-                                voxel.mat = -8;// -materialDist(gen);
-                            }
-                            if (y > distribution(gen) + (width * 0.70)) {
-                                voxel.mat = -14;// -materialDist(gen);  // -14 - -19 snow
-                            }
-                            testRandomVoxels.push_back(voxel);
-                        }
+        int numChunks = 0;
+        int chunkIndex = 0;
+        for (int y = 0; y < 2; y++) {
+            for (int x = 0; x < 20; x++) {
+                for (int z = 0; z < 20; z++) {
+                    int LOD = 0;
+                    if (x > 4 || z > 4) {
+                        LOD = 1;
                     }
-                    else {
-                        float simplex = simplexNoiseGenerator.fractal(5, (float)x / width, (float)y / width, (float)z / width);
-                        if (simplex > 0.7f) {
-                            Voxel voxel{};
-                            voxel.x = x;
-                            voxel.y = y;
-                            voxel.z = z;
-                            voxel.mat = -2;   // -2 - -7 grass
-                            testRandomVoxels.push_back(voxel);
-                        }
+                    if (x > 6 || z > 6) {
+                        LOD = 2;
                     }
+                    if (x > 8 || z > 8) {
+                        LOD = 3;
+                    }
+                    if (x > 10 || z > 10) {
+                        LOD = 4;
+                    }
+                    if (x > 12 || z > 12) {
+                        LOD = 5;
+                    }
+                    BitmaskOctree bitmaskOctree(x * config->octreeWidth, y * config->octreeWidth, z * config->octreeWidth, config->octreeDepth, LOD);
+                    octreeArray.insert(octreeArray.end(), bitmaskOctree.bitMaskArray.begin(), bitmaskOctree.bitMaskArray.end());
+
+                    ChunkInfo chunkInfo{};
+                    chunkInfo.x = x * config->octreeWidth;
+                    chunkInfo.y = y * config->octreeWidth;
+                    chunkInfo.z = z * config->octreeWidth;
+                    chunkInfo.index = chunkIndex;
+                    chunkInfos.push_back(chunkInfo);
+
+                    numChunks++;
+                    chunkIndex += bitmaskOctree.bitMaskArray.size();
                 }
             }
         }
-
-        std::cout << "Generating SVO Chunk Size: " << width << " x " << width << " x " << width << std::endl;
-        octree = Octree(testRandomVoxels, depth);
-        std::cout << "Octree Size: " << octree.octreeArray.size() * sizeof(OctreeNode) << std::endl;
-        */
+        config->ubo.numChunks = numChunks;
     }
 };

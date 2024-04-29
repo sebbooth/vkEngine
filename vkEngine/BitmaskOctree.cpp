@@ -1,6 +1,6 @@
 #include "BitmaskOctree.h"
 
-BitmaskOctree::BitmaskOctree(int xCoord, int zCoord, unsigned int maxDepth, unsigned int LODLevel)
+BitmaskOctree::BitmaskOctree(int xCoord, int yCoord, int zCoord, unsigned int maxDepth, unsigned int LODLevel)
 {
     const unsigned int octreeWidth = static_cast<unsigned int>(pow(2, maxDepth));
     const unsigned int voxelWidth = static_cast<unsigned int>(pow(2, LODLevel));
@@ -20,19 +20,26 @@ BitmaskOctree::BitmaskOctree(int xCoord, int zCoord, unsigned int maxDepth, unsi
 
     std::random_device rd;  // Seed for random number engine
     std::mt19937 gen(rd()); // Mersenne Twister random number engine
-    std::uniform_int_distribution<> distribution(octreeWidth / 20, octreeWidth / 20); // Range from 1 to 100
-    std::uniform_int_distribution<> materialDist(0, 5); // Range from 1 to 100
+    std::uniform_int_distribution<> distribution(-int(octreeWidth) / 20, octreeWidth / 20); // Range from 1 to 100
+
+    float perlinValMax = 0;
+    float perlinValMin = 100;
 
     for (int x = 0; x < octreeWidth; x += voxelWidth) {
         for (int z = 0; z < octreeWidth; z += voxelWidth) {
             float perlinVal = perlinGenerator.perlin2D(x + xCoord, z + zCoord);
             int yThreshold = (int)(perlinVal * octreeWidth);
 
-            for (int y = 0; y < octreeWidth; y += voxelWidth) {
-                float simplex = simplexNoiseGenerator.fractal(5, (float)x / octreeWidth, (float)y / octreeWidth, (float)z / octreeWidth);
+            perlinValMax = std::max(perlinValMax, perlinVal);
+            perlinValMin = std::min(perlinValMin, perlinVal);
 
-                if ( y < yThreshold) {
-                //if (y < octreeWidth/8) {
+
+
+            for (int y = 0; y < octreeWidth; y += voxelWidth) {
+                //float simplex = simplexNoiseGenerator.fractal(5, (float)x / octreeWidth, (float)y / octreeWidth, (float)z / octreeWidth);
+                
+
+                if ( y + yCoord < yThreshold) {
                     unsigned int voxelIndex = 0b000;
                     unsigned int curDepth = 0;
                     int curVoxelSize = octreeWidth;
@@ -57,18 +64,28 @@ BitmaskOctree::BitmaskOctree(int xCoord, int zCoord, unsigned int maxDepth, unsi
                     unsigned int finalIndex = sliceIndices[maxDepth - LODLevel] + voxelIndex;
 
                     //std::cout << "X: " << x << " Y: " << y << " Z: " << z << " index: " << voxelIndex << std::endl;
-                    unsigned int mat = 1;
-                    if (y < yThreshold - 6) 
-                        mat = 2;
-                    if (y > (octreeWidth * 0.70))
-                        mat = 3;
-                    mat = 1;
+                    unsigned int mat = 1; // grass
+                    int randomDist = distribution(gen);
+
+                    if (y + yCoord < yThreshold - 6) {
+                        mat = 2;// stone
+                    }
+                    if (y + yCoord > randomDist + (octreeWidth * 0.55)) {
+                        mat = 2; // stone
+                    }
+                    if (y + yCoord > randomDist + (octreeWidth * 0.70)) {
+                        mat = 3; //snow
+                    }
+
                     bitMaskArray[finalIndex] = mat << 8;
                     //std::cout << "Depth: " << maxDepth << " voxel = " << std::bitset<24>(bitMaskArray[finalIndex]) << std::endl;
                 }
             }
         }
     }
+
+    std::cout << perlinValMax << std::endl;
+    std::cout << perlinValMin << std::endl;
 
     int curDepth = maxDepth - LODLevel - 1;
 

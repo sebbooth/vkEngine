@@ -96,6 +96,16 @@ void Gui::draw(VkCommandBuffer commandBuffer)
             m_Config->downScaleFactor = std::pow(2, selectedResolution);
             m_Config->newSwapChainNeeded = true;
         }
+
+        ImGui::Checkbox("Show Depth", &m_Config->showDepth);
+        ImGui::Checkbox("Show Normals", &m_Config->showNormals);
+
+        if (m_Config->showDepth == true) m_Config->ubo.showDepth = 1;
+        else m_Config->ubo.showDepth = 0;
+        if (m_Config->showNormals == true) m_Config->ubo.showNormals = 1;
+        else m_Config->ubo.showNormals = 0;
+
+        ImGui::InputFloat("Ray Step Epsilon", &m_Config->ubo.rayEpsilon);
     }
 
 

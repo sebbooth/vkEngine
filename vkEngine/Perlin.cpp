@@ -15,13 +15,13 @@ float Perlin::perlin2D(int xi, int yi)
     }
 
     perlinValue *= 1.2;
-
+    /*
     // Clipping
     if (perlinValue > 1.0f)
         perlinValue = 1.0f;
     else if (perlinValue < -1.0f)
         perlinValue = -1.0f;
-
+    */
     return (perlinValue + 1.0f) / 2.0f;
 }
 

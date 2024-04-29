@@ -8,22 +8,31 @@
 #include <glm/glm.hpp>
 
 #include <vector>
+#include <array>
 
 struct ComputeUniformBufferObject {
-	alignas(16) glm::vec3 camPos = glm::vec3(262.905243, 270.311707, 282.328888);
-	alignas(16) glm::vec3 camDir = glm::vec3(-0.519135, -0.634374, -0.572781);
-	alignas(16) glm::vec3 camUp = glm::vec3(-0.422386, 0.773021, -0.473317);
+	alignas(16) glm::vec3 camPos = glm::vec3(300, 0, 0);
+	alignas(16) glm::vec3 camDir = glm::vec3(-1, 0, 0);
+	alignas(16) glm::vec3 camUp = glm::vec3(0, 1, 0);
 	alignas(16) glm::vec3 sunDir = glm::vec3(-1, -2, -3);
 	alignas(16) glm::vec3 fogColor = glm::vec3(0, 0, 0);
+
 	float fogMinDistance = 1.0f;
-	float fogMaxDistance = 100.0f;
+	float fogMaxDistance = 1000.0f;
 	float deltaTime = 1.0f;
 	float focalLength = 4.0f;
 	float viewportHeight = 1.0f;
+	float rayEpsilon = 0.0001f;
+
 	int width = 600;
 	int height = 800;
 	int octreeSize;
 	int octreeMaxDepth;
+
+	int numChunks = 4;
+
+	unsigned int showDepth = 0;
+	unsigned int showNormals = 0;
 };
 
 struct VkConfig {
@@ -71,11 +80,14 @@ struct VkConfig {
 	bool terrain = true;
 
 	// Shader
-	bool visualizeOctree = true;
+	bool visualizeOctree = false;
 	bool shadows = false;
-
+	bool showDepth = 0;
+	bool showNormals = 0;
 	// Compute UBO
 	ComputeUniformBufferObject ubo{};
+
+
 };
 
 #endif // !VKCONFIG_H
