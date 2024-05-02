@@ -667,7 +667,6 @@ private:
                 p_CommandBuffers->recordBufferIndexed(currentFrame, imageIndex, p_IndexBuffer->indices.size());
 
                 VkSemaphore waitSemaphores[] = {
-                    p_SyncObjects->depthComputeFinishedSemaphores[currentFrame],
                     p_SyncObjects->computeFinishedSemaphores[currentFrame],
                     p_SyncObjects->imageAvailableSemaphores[currentFrame]
                 };
@@ -972,11 +971,11 @@ private:
         int numChunks = 0;
         int chunkIndex = 0;
         int minX = 0;
-        int maxX = 2;
-        int minY = 0;
-        int maxY = 2;
+        int maxX = 4;
+        int minY = -2;
+        int maxY = 4;
         int minZ = 0;
-        int maxZ = 2;
+        int maxZ = 4;
         for (int y = minY; y < maxY; y++) {
             for (int x = minX; x < maxX; x++) {
                 for (int z = minZ; z < maxZ; z++) {

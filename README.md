@@ -2,6 +2,37 @@
 
 (name for now cause naming things is hard)
 
+## 2024-05-01
+
+### Bitmask Octree:
+
+A couple of big changes since last update - after rewriting my Vulkan abstractions, I opted to switch from a sparse voxel octree to a bitmask octree. Previously, each octree "node" contained a list of pointers to child nodes, which would be set to -1 for empty nodes, and other negative numbers would refer to materials.
+
+With the new bitmask octree, every node in the tree is given an index in the final octree array (including empty nodes), but nodes are now single unsigned integers, containing an 8-bit bitmask of valid child nodes, and additional bits for information pertaining to the material (with some bits to spare, so I'll see what I can use them for later).
+
+While the new solution holds more nodes, each node takes up an eight of the memory of the previous solution, so the final array ends up only being slightly larger. The main reason for switching however, is that when I eventually implement realtime modifications to the voxel world, the bitmask solution will allow for fast updates without having to rebuild the entire chunk.
+
+Since all of the nodes are in the bitmask octree array, and are sorted by depth, I can then find the index of the children nodes quite simply based on the current nodes index and it's depth within the octree:
+
+1. For depth `n` of the octree, there will be `8^n` nodes. The starting index of depth `n` within the octree array will be equal to `8^(n-1) + 8^(n-2) + ... + 8(0)`.
+
+2. If the current node is at index `i` and depth `d`, and we wish to find it's `n`th child, we:
+
+   1. subtract the starting index of depth `d`
+   2. multiptly index `i` by 8 (or bitshift by 3)
+   3. add `n` for the child index
+   4. add the starting index of depth `d+1`
+
+3. By maintaining an array of each depth's starting index, and a variable holding the bitshifted indices of each node leading to the current child node, this operation becomes just a bitshift and two additions.
+
+### Using a low res intial depth pass for optimization:
+
+The second big change I am working on is using a low resolution depth pass for optimizing the raymarching. The idea is that by running a depth pass at half resolution before fully rendering the scene, the full pass can start its rays much closer to the collision points, requiring fewer traversal of octree nodes.
+
+So far I have a basic implementation of this working with a second compute pipeline now running before my main raymarcher. So far it has shown very slight performance improvements, but it was bodged together in an afternoon and has plenty of room for improvement. It also has some issues related to synchronisation resulting in image tearing, so I will have to figure out how to get vulkan barriers working.
+
+I found this idea on Douglas Dwyer's youtube channel, he explains it well in this video: https://www.youtube.com/watch?v=P2bGF6GPmfc,.
+
 ## 2024-04-22
 
 Finally reaching the end of restructuring all of the Vulkan code, still plenty of cleaning up to do though. I've also brought back the gui and started adding some features for debugging and adjustments. I implemented controls for the resolution as well, which adjusts the size of the texture that the compute shader writes to.
