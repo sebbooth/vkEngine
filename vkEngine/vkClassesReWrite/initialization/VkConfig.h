@@ -11,28 +11,36 @@
 #include <array>
 
 struct ComputeUniformBufferObject {
-	alignas(16) glm::vec3 camPos = glm::vec3(300, 0, 0);
-	alignas(16) glm::vec3 camDir = glm::vec3(-1, 0, 0);
-	alignas(16) glm::vec3 camUp = glm::vec3(0, 1, 0);
+	alignas(16) glm::vec3 camPos = glm::vec3(-865, 1231, -933);
+	alignas(16) glm::vec3 camDir = glm::vec3(0.703, -0.408, 0.582);
+	alignas(16) glm::vec3 camUp = glm::vec3(0.314, 0.913, 0.260);
 	alignas(16) glm::vec3 sunDir = glm::vec3(-1, -2, -3);
 	alignas(16) glm::vec3 fogColor = glm::vec3(0, 0, 0);
 
 	float fogMinDistance = 1.0f;
-	float fogMaxDistance = 1000.0f;
+	float fogMaxDistance = 10000.0f;
 	float deltaTime = 1.0f;
 	float focalLength = 4.0f;
 	float viewportHeight = 1.0f;
-	float rayEpsilon = 0.0001f;
+	float rayEpsilon = 0.01f;
 
 	int width = 600;
 	int height = 800;
 	int octreeSize;
 	int octreeMaxDepth;
 
+	int minX;
+	int maxX;
+	int minY;
+	int maxY;
+	int minZ;
+	int maxZ;
+
 	int numChunks = 4;
 
 	unsigned int showDepth = 0;
 	unsigned int showNormals = 0;
+	unsigned int findChunkMode = 1;
 };
 
 struct VkConfig {

@@ -61,7 +61,7 @@ void Gui::draw(VkCommandBuffer commandBuffer)
         averageFrameTime = accumulateFrameTime / 256;
     }
 
-    if (ImGui::CollapsingHeader("Performance")) {
+    if (ImGui::CollapsingHeader("Performance", ImGuiTreeNodeFlags_DefaultOpen)) {
         ImGui::Text("Application average %.3f ms/frame (%5.1f FPS) (source: ImGui)", 1000.0f / io.Framerate, io.Framerate);
         ImGui::Text("Application average %.3f ms/frame (%5.1f FPS) (source: GLFW)", m_Config->lastFrameTime, 1000.0f / m_Config->lastFrameTime);
 
@@ -85,16 +85,23 @@ void Gui::draw(VkCommandBuffer commandBuffer)
 
     if (ImGui::CollapsingHeader("Fog")) {
         ImGui::SliderFloat("Min Fog Distance", &m_Config->ubo.fogMinDistance, 0.0f, 100.0f);
-        ImGui::SliderFloat("Max Fog Distance", &m_Config->ubo.fogMaxDistance, 0.0f, 1000.0f);
+        ImGui::SliderFloat("Max Fog Distance", &m_Config->ubo.fogMaxDistance, 0.0f, 10000.0f);
         ImGui::ColorEdit3("Fog Color", &m_Config->ubo.fogColor.r);
     }
 
-    static const char* items[] = { "1/1", "1/2", "1/4", "1/8", "1/16", "1/32" };
+    static const char* resolutionOptions[] = { "1/1", "1/2", "1/4", "1/8", "1/16", "1/32" };
     int selectedResolution = std::log2(m_Config->downScaleFactor);
-    if (ImGui::CollapsingHeader("Render Settings")) {
-        if (ImGui::Combo("Resolution", &selectedResolution, items, IM_ARRAYSIZE(items))) {
+
+    static const char* chunkDDAOptions[] = { "1", "2", "3" };
+    int selectedMode = m_Config->ubo.findChunkMode - 1;
+
+    if (ImGui::CollapsingHeader("Render Settings", ImGuiTreeNodeFlags_DefaultOpen)) {
+        if (ImGui::Combo("Resolution", &selectedResolution, resolutionOptions, IM_ARRAYSIZE(resolutionOptions))) {
             m_Config->downScaleFactor = std::pow(2, selectedResolution);
             m_Config->newSwapChainNeeded = true;
+        }
+        if (ImGui::Combo("Chunk DDA Mode", &selectedMode, chunkDDAOptions, IM_ARRAYSIZE(chunkDDAOptions))) {
+            m_Config->ubo.findChunkMode = selectedMode + 1;
         }
 
         ImGui::Checkbox("Show Depth", &m_Config->showDepth);

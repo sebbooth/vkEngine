@@ -13,8 +13,8 @@ BitmaskOctree::BitmaskOctree(int xCoord, int yCoord, int zCoord, unsigned int ma
 
     Perlin perlinGenerator;
     perlinGenerator.layers = maxDepth - 1;
-    perlinGenerator.init_amp = 2;
-    perlinGenerator.grid_size = octreeWidth * 2;
+    perlinGenerator.init_amp = 4;
+    perlinGenerator.grid_size = octreeWidth * 8;
 
     SimplexNoise simplexNoiseGenerator = SimplexNoise(8.0f, 3.0f, 3.0f, 0.1f);
 

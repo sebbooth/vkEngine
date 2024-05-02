@@ -9,10 +9,6 @@
 #define TINYOBJLOADER_IMPLEMENTATION
 
 #include "VkClassesIndex.h"
-#include <random>
-#include "Octree.h"
-#include "Perlin.h"
-#include "SimplexNoise.h"
 #include "BitmaskOctree.h"
 
 const bool enableValidationLayers = false;
@@ -35,7 +31,6 @@ std::vector<uint32_t> quadIndices = {
     0,1,2,
     2,3,0
 };
-
 
 class TestRewrite {
 
@@ -111,6 +106,9 @@ private:
     std::shared_ptr<SyncObjects> p_SyncObjects;
 
     QueueSubmitter queuesubmit;
+
+    std::vector<unsigned int> octreeArray;
+    std::vector<ChunkInfo> chunkInfos;
 
     void initSettings() {
         config = std::make_shared<VkConfig>();
@@ -793,53 +791,62 @@ private:
         p_Instance->destroy();
     }
 
-    //Octree octree;
-    BitmaskOctree bitmaskOctree00;
-    BitmaskOctree bitmaskOctree01;
-    BitmaskOctree bitmaskOctree10;
-    BitmaskOctree bitmaskOctree11;
-
-    std::vector<unsigned int> octreeArray;
-    std::vector<ChunkInfo> chunkInfos;
-
     void createOctree() {
 
         int numChunks = 0;
         int chunkIndex = 0;
-        for (int y = 0; y < 2; y++) {
-            for (int x = 0; x < 20; x++) {
-                for (int z = 0; z < 20; z++) {
+        int minX = 0;
+        int maxX = 4;
+        int minY = 0;
+        int maxY = 2;
+        int minZ = 0;
+        int maxZ = 4;
+        for (int y = minY; y < maxY; y++) {
+            for (int x = minX; x < maxX; x++) {
+                for (int z = minZ; z < maxZ; z++) {
                     int LOD = 0;
-                    if (x > 4 || z > 4) {
+                    if (x > 6 || z > 6) {
                         LOD = 1;
                     }
-                    if (x > 6 || z > 6) {
+                    if (x > 10 || z > 10) {
                         LOD = 2;
                     }
-                    if (x > 8 || z > 8) {
-                        LOD = 3;
-                    }
-                    if (x > 10 || z > 10) {
-                        LOD = 4;
-                    }
-                    if (x > 12 || z > 12) {
-                        LOD = 5;
-                    }
-                    BitmaskOctree bitmaskOctree(x * config->octreeWidth, y * config->octreeWidth, z * config->octreeWidth, config->octreeDepth, LOD);
-                    octreeArray.insert(octreeArray.end(), bitmaskOctree.bitMaskArray.begin(), bitmaskOctree.bitMaskArray.end());
+                    BitmaskOctree bitmaskOctree(
+                        x * config->octreeWidth, 
+                        y * config->octreeWidth, 
+                        z * config->octreeWidth, 
+                        config->octreeDepth, 
+                        LOD
+                    );
 
-                    ChunkInfo chunkInfo{};
-                    chunkInfo.x = x * config->octreeWidth;
-                    chunkInfo.y = y * config->octreeWidth;
-                    chunkInfo.z = z * config->octreeWidth;
-                    chunkInfo.index = chunkIndex;
-                    chunkInfos.push_back(chunkInfo);
+                    if (bitmaskOctree.bitMaskArray[0] != 0) {
+                        octreeArray.insert(
+                            octreeArray.end(), 
+                            bitmaskOctree.bitMaskArray.begin(), 
+                            bitmaskOctree.bitMaskArray.end()
+                        );
 
-                    numChunks++;
-                    chunkIndex += bitmaskOctree.bitMaskArray.size();
+                        ChunkInfo chunkInfo{};
+                        chunkInfo.x = x * config->octreeWidth;
+                        chunkInfo.y = y * config->octreeWidth;
+                        chunkInfo.z = z * config->octreeWidth;
+                        chunkInfo.index = chunkIndex;
+                        chunkInfos.push_back(chunkInfo);
+
+                        numChunks++;
+                        chunkIndex += bitmaskOctree.bitMaskArray.size();
+                    }
                 }
             }
         }
         config->ubo.numChunks = numChunks;
+
+        config->ubo.minX = minX * config->octreeWidth;
+        config->ubo.minY = minY * config->octreeWidth;
+        config->ubo.minZ = minZ * config->octreeWidth;
+
+        config->ubo.maxX = (maxX + 1) * config->octreeWidth;
+        config->ubo.maxY = (maxY + 1) * config->octreeWidth;
+        config->ubo.maxZ = (maxZ + 1) * config->octreeWidth;
     }
 };
