@@ -104,14 +104,18 @@ void Gui::draw(VkCommandBuffer commandBuffer)
             m_Config->ubo.findChunkMode = selectedMode + 1;
         }
 
+        ImGui::SliderFloat("Depth Pass Correction", &m_Config->ubo.depthPassCorrection, 0.0f, 500.0f);
+
         ImGui::Checkbox("Show Depth", &m_Config->showDepth);
         ImGui::Checkbox("Show Normals", &m_Config->showNormals);
+        ImGui::Checkbox("Use Initial Depth Pass", &m_Config->useInitialDepthPass);
 
         if (m_Config->showDepth == true) m_Config->ubo.showDepth = 1;
         else m_Config->ubo.showDepth = 0;
         if (m_Config->showNormals == true) m_Config->ubo.showNormals = 1;
         else m_Config->ubo.showNormals = 0;
-
+        if (m_Config->useInitialDepthPass == true) m_Config->ubo.useInitialDepthPass = 1;
+        else m_Config->ubo.useInitialDepthPass = 0;
         ImGui::InputFloat("Ray Step Epsilon", &m_Config->ubo.rayEpsilon);
     }
 

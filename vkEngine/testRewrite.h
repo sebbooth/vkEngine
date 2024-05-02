@@ -11,7 +11,7 @@
 #include "VkClassesIndex.h"
 #include "BitmaskOctree.h"
 
-const bool enableValidationLayers = false;
+const bool enableValidationLayers = true;
 
 const std::vector<Vertex> quadVertices = {
         {{-1.0f, -1.0f, 0.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 1.0f}},
@@ -65,20 +65,31 @@ private:
     uint32_t colorResolveBinding;
 
     std::shared_ptr<DescriptorSetLayout> p_GraphicsDescriptorSetLayout;
+    std::shared_ptr<DescriptorSetLayout> p_DepthComputeDescriptorSetLayout;
     std::shared_ptr<DescriptorSetLayout> p_ComputeDescriptorSetLayout;
     uint32_t vertexUniformBinding;
     uint32_t fragmentSamplerBinding;
     uint32_t imguiSamplerBinding;
+
+    uint32_t depthComputeUniformBinding;
+    uint32_t depthComputeSSBOBinding;
+    uint32_t depthComputeChunkInfoSSBOBinding;
+    uint32_t depthComputeDepthImageBinding;
+    uint32_t depthComputeImageBinding;
+
     uint32_t computeUniformBinding;
     uint32_t computeSSBOBinding;
     uint32_t computeChunkInfoSSBOBinding;
+    uint32_t computeDepthImageBinding;
     uint32_t computeImageBinding;
 
     std::shared_ptr<GraphicsPipeline> p_GraphicsPipeline;
+    std::shared_ptr<ComputePipeline> p_DepthComputePipeline;
     std::shared_ptr<ComputePipeline> p_ComputePipeline;
 
     std::shared_ptr<CommandPool> p_CommandPool;
 
+    std::shared_ptr<StorageImage> p_DepthImage;
     std::shared_ptr<SSBO> p_OctreeSSBO;
     std::shared_ptr<SSBO> p_ChunkInfoSSBO;
     std::shared_ptr<StorageImage> p_CanvasImage;
@@ -88,6 +99,8 @@ private:
     std::shared_ptr<VertexBuffer> p_VertexBuffer;
     std::shared_ptr<IndexBuffer> p_IndexBuffer;
 
+    std::shared_ptr<DescriptorPool> p_DepthComputeDescriptorPool;
+    std::shared_ptr<DescriptorSets> p_DepthComputeDescriptorSets;
     std::shared_ptr<DescriptorPool> p_ComputeDescriptorPool;
     std::shared_ptr<DescriptorSets> p_ComputeDescriptorSets;
     std::shared_ptr<DescriptorPool> p_GraphicsDescriptorPool;
@@ -102,6 +115,7 @@ private:
 
     std::shared_ptr<CommandBuffers> p_CommandBuffers;
     std::shared_ptr<ComputeCommandBuffers> p_ComputeCommandBuffers;
+    std::shared_ptr<ComputeCommandBuffers> p_DepthComputeCommandBuffers;
 
     std::shared_ptr<SyncObjects> p_SyncObjects;
 
@@ -219,6 +233,14 @@ private:
         imguiSamplerBinding = p_GraphicsDescriptorSetLayout->bindFragSampler();
         p_GraphicsDescriptorSetLayout->create();
 
+        p_DepthComputeDescriptorSetLayout = std::make_shared<DescriptorSetLayout>(p_LogicalDevice->device);
+        depthComputeUniformBinding = p_DepthComputeDescriptorSetLayout->bindCompUniformBuffer();  //0
+        depthComputeSSBOBinding = p_DepthComputeDescriptorSetLayout->bindCompStorageBuffer();     //1
+        depthComputeChunkInfoSSBOBinding = p_DepthComputeDescriptorSetLayout->bindCompStorageBuffer();     //2
+        depthComputeDepthImageBinding = p_DepthComputeDescriptorSetLayout->bindCompStorageImage();     //3
+        depthComputeImageBinding = p_DepthComputeDescriptorSetLayout->bindCompStorageImage();     //4
+        p_DepthComputeDescriptorSetLayout->create();
+
         p_ComputeDescriptorSetLayout = std::make_shared<DescriptorSetLayout>(p_LogicalDevice->device);
 
         // Note: Must do DSL bindings in order of bindings in shader code
@@ -227,7 +249,8 @@ private:
         computeUniformBinding = p_ComputeDescriptorSetLayout->bindCompUniformBuffer();  //0
         computeSSBOBinding = p_ComputeDescriptorSetLayout->bindCompStorageBuffer();     //1
         computeChunkInfoSSBOBinding = p_ComputeDescriptorSetLayout->bindCompStorageBuffer();     //2
-        computeImageBinding = p_ComputeDescriptorSetLayout->bindCompStorageImage();     //3
+        computeDepthImageBinding = p_ComputeDescriptorSetLayout->bindCompStorageImage();    //3
+        computeImageBinding = p_ComputeDescriptorSetLayout->bindCompStorageImage();     //4
         p_ComputeDescriptorSetLayout->create();
     }
 
@@ -253,6 +276,13 @@ private:
             fragmentShaderFile
         );
 
+        p_DepthComputePipeline = std::make_shared<ComputePipeline>(
+            p_LogicalDevice->device,
+            p_DepthComputeDescriptorSetLayout->descriptorSetLayout
+        );
+        std::string depthComputeShaderFile = "shaders/depthPass.spv";
+        p_DepthComputePipeline->create(depthComputeShaderFile);
+
         p_ComputePipeline = std::make_shared<ComputePipeline>(
             p_LogicalDevice->device,
             p_ComputeDescriptorSetLayout->descriptorSetLayout
@@ -271,6 +301,15 @@ private:
     }
 
     void initShaderResources() {
+        p_DepthImage = std::make_shared<StorageImage>(
+            p_LogicalDevice->device,
+            p_Images,
+            p_ImageViews,
+            p_CommandPool,
+            config
+        );
+        p_DepthImage->create(p_SwapChain->swapChainExtent);
+
         p_OctreeSSBO = std::make_shared<SSBO>(
             p_LogicalDevice,
             p_CommandPool,
@@ -334,6 +373,49 @@ private:
     }
 
     void initDescriptorSets() {
+        p_DepthComputeDescriptorPool = std::make_shared<DescriptorPool>(
+            p_LogicalDevice->device,
+            config
+        );
+        p_DepthComputeDescriptorPool->bindUniformBuffer(computeUniformBinding, config->maxFramesInFlight);
+        p_DepthComputeDescriptorPool->bindStorageBuffer(computeSSBOBinding, config->maxFramesInFlight);
+        p_DepthComputeDescriptorPool->bindStorageBuffer(computeChunkInfoSSBOBinding, config->maxFramesInFlight);
+        p_DepthComputeDescriptorPool->bindStorageImage(computeDepthImageBinding, config->maxFramesInFlight);
+        p_DepthComputeDescriptorPool->bindStorageImage(computeImageBinding, config->maxFramesInFlight);
+        p_DepthComputeDescriptorPool->create();
+
+        p_DepthComputeDescriptorSets = std::make_shared<DescriptorSets>(
+            p_LogicalDevice->device,
+            p_DepthComputeDescriptorSetLayout,
+            p_DepthComputeDescriptorPool,
+            config
+        );
+        p_DepthComputeDescriptorSets->bindUniformBuffer(
+            depthComputeUniformBinding,
+            p_ComputeUBO->uniformBuffers,
+            2 * sizeof(ComputeUniformBufferObject)
+        );
+        p_DepthComputeDescriptorSets->bindStorageBuffer(
+            depthComputeSSBOBinding,
+            p_OctreeSSBO->shaderStorageBuffers,
+            sizeof(unsigned int) * octreeArray.size()
+        );
+        p_DepthComputeDescriptorSets->bindStorageBuffer(
+            depthComputeChunkInfoSSBOBinding,
+            p_ChunkInfoSSBO->shaderStorageBuffers,
+            sizeof(ChunkInfo) * config->ubo.numChunks
+        );
+        p_DepthComputeDescriptorSets->bindStorageImage(
+            computeDepthImageBinding,
+            p_DepthImage->storageImageViews
+        );
+        p_DepthComputeDescriptorSets->bindStorageImage(
+            depthComputeImageBinding,
+            p_CanvasImage->storageImageViews
+        );
+        p_DepthComputeDescriptorSets->create();
+
+
         p_ComputeDescriptorPool = std::make_shared<DescriptorPool>(
             p_LogicalDevice->device,
             config
@@ -341,6 +423,7 @@ private:
         p_ComputeDescriptorPool->bindUniformBuffer(computeUniformBinding, config->maxFramesInFlight);
         p_ComputeDescriptorPool->bindStorageBuffer(computeSSBOBinding, config->maxFramesInFlight);
         p_ComputeDescriptorPool->bindStorageBuffer(computeChunkInfoSSBOBinding, config->maxFramesInFlight);
+        p_ComputeDescriptorPool->bindStorageImage(computeDepthImageBinding, config->maxFramesInFlight);
         p_ComputeDescriptorPool->bindStorageImage(computeImageBinding, config->maxFramesInFlight);
         p_ComputeDescriptorPool->create();
 
@@ -364,6 +447,10 @@ private:
             computeChunkInfoSSBOBinding,
             p_ChunkInfoSSBO->shaderStorageBuffers,
             sizeof(ChunkInfo) * config->ubo.numChunks
+        );
+        p_ComputeDescriptorSets->bindStorageImage(
+            computeDepthImageBinding,
+            p_DepthImage->storageImageViews
         );
         p_ComputeDescriptorSets->bindStorageImage(
             computeImageBinding,
@@ -471,6 +558,16 @@ private:
         p_CommandBuffers->attachGui(p_Gui);
         p_CommandBuffers->create();
 
+        p_DepthComputeCommandBuffers = std::make_shared<ComputeCommandBuffers>(
+            p_LogicalDevice->device,
+            p_CommandPool->commandPool,
+            config
+        );
+        p_DepthComputeCommandBuffers->attachComputePipeline(p_DepthComputePipeline->computePipeline, p_DepthComputePipeline->computePipelineLayout);
+        p_DepthComputeCommandBuffers->attachDescriptorSets(p_DepthComputeDescriptorSets->descriptorSets);
+        p_DepthComputeCommandBuffers->setExtent(p_SwapChain->swapChainExtent);
+        p_DepthComputeCommandBuffers->create();
+
         p_ComputeCommandBuffers = std::make_shared<ComputeCommandBuffers>(
             p_LogicalDevice->device,
             p_CommandPool->commandPool,
@@ -502,24 +599,49 @@ private:
     }
 
     void drawFrame() {
-        
+        updateComputeUniformBuffer(currentFrame);
 
-        // Compute submission        
-                p_SyncObjects->waitForComputeFence(currentFrame, VK_TRUE, UINT64_MAX);
+        // Depth Compute submission
+                p_SyncObjects->waitForDepthComputeFence(currentFrame, VK_TRUE, UINT64_MAX);
 
-                updateComputeUniformBuffer(currentFrame);
 
-                p_ComputeCommandBuffers->recordBuffer(
-                    p_ComputeCommandBuffers->commandBuffers[currentFrame], 
+                p_DepthComputeCommandBuffers->recordBuffer(
+                    p_DepthComputeCommandBuffers->commandBuffers[currentFrame],
                     currentFrame
                 );
 
                 queuesubmit.submit(
                     p_LogicalDevice->computeQueue,
-                    p_SyncObjects->computeInFlightFences[currentFrame],
-                    &p_ComputeCommandBuffers->commandBuffers[currentFrame],
-                    &p_SyncObjects->computeFinishedSemaphores[currentFrame]
+                    p_SyncObjects->depthComputeInFlightFences[currentFrame],
+                    &p_DepthComputeCommandBuffers->commandBuffers[currentFrame],
+                    &p_SyncObjects->depthComputeFinishedSemaphores[currentFrame]
                 );
+            
+        // Compute submission  
+                
+                {
+                    p_SyncObjects->waitForComputeFence(currentFrame, VK_TRUE, UINT64_MAX);
+
+                    p_ComputeCommandBuffers->recordBuffer(
+                        p_ComputeCommandBuffers->commandBuffers[currentFrame],
+                        currentFrame
+                    );
+
+                    VkSemaphore waitSemaphores[] = {
+                        p_SyncObjects->depthComputeFinishedSemaphores[currentFrame],
+                    };
+                    VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT };
+                    queuesubmit.submit(
+                        p_LogicalDevice->computeQueue,
+                        p_SyncObjects->computeInFlightFences[currentFrame],
+                        &p_ComputeCommandBuffers->commandBuffers[currentFrame],
+                        &p_SyncObjects->computeFinishedSemaphores[currentFrame],
+                        1,
+                        waitSemaphores,
+                        waitStages
+                    );
+                }
+                
 
         // Graphics submission
                 p_SyncObjects->waitForGraphicsFence(currentFrame, VK_TRUE, UINT64_MAX);
@@ -545,8 +667,9 @@ private:
                 p_CommandBuffers->recordBufferIndexed(currentFrame, imageIndex, p_IndexBuffer->indices.size());
 
                 VkSemaphore waitSemaphores[] = {
-                    p_SyncObjects->computeFinishedSemaphores[currentFrame], 
-                    p_SyncObjects->imageAvailableSemaphores[currentFrame] 
+                    p_SyncObjects->depthComputeFinishedSemaphores[currentFrame],
+                    p_SyncObjects->computeFinishedSemaphores[currentFrame],
+                    p_SyncObjects->imageAvailableSemaphores[currentFrame]
                 };
                 VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_VERTEX_INPUT_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
 
@@ -560,7 +683,7 @@ private:
                     waitStages
                 );
 
-          VkPresentInfoKHR presentInfo{};
+        VkPresentInfoKHR presentInfo{};
         presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
         presentInfo.waitSemaphoreCount = 1;
         presentInfo.pWaitSemaphores = &p_SyncObjects->renderFinishedSemaphores[currentFrame];
@@ -666,12 +789,16 @@ private:
         p_Gui->vulkanShutdown();
         cleanupSwapChain();
 
+        p_DepthComputeDescriptorSets->destroy();
+        p_DepthComputeDescriptorPool->destroy();
+
         p_ComputeDescriptorSets->destroy();
         p_ComputeDescriptorPool->destroy();
 
         p_GraphicsDescriptorSets->destroy();
         p_GraphicsDescriptorPool->destroy();
 
+        p_DepthImage->destroy();
         p_CanvasImage->destroy();
         p_CanvasSampler->destroy();
 
@@ -686,14 +813,50 @@ private:
        
         p_FrameBuffers->create(NULL, NULL);
         
+        p_DepthImage->create(p_SwapChain->swapChainExtent);
+
         p_CanvasImage->create(p_SwapChain->swapChainExtent);
         p_CanvasSampler->create();
 
         p_ComputeDescriptorPool->bindUniformBuffer(computeUniformBinding, config->maxFramesInFlight);
         p_ComputeDescriptorPool->bindStorageBuffer(computeSSBOBinding, config->maxFramesInFlight);
         p_ComputeDescriptorPool->bindStorageBuffer(computeChunkInfoSSBOBinding, config->maxFramesInFlight);
+        p_ComputeDescriptorPool->bindStorageImage(computeDepthImageBinding, config->maxFramesInFlight);
         p_ComputeDescriptorPool->bindStorageImage(computeImageBinding, config->maxFramesInFlight);
         p_ComputeDescriptorPool->create();
+
+        p_DepthComputeDescriptorPool->bindUniformBuffer(depthComputeUniformBinding, config->maxFramesInFlight);
+        p_DepthComputeDescriptorPool->bindStorageBuffer(depthComputeSSBOBinding, config->maxFramesInFlight);
+        p_DepthComputeDescriptorPool->bindStorageBuffer(depthComputeChunkInfoSSBOBinding, config->maxFramesInFlight);
+        p_DepthComputeDescriptorPool->bindStorageImage(depthComputeDepthImageBinding, config->maxFramesInFlight);
+        p_DepthComputeDescriptorPool->bindStorageImage(depthComputeImageBinding, config->maxFramesInFlight);
+        p_DepthComputeDescriptorPool->create();
+
+        p_DepthComputeDescriptorSets->reInit();
+        p_DepthComputeDescriptorSets->bindUniformBuffer(
+            depthComputeUniformBinding,
+            p_ComputeUBO->uniformBuffers,
+            2 * sizeof(ComputeUniformBufferObject)
+        );
+        p_DepthComputeDescriptorSets->bindStorageBuffer(
+            depthComputeSSBOBinding,
+            p_OctreeSSBO->shaderStorageBuffers,
+            sizeof(unsigned int) * octreeArray.size()
+        );
+        p_DepthComputeDescriptorSets->bindStorageBuffer(
+            depthComputeChunkInfoSSBOBinding,
+            p_ChunkInfoSSBO->shaderStorageBuffers,
+            sizeof(ChunkInfo) * chunkInfos.size()
+        );
+        p_DepthComputeDescriptorSets->bindStorageImage(
+            depthComputeDepthImageBinding,
+            p_DepthImage->storageImageViews
+        );
+        p_DepthComputeDescriptorSets->bindStorageImage(
+            depthComputeImageBinding,
+            p_CanvasImage->storageImageViews
+        );
+        p_DepthComputeDescriptorSets->create();
 
         p_ComputeDescriptorSets->reInit();
         p_ComputeDescriptorSets->bindUniformBuffer(
@@ -710,6 +873,10 @@ private:
             computeChunkInfoSSBOBinding,
             p_ChunkInfoSSBO->shaderStorageBuffers,
             sizeof(ChunkInfo) * chunkInfos.size()
+        );
+        p_ComputeDescriptorSets->bindStorageImage(
+            computeDepthImageBinding,
+            p_DepthImage->storageImageViews
         );
         p_ComputeDescriptorSets->bindStorageImage(
             computeImageBinding,
@@ -739,6 +906,10 @@ private:
         p_ComputeCommandBuffers->attachDescriptorSets(p_ComputeDescriptorSets->descriptorSets);
         p_ComputeCommandBuffers->setExtent(p_SwapChain->swapChainExtent);
         p_ComputeCommandBuffers->create();
+
+        p_DepthComputeCommandBuffers->attachDescriptorSets(p_DepthComputeDescriptorSets->descriptorSets);
+        p_DepthComputeCommandBuffers->setExtent(p_SwapChain->swapChainExtent);
+        p_DepthComputeCommandBuffers->create();
         
         /*
         p_CanvasImage->transitionImageLayout(
@@ -764,6 +935,7 @@ private:
 
         p_GraphicsDescriptorPool->destroy();
         p_ComputeDescriptorPool->destroy();
+        p_DepthComputeDescriptorPool->destroy();
 
         p_IndexBuffer->destroy();
         p_VertexBuffer->destroy();
@@ -772,13 +944,17 @@ private:
         p_CanvasImage->destroy();
         p_OctreeSSBO->destroy();
         p_ChunkInfoSSBO->destroy();
+        p_DepthImage->destroy();
+
 
         p_CommandPool->destroy();
 
         p_ComputePipeline->destroy();
+        p_DepthComputePipeline->destroy();
         p_GraphicsPipeline->destroy();
 
         p_ComputeDescriptorSetLayout->destroy();
+        p_DepthComputeDescriptorSetLayout->destroy();
         p_GraphicsDescriptorSetLayout->destroy();
 
         p_RenderPass->destroy();
@@ -796,11 +972,11 @@ private:
         int numChunks = 0;
         int chunkIndex = 0;
         int minX = 0;
-        int maxX = 4;
+        int maxX = 2;
         int minY = 0;
         int maxY = 2;
         int minZ = 0;
-        int maxZ = 4;
+        int maxZ = 2;
         for (int y = minY; y < maxY; y++) {
             for (int x = minX; x < maxX; x++) {
                 for (int z = minZ; z < maxZ; z++) {

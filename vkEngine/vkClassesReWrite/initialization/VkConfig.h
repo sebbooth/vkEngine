@@ -19,6 +19,9 @@ struct ComputeUniformBufferObject {
 
 	float fogMinDistance = 1.0f;
 	float fogMaxDistance = 10000.0f;
+
+	float depthPassCorrection = 10.0f;
+
 	float deltaTime = 1.0f;
 	float focalLength = 4.0f;
 	float viewportHeight = 1.0f;
@@ -41,6 +44,7 @@ struct ComputeUniformBufferObject {
 	unsigned int showDepth = 0;
 	unsigned int showNormals = 0;
 	unsigned int findChunkMode = 1;
+	unsigned int useInitialDepthPass = 1;
 };
 
 struct VkConfig {
@@ -92,6 +96,7 @@ struct VkConfig {
 	bool shadows = false;
 	bool showDepth = 0;
 	bool showNormals = 0;
+	bool useInitialDepthPass = 1;
 	// Compute UBO
 	ComputeUniformBufferObject ubo{};
 

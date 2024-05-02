@@ -17,9 +17,11 @@ public:
 	std::vector<VkSemaphore> imageAvailableSemaphores;
 	std::vector<VkSemaphore> renderFinishedSemaphores;
 	std::vector<VkSemaphore> computeFinishedSemaphores;
+	std::vector<VkSemaphore> depthComputeFinishedSemaphores;
 
 	std::vector<VkFence> inFlightFences;
 	std::vector<VkFence> computeInFlightFences;
+	std::vector<VkFence> depthComputeInFlightFences;
 
 private:
 	VkDevice m_Device;
@@ -31,6 +33,7 @@ public:
 	void destroy();
 	void waitForGraphicsFence(uint32_t currentFrame, VkBool32 waitAll, uint64_t timeout);
 	void waitForComputeFence(uint32_t currentFrame, VkBool32 waitAll, uint64_t timeout);
+	void waitForDepthComputeFence(uint32_t currentFrame, VkBool32 waitAll, uint64_t timeout);
 };
 
 #endif

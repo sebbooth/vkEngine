@@ -36,6 +36,7 @@ layout(binding = 0) uniform ParameterUBO {
 	uint showNormals;
     uint findChunkMode;
     uint useInitialDepthPass;
+
 } ubo;
 
 layout(std430, binding = 1) readonly buffer OctreeSSBO {
@@ -53,7 +54,8 @@ layout(std430, binding = 2) readonly buffer ChunkInfoSSBO {
     ChunkInfo chunkInfos[];
 } chunkInfo;
 
-layout(binding = 3, rgba8) uniform writeonly image2D outputImage;
+layout(binding = 3, rgba8) uniform writeonly image2D depthImage;
+layout(binding = 4, rgba8) uniform writeonly image2D outputImage;
 
 layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
 
@@ -99,10 +101,6 @@ ivec2 texPos = ivec2(screenX, screenY);
 vec3 pixelCenter = botLeft + (viewportV * ubo.camUp * screenY) + (viewportU * camRight * screenX);
 
 vec3 rayDir = normalize(pixelCenter - ubo.camPos);
-
-bool posX = rayDir.x > 0;
-bool posY = rayDir.y > 0;
-bool posZ = rayDir.z > 0;
 
 float lightings[6] = {
     ambient + max(0, dot(vec3( 1,  0,  0), sunDir)),
@@ -329,8 +327,7 @@ vec3 traverseOctree(vec3 curPos, vec3 rayDir, int intersectionType, ivec3 octree
     return vec3(-1,-2,-1);
 }
 
-// This is too slow -- should do check for guaranteed misses first
-vec3 findChunk1(vec3 rayOrigin, vec3 rayDir, int maxChecks) {
+vec3 findChunk(vec3 rayOrigin, vec3 rayDir, int maxChecks) {
     
     if (
         ( (rayDir.x > 0) && rayOrigin.x > ubo.maxX) ||
@@ -343,229 +340,18 @@ vec3 findChunk1(vec3 rayOrigin, vec3 rayDir, int maxChecks) {
             return vec3(0,-1,0);
     } 
     
+    ivec3 curVoxel = roundVoxel(rayOrigin, CHUNK_SIZE);
+
     if (rayOrigin.y >= 0 && rayOrigin.y <= (2 * CHUNK_SIZE) ) {
         int i = 0;
         while (i < ubo.numChunks) {
-            ivec3 chunkCoord = ivec3(chunkInfo.chunkInfos[i].x, chunkInfo.chunkInfos[i].y, chunkInfo.chunkInfos[i].z);
-            if (pointInIVoxel(ubo.camPos, chunkCoord, CHUNK_SIZE)) {
-                vec3 traversal = traverseOctree(rayOrigin, rayDir, 0, chunkCoord, chunkInfo.chunkInfos[i].index);
-                if (traversal.y > -1) {
-                    return traversal;
-                }        
-            }
-            i++;
-        }
-    }
-    vec3 end = maxChecks * rayDir + rayOrigin;
-    vec3 curPos = rayOrigin;
-    vec3 deltas = vec3(-1,-1,-1);
-    int intersectionType;
+            ChunkInfo curChunk = chunkInfo.chunkInfos[i];
+            bool inChunk =  (curVoxel.x == curChunk.x) && 
+                            (curVoxel.y == curChunk.y) && 
+                            (curVoxel.z == curChunk.z);
 
-    while (maxChecks > 0) {
-        maxChecks -= 1;
-
-        vec4 nextIntersect = findNextIntersect(curPos, rayDir, CHUNK_SIZE);
-        curPos = nextIntersect.xyz;
-       
-        if (nextIntersect.a < 2)  {
-            if (nextIntersect.a < 1) {
-                    curPos.x += EPSILON;
-                }
-                else {
-                    curPos.x -= EPSILON;
-                }
-        }            
-        else if (nextIntersect.a < 4) {
-            if (nextIntersect.a < 3) {
-                    curPos.y += EPSILON;
-                }
-                else {
-                    curPos.y -= EPSILON;
-                }
-        }
-        else {
-            if (nextIntersect.a < 5) {
-                    curPos.z += EPSILON;
-                }
-                else {
-                    curPos.z -= EPSILON;
-                }
-        }
-        
-        if (
-                curPos.x <= ubo.maxX &&
-                curPos.x >= ubo.minX &&
-                curPos.y <= ubo.maxY &&
-                curPos.y >= ubo.minY &&
-                curPos.z <= ubo.maxZ &&
-                curPos.z >= ubo.minZ 
-            ) {
-            int j = 0;
-            while (j < ubo.numChunks) { 
-                ivec3 chunkCoord = ivec3(chunkInfo.chunkInfos[j].x, chunkInfo.chunkInfos[j].y, chunkInfo.chunkInfos[j].z);
-
-                if (pointInIVoxel(curPos, chunkCoord, CHUNK_SIZE)) {
-                    // enter chunk octree
-                    vec3 traversal = traverseOctree(curPos, rayDir, int(nextIntersect.a), chunkCoord, chunkInfo.chunkInfos[j].index);
-                    if (traversal.y > -1) {
-                        return traversal;
-                    }
-                }
-                j++;
-            }
-        }
-        else if (
-            ( (rayDir.x > 0) && curPos.x > ubo.maxX) ||
-            (!(rayDir.x > 0) && curPos.x < ubo.minX) ||
-            ( (rayDir.y > 0) && curPos.y > ubo.maxY) ||
-            (!(rayDir.y > 0) && curPos.y < ubo.minY) ||
-            ( (rayDir.z > 0) && curPos.z > ubo.maxZ) ||
-            (!(rayDir.z > 0) && curPos.z < ubo.minZ)
-        ){
-                return vec3(0,-1,0);
-        }
-    }
-    return vec3(0,-1,0);
-}
-
-// This is too slow -- should do check for guaranteed misses first
-vec3 findChunk2(vec3 rayOrigin, vec3 rayDir, int maxChecks) {
-    
-    if (
-        ( (rayDir.x > 0) && rayOrigin.x > ubo.maxX) ||
-        (!(rayDir.x > 0) && rayOrigin.x < ubo.minX) ||
-        ( (rayDir.y > 0) && rayOrigin.y > ubo.maxY) ||
-        (!(rayDir.y > 0) && rayOrigin.y < ubo.minY) ||
-        ( (rayDir.z > 0) && rayOrigin.z > ubo.maxZ) ||
-        (!(rayDir.z > 0) && rayOrigin.z < ubo.minZ) 
-    ){
-            return vec3(0,-1,0);
-    } 
-    
-    if (rayOrigin.y >= 0 && rayOrigin.y <= (2 * CHUNK_SIZE) ) {
-        int i = 0;
-        while (i < ubo.numChunks) {
-            ivec3 chunkCoord = ivec3(chunkInfo.chunkInfos[i].x, chunkInfo.chunkInfos[i].y, chunkInfo.chunkInfos[i].z);
-            if (pointInIVoxel(ubo.camPos, chunkCoord, CHUNK_SIZE)) {
-                vec3 traversal = traverseOctree(rayOrigin, rayDir, 0, chunkCoord, chunkInfo.chunkInfos[i].index);
-                if (traversal.y > -1) {
-                    return traversal;
-                }        
-            }
-            i++;
-        }
-    }
-    vec3 end = maxChecks * rayDir + rayOrigin;
-    vec3 curPos = rayOrigin;
-    vec3 deltas = vec3(-1,-1,-1);
-    int intersectionType;
-
-    while (maxChecks > 0) {
-        maxChecks -= 1;
-        
-        deltas = findDeltas(curPos, rayDir, CHUNK_SIZE, deltas);
-        float minDelta = min(min(deltas.x, deltas.y), deltas.z);
-
-        if (minDelta == deltas.x) {
-            deltas.y -= deltas.x;
-            deltas.z -= deltas.x;
-            deltas.x = -1;
-            if (rayDir.x > 0) {
-                intersectionType = 0;
-                curPos.x += EPSILON;
-            } 
-            else {
-                intersectionType = 1;
-                curPos.x -= EPSILON;
-            }
-        }
-        else if (minDelta == deltas.y) {
-            deltas.x -= deltas.y;
-            deltas.z -= deltas.y;
-            deltas.y = -1;
-            if (rayDir.y > 0) {
-                intersectionType = 2;
-                curPos.y += EPSILON;
-            } 
-            else {
-                intersectionType = 3;
-                curPos.y -= EPSILON;
-            }
-        }
-        else if (minDelta == deltas.z) {
-            deltas.x -= deltas.z;
-            deltas.y -= deltas.z;
-            deltas.z = -1;
-            if (rayDir.z > 0) {
-                intersectionType = 4;
-                curPos.z += EPSILON;
-            } 
-            else {
-                intersectionType = 5;
-                curPos.z -= EPSILON;
-            }
-        }
-        else {
-            return vec3(0,-1,0);
-        }
-
-        curPos += rayDir * minDelta;
-
-        if (
-                curPos.x <= ubo.maxX &&
-                curPos.x >= ubo.minX &&
-                curPos.y <= ubo.maxY &&
-                curPos.y >= ubo.minY &&
-                curPos.z <= ubo.maxZ &&
-                curPos.z >= ubo.minZ 
-            ) {
-            int j = 0;
-            while (j < ubo.numChunks) { 
-                ivec3 chunkCoord = ivec3(chunkInfo.chunkInfos[j].x, chunkInfo.chunkInfos[j].y, chunkInfo.chunkInfos[j].z);
-
-                if (pointInIVoxel(curPos, chunkCoord, CHUNK_SIZE)) {
-                    // enter chunk octree
-                    vec3 traversal = traverseOctree(curPos, rayDir, intersectionType, chunkCoord, chunkInfo.chunkInfos[j].index);
-                    if (traversal.y > -1) {
-                        return traversal;
-                    }
-                }
-                j++;
-            }
-        }
-        else if (
-            ( (rayDir.x > 0) && curPos.x > ubo.maxX) ||
-            (!(rayDir.x > 0) && curPos.x < ubo.minX) ||
-            ( (rayDir.y > 0) && curPos.y > ubo.maxY) ||
-            (!(rayDir.y > 0) && curPos.y < ubo.minY) ||
-            ( (rayDir.z > 0) && curPos.z > ubo.maxZ) ||
-            (!(rayDir.z > 0) && curPos.z < ubo.minZ)
-        ){
-                return vec3(0,-1,0);
-        }
-    }
-    return vec3(0,-1,0);
-}
-
-vec3 findChunk3(vec3 rayOrigin, vec3 rayDir, int maxChecks) {
-    
-    if (
-        ( (rayDir.x > 0) && rayOrigin.x > ubo.maxX) ||
-        (!(rayDir.x > 0) && rayOrigin.x < ubo.minX) ||
-        ( (rayDir.y > 0) && rayOrigin.y > ubo.maxY) ||
-        (!(rayDir.y > 0) && rayOrigin.y < ubo.minY) ||
-        ( (rayDir.z > 0) && rayOrigin.z > ubo.maxZ) ||
-        (!(rayDir.z > 0) && rayOrigin.z < ubo.minZ) 
-    ){
-            return vec3(0,-1,0);
-    } 
-    
-    if (rayOrigin.y >= 0 && rayOrigin.y <= (2 * CHUNK_SIZE) ) {
-        int i = 0;
-        while (i < ubo.numChunks) {
-            ivec3 chunkCoord = ivec3(chunkInfo.chunkInfos[i].x, chunkInfo.chunkInfos[i].y, chunkInfo.chunkInfos[i].z);
-            if (pointInIVoxel(ubo.camPos, chunkCoord, CHUNK_SIZE)) {
-                vec3 traversal = traverseOctree(rayOrigin, rayDir, 0, chunkCoord, chunkInfo.chunkInfos[i].index);
+            if (inChunk) {
+                vec3 traversal = traverseOctree(rayOrigin, rayDir, 0, curVoxel, curChunk.index);
                 if (traversal.y > -1) {
                     return traversal;
                 }        
@@ -602,10 +388,12 @@ vec3 findChunk3(vec3 rayOrigin, vec3 rayDir, int maxChecks) {
                 if ((rayDir.x > 0)) {
                     intersectionType = 0;
                     curEpsilon = vec3(EPSILON, 0, 0);
+                    curVoxel.x += CHUNK_SIZE;
                 }
                 else {
                     intersectionType = 1;
                     curEpsilon = vec3(-EPSILON, 0, 0);
+                    curVoxel.x -= CHUNK_SIZE;
                 }
             }
             else {
@@ -616,10 +404,12 @@ vec3 findChunk3(vec3 rayOrigin, vec3 rayDir, int maxChecks) {
                 if ((rayDir.z > 0)) {
                     intersectionType = 4;
                     curEpsilon = vec3(0, 0, EPSILON);
+                    curVoxel.z += CHUNK_SIZE;
                 }
                 else {
                     intersectionType = 5;
                     curEpsilon = vec3(0, 0, -EPSILON);
+                    curVoxel.z -= CHUNK_SIZE;
                 }
             }
         }
@@ -631,10 +421,12 @@ vec3 findChunk3(vec3 rayOrigin, vec3 rayDir, int maxChecks) {
             if ((rayDir.y > 0)) {
                 intersectionType = 2;
                 curEpsilon = vec3(0, EPSILON, 0);
+                curVoxel.y += CHUNK_SIZE;
             }
             else {
                 intersectionType = 3;
                 curEpsilon = vec3(0, -EPSILON, 0);
+                curVoxel.y -= CHUNK_SIZE;
             }
         }
         else {
@@ -645,10 +437,12 @@ vec3 findChunk3(vec3 rayOrigin, vec3 rayDir, int maxChecks) {
             if ((rayDir.z > 0)) {
                 intersectionType = 4;
                 curEpsilon = vec3(0, 0, EPSILON);
+                curVoxel.z += CHUNK_SIZE;
             }
             else {
                 intersectionType = 5;
                 curEpsilon = vec3(0, 0, -EPSILON);
+                curVoxel.z -= CHUNK_SIZE;
             }
         }
 
@@ -665,11 +459,15 @@ vec3 findChunk3(vec3 rayOrigin, vec3 rayDir, int maxChecks) {
             ) {
             int j = 0;
             while (j < ubo.numChunks) { 
-                ivec3 chunkCoord = ivec3(chunkInfo.chunkInfos[j].x, chunkInfo.chunkInfos[j].y, chunkInfo.chunkInfos[j].z);
+                ChunkInfo curChunk = chunkInfo.chunkInfos[j];
 
-                if (pointInIVoxel(curPos, chunkCoord, CHUNK_SIZE)) {
+                bool inChunk =  (curVoxel.x == curChunk.x) && 
+                                (curVoxel.y == curChunk.y) && 
+                                (curVoxel.z == curChunk.z);
+
+                if (inChunk) {
                     // enter chunk octree
-                    vec3 traversal = traverseOctree(curPos, rayDir, intersectionType, chunkCoord, chunkInfo.chunkInfos[j].index);
+                    vec3 traversal = traverseOctree(curPos, rayDir, intersectionType, curVoxel, curChunk.index);
                     if (traversal.y > -1) {
                         return traversal;
                     }
@@ -696,29 +494,26 @@ vec3 findChunk3(vec3 rayOrigin, vec3 rayDir, int maxChecks) {
 
 
 void main() {
+    if (screenX % 2 == 0 || screenY % 2 == 0) {
+        imageStore(depthImage, texPos, vec4(1, 1, 0, 1));                          
+        return;
+    }
+
     if (screenX == (ubo.screenWidth / 2) && screenY == (ubo.screenHeight / 2)) {    // yellow dot in screen centre
         imageStore(outputImage, texPos, vec4(1, 1, 0, 1));                          
         return;
     }
 
-    vec3 intersection;
-    if (ubo.findChunkMode == 1) {
-        intersection = findChunk1(ubo.camPos, rayDir, 100);
-    }
-    else if (ubo.findChunkMode == 2) {
-        intersection = findChunk2(ubo.camPos, rayDir, 100);
-    }
-    else if (ubo.findChunkMode == 3) {
-        intersection = findChunk3(ubo.camPos, rayDir, 100);
-    }
-
+    vec3 intersection = findChunk(ubo.camPos, rayDir, 100);
     vec3 color;
+    vec3 depthColor;
     float fogFactor = (sqrt(intersection.z) / ubo.fogMaxDistance);
 
     if (intersection.y >= 0) {
+        depthColor = vec3(1,1,1) * fogFactor;
+        
         if (ubo.showDepth == 1) {
-            color = vec3(1,1,1) * fogFactor;
-            
+            color = depthColor;
         }
         else if (ubo.showNormals == 1){
             color = normals[int(intersection.y)];
@@ -726,13 +521,15 @@ void main() {
         else{
             color = materials[int(intersection.x) - 1] * lightings[int(intersection.y)];
         }
-        //color = color + vec3(1,1,1) * max(0,fogFactor);
+
         imageStore(outputImage, texPos, vec4(color, 1));
+        imageStore(depthImage, texPos, vec4(depthColor, 1));
         return;
     }
 
+    depthColor = vec3(1,1,1);
     if (ubo.showDepth == 1) {
-        color = vec3(0,0,0) + vec3(1,1,1) * (1 / fogFactor);
+        color = depthColor;
     }
     else {
         if (dot(rayDir, -sunDir) > 0.999) {
@@ -742,7 +539,7 @@ void main() {
             color = vec3(0.6,0.6,0.6) * dot(rayDir, -sunDir) + vec3(0,0,0.3);
         }
     }
-
-    //color = vec3(1,1,1);
     imageStore(outputImage, texPos, vec4(color, 1));
+    imageStore(depthImage, texPos, vec4(depthColor, 1));
+    return;
 }

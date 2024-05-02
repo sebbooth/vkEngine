@@ -11,8 +11,10 @@ void SyncObjects::create()
     imageAvailableSemaphores.resize(m_Config->maxFramesInFlight);
     renderFinishedSemaphores.resize(m_Config->maxFramesInFlight);
     computeFinishedSemaphores.resize(m_Config->maxFramesInFlight);
+    depthComputeFinishedSemaphores.resize(m_Config->maxFramesInFlight);
     inFlightFences.resize(m_Config->maxFramesInFlight);
     computeInFlightFences.resize(m_Config->maxFramesInFlight);
+    depthComputeInFlightFences.resize(m_Config->maxFramesInFlight);
 
     VkSemaphoreCreateInfo semaphoreInfo{};
     semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
@@ -32,6 +34,10 @@ void SyncObjects::create()
             vkCreateFence(m_Device, &fenceInfo, nullptr, &computeInFlightFences[i]) != VK_SUCCESS) {
             throw std::runtime_error("failed to create compute synchronization objects for a frame!");
         }
+        if (vkCreateSemaphore(m_Device, &semaphoreInfo, nullptr, &depthComputeFinishedSemaphores[i]) != VK_SUCCESS ||
+            vkCreateFence(m_Device, &fenceInfo, nullptr, &depthComputeInFlightFences[i]) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create depth compute synchronization objects for a frame!");
+        }
     }
 }
 
@@ -41,8 +47,10 @@ void SyncObjects::destroy()
         vkDestroySemaphore(m_Device, renderFinishedSemaphores[i], nullptr);
         vkDestroySemaphore(m_Device, imageAvailableSemaphores[i], nullptr);
         vkDestroySemaphore(m_Device, computeFinishedSemaphores[i], nullptr);
+        vkDestroySemaphore(m_Device, depthComputeFinishedSemaphores[i], nullptr);
         vkDestroyFence(m_Device, inFlightFences[i], nullptr);
         vkDestroyFence(m_Device, computeInFlightFences[i], nullptr);
+        vkDestroyFence(m_Device, depthComputeInFlightFences[i], nullptr);
     }
 }
 
@@ -56,5 +64,11 @@ void SyncObjects::waitForComputeFence(uint32_t currentFrame, VkBool32 waitAll, u
 {
     vkWaitForFences(m_Device, 1, &computeInFlightFences[currentFrame], waitAll, timeout);
     vkResetFences(m_Device, 1, &computeInFlightFences[currentFrame]);
+}
+
+void SyncObjects::waitForDepthComputeFence(uint32_t currentFrame, VkBool32 waitAll, uint64_t timeout)
+{
+    vkWaitForFences(m_Device, 1, &depthComputeInFlightFences[currentFrame], waitAll, timeout);
+    vkResetFences(m_Device, 1, &depthComputeInFlightFences[currentFrame]);
 }
 
