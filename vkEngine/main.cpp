@@ -1,7 +1,7 @@
-#include "TestRewrite.h"
+#include "OctreeRaymarchingApp.h"
 
 int main() {
-    TestRewrite app;
+    OctreeRaymarchingApp app;
     try {
         app.run();
     }

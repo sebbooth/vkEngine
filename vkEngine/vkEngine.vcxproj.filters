@@ -15,18 +15,17 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="shaders\HelloTriangle.vert">
+    <None Include="shaders\unused\HelloTriangle.vert">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="shaders\HelloTriangle.frag">
+    <None Include="shaders\unused\HelloTriangle.frag">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="shaders\compile.bat">
+    <None Include="shaders\unused\compile.bat">
       <Filter>Source Files</Filter>
     </None>
     <None Include="shaders\simple_shader.vert" />
     <None Include="shaders\simple_shader.frag" />
-    <None Include="shaders\bitmaskOctree.comp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="vendor\stb\stb_image.h">
@@ -53,25 +52,25 @@
     <ClInclude Include="vendor\imgui-1.90.4\imstb_truetype.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="vkClassesReWrite\initialization\Instance.h">
+    <ClInclude Include="vkClasses\initialization\Instance.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="vkClassesReWrite\initialization\Surface.h">
+    <ClInclude Include="vkClasses\initialization\Surface.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="vkClassesReWrite\VkClassesIndex.h">
+    <ClInclude Include="vkClasses\VkClassesIndex.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="TestRewrite.h">
+    <ClInclude Include="OctreeRaymarchingApp.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="vkClassesReWrite\devices\PhysicalDevice.h">
+    <ClInclude Include="vkClasses\devices\PhysicalDevice.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="vkClassesReWrite\initialization\VkConfig.h">
+    <ClInclude Include="vkClasses\initialization\VkConfig.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="vkClassesReWrite\devices\LogicalDevice.h">
+    <ClInclude Include="vkClasses\devices\LogicalDevice.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="vkUtils\DebugUtils.h">
@@ -86,91 +85,91 @@
     <ClInclude Include="vkUtils\VkStructs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="vkClassesReWrite\presentation\SwapChain.h">
+    <ClInclude Include="vkClasses\presentation\SwapChain.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="vkClassesReWrite\images\ImageViews.h">
+    <ClInclude Include="vkClasses\images\ImageViews.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="vkClassesReWrite\presentation\RenderPass.h">
+    <ClInclude Include="vkClasses\presentation\RenderPass.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="vkClassesReWrite\descriptors\DescriptorSetLayout.h">
+    <ClInclude Include="vkClasses\descriptors\DescriptorSetLayout.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="vkClassesReWrite\pipelines\GraphicsPipeline.h">
+    <ClInclude Include="vkClasses\pipelines\GraphicsPipeline.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="vkClassesReWrite\pipelines\ComputePipeline.h">
+    <ClInclude Include="vkClasses\pipelines\ComputePipeline.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="vkClassesReWrite\commands\CommandPool.h">
+    <ClInclude Include="vkClasses\commands\CommandPool.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Octree.h">
+    <ClInclude Include="octreeGeneration\Octree.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="OctreeStructs.h">
+    <ClInclude Include="octreeGeneration\OctreeStructs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Perlin.h">
+    <ClInclude Include="octreeGeneration\Perlin.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="SimplexNoise.h">
+    <ClInclude Include="octreeGeneration\SimplexNoise.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="vkClassesReWrite\shaderResources\SSBO.h">
+    <ClInclude Include="vkClasses\shaderResources\SSBO.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="vkClassesReWrite\shaderResources\StorageImage.h">
+    <ClInclude Include="vkClasses\shaderResources\StorageImage.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="vkClassesReWrite\shaderResources\Sampler.h">
+    <ClInclude Include="vkClasses\shaderResources\Sampler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="vkClassesReWrite\shaderResources\UniformBuffer.h">
+    <ClInclude Include="vkClasses\shaderResources\UniformBuffer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="vkClassesReWrite\descriptors\DescriptorPool.h">
+    <ClInclude Include="vkClasses\descriptors\DescriptorPool.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="vkClassesReWrite\descriptors\DescriptorSets.h">
+    <ClInclude Include="vkClasses\descriptors\DescriptorSets.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="vkClassesReWrite\images\Images.h">
+    <ClInclude Include="vkClasses\images\Images.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="vkClassesReWrite\renderAttachments\DepthResources.h">
+    <ClInclude Include="vkClasses\renderAttachments\DepthResources.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="vkClassesReWrite\renderAttachments\ColorResources.h">
+    <ClInclude Include="vkClasses\renderAttachments\ColorResources.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="vkClassesReWrite\framebuffers\FrameBuffers.h">
+    <ClInclude Include="vkClasses\framebuffers\FrameBuffers.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="vkClassesReWrite\shaderResources\VertexBuffer.h">
+    <ClInclude Include="vkClasses\shaderResources\VertexBuffer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="vkClassesReWrite\shaderResources\IndexBuffer.h">
+    <ClInclude Include="vkClasses\shaderResources\IndexBuffer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="vkClassesReWrite\commands\CommandBuffers.h">
+    <ClInclude Include="vkClasses\commands\CommandBuffers.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="vkClassesReWrite\commands\ComputeCommandBuffers.h">
+    <ClInclude Include="vkClasses\commands\ComputeCommandBuffers.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="vkClassesReWrite\syncObjects\SyncObjects.h">
+    <ClInclude Include="vkClasses\syncObjects\SyncObjects.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="vkClassesReWrite\gui\Gui.h">
+    <ClInclude Include="vkClasses\gui\Gui.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="vkClassesReWrite\queueSubmit\QueueSubmitter.h">
+    <ClInclude Include="vkClasses\queueSubmit\QueueSubmitter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="BitmaskOctree.h">
+    <ClInclude Include="octreeGeneration\BitmaskOctree.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -199,100 +198,100 @@
     <ClCompile Include="vendor\imgui-1.90.4\imgui_widgets.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="vkClassesReWrite\initialization\Instance.cpp">
+    <ClCompile Include="vkClasses\initialization\Instance.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="vkClassesReWrite\initialization\Surface.cpp">
+    <ClCompile Include="vkClasses\initialization\Surface.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="vkClassesReWrite\devices\PhysicalDevice.cpp">
+    <ClCompile Include="vkClasses\devices\PhysicalDevice.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="vkClassesReWrite\devices\LogicalDevice.cpp">
+    <ClCompile Include="vkClasses\devices\LogicalDevice.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="vkClassesReWrite\presentation\SwapChain.cpp">
+    <ClCompile Include="vkClasses\presentation\SwapChain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="vkClassesReWrite\images\ImageViews.cpp">
+    <ClCompile Include="vkClasses\images\ImageViews.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="vkClassesReWrite\presentation\RenderPass.cpp">
+    <ClCompile Include="vkClasses\presentation\RenderPass.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="vkClassesReWrite\descriptors\DescriptorSetLayout.cpp">
+    <ClCompile Include="vkClasses\descriptors\DescriptorSetLayout.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="vkClassesReWrite\pipelines\GraphicsPipeline.cpp">
+    <ClCompile Include="vkClasses\pipelines\GraphicsPipeline.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="vkClassesReWrite\pipelines\ComputePipeline.cpp">
+    <ClCompile Include="vkClasses\pipelines\ComputePipeline.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="vkClassesReWrite\commands\CommandPool.cpp">
+    <ClCompile Include="vkClasses\commands\CommandPool.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Octree.cpp">
+    <ClCompile Include="octreeGeneration\Octree.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Perlin.cpp">
+    <ClCompile Include="octreeGeneration\Perlin.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="SimplexNoise.cpp">
+    <ClCompile Include="octreeGeneration\SimplexNoise.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="vkClassesReWrite\shaderResources\SSBO.cpp">
+    <ClCompile Include="vkClasses\shaderResources\SSBO.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="vkClassesReWrite\shaderResources\StorageImage.cpp">
+    <ClCompile Include="vkClasses\shaderResources\StorageImage.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="vkClassesReWrite\shaderResources\Sampler.cpp">
+    <ClCompile Include="vkClasses\shaderResources\Sampler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="vkClassesReWrite\shaderResources\UniformBuffer.cpp">
+    <ClCompile Include="vkClasses\shaderResources\UniformBuffer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="vkClassesReWrite\descriptors\DescriptorPool.cpp">
+    <ClCompile Include="vkClasses\descriptors\DescriptorPool.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="vkClassesReWrite\descriptors\DescriptorSets.cpp">
+    <ClCompile Include="vkClasses\descriptors\DescriptorSets.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="vkClassesReWrite\images\Images.cpp">
+    <ClCompile Include="vkClasses\images\Images.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="vkClassesReWrite\renderAttachments\DepthResources.cpp">
+    <ClCompile Include="vkClasses\renderAttachments\DepthResources.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="vkClassesReWrite\renderAttachments\ColorResources.cpp">
+    <ClCompile Include="vkClasses\renderAttachments\ColorResources.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="vkClassesReWrite\framebuffers\FrameBuffers.cpp">
+    <ClCompile Include="vkClasses\framebuffers\FrameBuffers.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="vkClassesReWrite\shaderResources\VertexBuffer.cpp">
+    <ClCompile Include="vkClasses\shaderResources\VertexBuffer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="vkClassesReWrite\shaderResources\IndexBuffer.cpp">
+    <ClCompile Include="vkClasses\shaderResources\IndexBuffer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="vkClassesReWrite\commands\CommandBuffers.cpp">
+    <ClCompile Include="vkClasses\commands\CommandBuffers.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="vkClassesReWrite\commands\ComputeCommandBuffers.cpp">
+    <ClCompile Include="vkClasses\commands\ComputeCommandBuffers.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="vkClassesReWrite\syncObjects\SyncObjects.cpp">
+    <ClCompile Include="vkClasses\syncObjects\SyncObjects.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="vkClassesReWrite\gui\Gui.cpp">
+    <ClCompile Include="vkClasses\gui\Gui.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="vkClassesReWrite\queueSubmit\QueueSubmitter.cpp">
+    <ClCompile Include="vkClasses\queueSubmit\QueueSubmitter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="BitmaskOctree.cpp">
+    <ClCompile Include="octreeGeneration\BitmaskOctree.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
