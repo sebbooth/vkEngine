@@ -20,6 +20,8 @@ class StorageImage
         std::vector<VkImageView> storageImageViews;
         std::vector<VkSampler> imageSamplers;
 
+        VkFormat imageFormat = VK_FORMAT_R8G8B8A8_UNORM;
+
     private:
         VkDevice m_Device;
         std::shared_ptr<Images> mp_Images;

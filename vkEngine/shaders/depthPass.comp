@@ -54,7 +54,7 @@ layout(std430, binding = 2) readonly buffer ChunkInfoSSBO {
     ChunkInfo chunkInfos[];
 } chunkInfo;
 
-layout(binding = 3, rgba8) uniform writeonly image2D depthImage;
+layout(binding = 3, r32f) uniform writeonly image2D depthImage;
 layout(binding = 4, rgba8) uniform writeonly image2D outputImage;
 
 layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
@@ -93,8 +93,8 @@ vec3 sunDir = normalize(ubo.sunDir);
 
 uint index = gl_GlobalInvocationID.x;
 
-int screenX = ubo.screenWidth - int(mod(index, ubo.screenWidth));
-int screenY = ubo.screenHeight - int(floor(index / ubo.screenWidth));
+int screenX = 1 + 2 * ((ubo.screenWidth / 2) - int(mod((index), (ubo.screenWidth / 2))));
+int screenY = 1 + 2 * ((ubo.screenHeight / 2) - int(floor((index) / (ubo.screenWidth / 2))));
 
 ivec2 texPos = ivec2(screenX, screenY);
 
@@ -494,16 +494,6 @@ vec3 findChunk(vec3 rayOrigin, vec3 rayDir, int maxChecks) {
 
 
 void main() {
-    if (screenX % 2 == 0 || screenY % 2 == 0) {
-        imageStore(depthImage, texPos, vec4(1, 1, 0, 1));                          
-        return;
-    }
-
-    if (screenX == (ubo.screenWidth / 2) && screenY == (ubo.screenHeight / 2)) {    // yellow dot in screen centre
-        imageStore(outputImage, texPos, vec4(1, 1, 0, 1));                          
-        return;
-    }
-
     vec3 intersection = findChunk(ubo.camPos, rayDir, 100);
     vec3 color;
     vec3 depthColor;
@@ -512,19 +502,21 @@ void main() {
     if (intersection.y >= 0) {
         depthColor = vec3(1,1,1) * fogFactor;
         
-        if (ubo.showDepth == 1) {
-            color = depthColor;
+        
+        if (depthColor.x < 1) {
+            if (ubo.showDepth == 1) {
+                color = depthColor;
+            }
+            else if (ubo.showNormals == 1){
+                color = normals[int(intersection.y)];
+            } 
+            else{
+                color = materials[int(intersection.x) - 1] * lightings[int(intersection.y)];
+            }
+            imageStore(outputImage, texPos, vec4(color, 1));
+            imageStore(depthImage, texPos, vec4(depthColor, 1));
+            return;
         }
-        else if (ubo.showNormals == 1){
-            color = normals[int(intersection.y)];
-        } 
-        else{
-            color = materials[int(intersection.x) - 1] * lightings[int(intersection.y)];
-        }
-
-        imageStore(outputImage, texPos, vec4(color, 1));
-        imageStore(depthImage, texPos, vec4(depthColor, 1));
-        return;
     }
 
     depthColor = vec3(1,1,1);

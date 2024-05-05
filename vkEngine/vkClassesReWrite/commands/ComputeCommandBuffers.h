@@ -39,7 +39,8 @@ public:
 	void create();
 	void attachComputePipeline(VkPipeline computePipeline, VkPipelineLayout pipelineLayout);
 	void attachDescriptorSets(std::vector<VkDescriptorSet> descriptorSets);
-	void setExtent(VkExtent2D extent);
+	void setExtent(unsigned int width, unsigned int height);
+	void setGroupSize(unsigned int size);
 
 	void recordBuffer(VkCommandBuffer commandBuffer, uint32_t currentFrame);
 };

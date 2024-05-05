@@ -37,9 +37,14 @@ void ComputeCommandBuffers::attachDescriptorSets(std::vector<VkDescriptorSet> de
     m_DescriptorSets = descriptorSets;
 }
 
-void ComputeCommandBuffers::setExtent(VkExtent2D extent)
+void ComputeCommandBuffers::setExtent(unsigned int width, unsigned int height)
 {
-    groupSizeX = std::ceil(((extent.width / m_Config->downScaleFactor) * (extent.height / m_Config->downScaleFactor) + extent.width) / 256 + 1);
+    groupSizeX = std::ceil(((width / m_Config->downScaleFactor) * (height / m_Config->downScaleFactor)) / 256);
+}
+
+void ComputeCommandBuffers::setGroupSize(unsigned int size)
+{
+    groupSizeX = std::ceil(size / (m_Config->downScaleFactor * m_Config->downScaleFactor) / 256);
 }
 
 void ComputeCommandBuffers::recordBuffer(VkCommandBuffer commandBuffer, uint32_t currentFrame)
@@ -68,11 +73,32 @@ void ComputeCommandBuffers::recordBuffer(VkCommandBuffer commandBuffer, uint32_t
         0, 
         nullptr
     );
+    
+    static bool firstRun = true;
+
+    VkMemoryBarrier2 memoryBarrier{};
+    if (firstRun) {
+        memoryBarrier.srcStageMask = VK_PIPELINE_STAGE_2_NONE_KHR;
+        memoryBarrier.srcAccessMask = VK_ACCESS_2_NONE_KHR;
+    }
+    else { 
+        memoryBarrier.srcStageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT_KHR;
+        memoryBarrier.srcAccessMask = VK_ACCESS_2_SHADER_WRITE_BIT_KHR | VK_ACCESS_2_SHADER_READ_BIT_KHR;
+    }
+    memoryBarrier.dstStageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT_KHR;
+    memoryBarrier.dstAccessMask = VK_ACCESS_2_SHADER_WRITE_BIT_KHR | VK_ACCESS_2_SHADER_READ_BIT_KHR;
+
+    VkDependencyInfo dependencyInfo{};
+    dependencyInfo.memoryBarrierCount = 1;
+    dependencyInfo.pMemoryBarriers = &memoryBarrier;
+
+    //vkCmdPipelineBarrier2(commandBuffer, &dependencyInfo);
 
     vkCmdDispatch(commandBuffer, groupSizeX, groupSizeY, groupSizeZ);
 
     if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
         throw std::runtime_error("failed to record compute command buffer!");
     }
+    firstRun = false;
 }
 

@@ -29,7 +29,7 @@ void StorageImage::create(VkExtent2D extent)
         mp_Images->createImage(
             width,
             height,
-            VK_FORMAT_R8G8B8A8_UNORM,
+            imageFormat,
             VK_IMAGE_TILING_OPTIMAL,
             VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
             VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
@@ -41,14 +41,14 @@ void StorageImage::create(VkExtent2D extent)
 
         transitionImageLayout(
             storageImages[i],
-            VK_FORMAT_R8G8B8A8_UNORM,
+            imageFormat,
             VK_IMAGE_LAYOUT_UNDEFINED,
             VK_IMAGE_LAYOUT_GENERAL
         );
 
         storageImageViews[i] = mp_ImageViews->createImageView(
             storageImages[i],
-            VK_FORMAT_R8G8B8A8_UNORM,
+            imageFormat,
             VK_IMAGE_ASPECT_COLOR_BIT,
             1
         );

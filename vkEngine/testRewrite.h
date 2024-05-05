@@ -308,6 +308,7 @@ private:
             p_CommandPool,
             config
         );
+        p_DepthImage->imageFormat = VK_FORMAT_R32_SFLOAT;
         p_DepthImage->create(p_SwapChain->swapChainExtent);
 
         p_OctreeSSBO = std::make_shared<SSBO>(
@@ -554,7 +555,7 @@ private:
             p_VertexBuffer->vertexBuffer,
             p_IndexBuffer->indexBuffer
         );
-        p_CommandBuffers->setExtent(p_SwapChain->swapChainExtent);
+        p_CommandBuffers->setExtent(p_SwapChain->swapChainExtent); 
         p_CommandBuffers->attachGui(p_Gui);
         p_CommandBuffers->create();
 
@@ -565,7 +566,8 @@ private:
         );
         p_DepthComputeCommandBuffers->attachComputePipeline(p_DepthComputePipeline->computePipeline, p_DepthComputePipeline->computePipelineLayout);
         p_DepthComputeCommandBuffers->attachDescriptorSets(p_DepthComputeDescriptorSets->descriptorSets);
-        p_DepthComputeCommandBuffers->setExtent(p_SwapChain->swapChainExtent);
+
+        p_DepthComputeCommandBuffers->setExtent(p_SwapChain->swapChainExtent.width / 2, p_SwapChain->swapChainExtent.height / 2);
         p_DepthComputeCommandBuffers->create();
 
         p_ComputeCommandBuffers = std::make_shared<ComputeCommandBuffers>(
@@ -575,7 +577,18 @@ private:
         );
         p_ComputeCommandBuffers->attachComputePipeline(p_ComputePipeline->computePipeline, p_ComputePipeline->computePipelineLayout);
         p_ComputeCommandBuffers->attachDescriptorSets(p_ComputeDescriptorSets->descriptorSets);
-        p_ComputeCommandBuffers->setExtent(p_SwapChain->swapChainExtent);
+        
+        p_ComputeCommandBuffers->setGroupSize(
+             (p_SwapChain->swapChainExtent.width * p_SwapChain->swapChainExtent.height) - 
+             ((p_SwapChain->swapChainExtent.width / 2) * (p_SwapChain->swapChainExtent.height / 2))
+        );
+        
+        /*
+        p_ComputeCommandBuffers->setExtent(
+            p_SwapChain->swapChainExtent.width,
+            p_SwapChain->swapChainExtent.height
+        );
+        */
         p_ComputeCommandBuffers->create();
     }
 
@@ -617,6 +630,7 @@ private:
                     &p_SyncObjects->depthComputeFinishedSemaphores[currentFrame]
                 );
             
+                    
         // Compute submission  
                 
                 {
@@ -730,10 +744,10 @@ private:
             config->ubo.camPos += config->ubo.deltaTime * config->moveSpeed * config->ubo.camDir;
         if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
             config->ubo.camPos -= config->ubo.deltaTime * config->moveSpeed * config->ubo.camDir;
-        if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
-            config->ubo.camPos += config->ubo.deltaTime * config->moveSpeed * config->ubo.camUp;
-        if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS)
-            config->ubo.camPos -= config->ubo.deltaTime * config->moveSpeed * config->ubo.camUp;
+        if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+            config->ubo.camPos += config->ubo.deltaTime * config->moveSpeed * glm::vec3(0, 1, 0);
+        if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+            config->ubo.camPos += config->ubo.deltaTime * config->moveSpeed * glm::vec3(0, -1, 0);
 
         if (config->cursorActive && glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
             float deltaX = 0;
@@ -903,11 +917,23 @@ private:
         p_CommandBuffers->create();
 
         p_ComputeCommandBuffers->attachDescriptorSets(p_ComputeDescriptorSets->descriptorSets);
-        p_ComputeCommandBuffers->setExtent(p_SwapChain->swapChainExtent);
+        
+        p_ComputeCommandBuffers->setGroupSize(
+            (p_SwapChain->swapChainExtent.width * p_SwapChain->swapChainExtent.height) -
+            ((p_SwapChain->swapChainExtent.width / 2) * (p_SwapChain->swapChainExtent.height / 2))
+        );
+        
+
+        /*
+        p_ComputeCommandBuffers->setExtent(
+            p_SwapChain->swapChainExtent.width,
+            p_SwapChain->swapChainExtent.height
+        );
+        */
         p_ComputeCommandBuffers->create();
 
         p_DepthComputeCommandBuffers->attachDescriptorSets(p_DepthComputeDescriptorSets->descriptorSets);
-        p_DepthComputeCommandBuffers->setExtent(p_SwapChain->swapChainExtent);
+        p_DepthComputeCommandBuffers->setExtent(p_SwapChain->swapChainExtent.width / 2, p_SwapChain->swapChainExtent.height / 2);
         p_DepthComputeCommandBuffers->create();
         
         /*
@@ -971,11 +997,11 @@ private:
         int numChunks = 0;
         int chunkIndex = 0;
         int minX = 0;
-        int maxX = 4;
-        int minY = -2;
-        int maxY = 4;
+        int maxX = 8;
+        int minY = 0;
+        int maxY = 2;
         int minZ = 0;
-        int maxZ = 4;
+        int maxZ = 8;
         for (int y = minY; y < maxY; y++) {
             for (int x = minX; x < maxX; x++) {
                 for (int z = minZ; z < maxZ; z++) {
