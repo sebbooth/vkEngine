@@ -76,9 +76,6 @@ const vec3 materials[3] = {
     vec3(1, 1, 1)
 };
 
-
-
-
 float aspectRatio;
 float viewportWidth;
 float viewportV;
@@ -95,8 +92,6 @@ ivec2 texPos;
 vec3 pixelCenter;
 vec3 rayDir;
 vec3 curPos;
-
-
 
 bool pointInIVoxel(vec3 point, ivec3 iVoxel, int iVoxelSize) {
     vec3 fIVoxel = vec3(iVoxel);
@@ -313,16 +308,31 @@ vec3 traverseOctree(vec3 curPos, vec3 rayDir, int intersectionType, ivec3 octree
     return vec3(-1,-2,-1);
 }
 
+bool rayHasLeftBounds(vec3 rayDir, vec3 rayPosition) {
+    return (
+        ( (rayDir.x > 0) && rayPosition.x > ubo.maxX) ||
+        (!(rayDir.x > 0) && rayPosition.x < ubo.minX) ||
+        ( (rayDir.y > 0) && rayPosition.y > ubo.maxY) ||
+        (!(rayDir.y > 0) && rayPosition.y < ubo.minY) ||
+        ( (rayDir.z > 0) && rayPosition.z > ubo.maxZ) ||
+        (!(rayDir.z > 0) && rayPosition.z < ubo.minZ)
+    );
+}
+
+bool pointInBounds(vec3 point) {
+    return (
+        point.x <= ubo.maxX &&
+        point.x >= ubo.minX &&
+        point.y <= ubo.maxY &&
+        point.y >= ubo.minY &&
+        point.z <= ubo.maxZ &&
+        point.z >= ubo.minZ
+    );
+}
+
 vec3 findChunk(vec3 rayOrigin, vec3 rayDir, int maxChecks) {
     
-    if (
-        ( (rayDir.x > 0) && rayOrigin.x > ubo.maxX) ||
-        (!(rayDir.x > 0) && rayOrigin.x < ubo.minX) ||
-        ( (rayDir.y > 0) && rayOrigin.y > ubo.maxY) ||
-        (!(rayDir.y > 0) && rayOrigin.y < ubo.minY) ||
-        ( (rayDir.z > 0) && rayOrigin.z > ubo.maxZ) ||
-        (!(rayDir.z > 0) && rayOrigin.z < ubo.minZ) 
-    ){
+    if (rayHasLeftBounds(rayDir, rayOrigin)){
             return vec3(0,-1,0);
     } 
     
@@ -435,14 +445,7 @@ vec3 findChunk(vec3 rayOrigin, vec3 rayDir, int maxChecks) {
         curPos += (stepSize * rayDir);
         curPos += curEpsilon;
 
-        if (
-                curPos.x <= ubo.maxX &&
-                curPos.x >= ubo.minX &&
-                curPos.y <= ubo.maxY &&
-                curPos.y >= ubo.minY &&
-                curPos.z <= ubo.maxZ &&
-                curPos.z >= ubo.minZ 
-            ) {
+        if (pointInBounds(curPos)) {
             int j = 0;
             while (j < ubo.numChunks) { 
                 ChunkInfo curChunk = chunkInfo.chunkInfos[j];
@@ -461,20 +464,11 @@ vec3 findChunk(vec3 rayOrigin, vec3 rayDir, int maxChecks) {
                     j++;
             }
         }
-        else if (
-            ( (rayDir.x > 0) && curPos.x > ubo.maxX) ||
-            (!(rayDir.x > 0) && curPos.x < ubo.minX) ||
-            ( (rayDir.y > 0) && curPos.y > ubo.maxY) ||
-            (!(rayDir.y > 0) && curPos.y < ubo.minY) ||
-            ( (rayDir.z > 0) && curPos.z > ubo.maxZ) ||
-            (!(rayDir.z > 0) && curPos.z < ubo.minZ)
-        ){
-                return vec3(0,-1,0);
+        else if (rayHasLeftBounds(rayDir, curPos)){
+            return vec3(0,-1,0);
         }
         curPos -= curEpsilon;
     }
-    
-
     return vec3(0,-1,0);
 }
 
@@ -521,7 +515,7 @@ void main() {
     }
 
     texPos = ivec2(screenX, screenY);
-
+    
     pixelCenter = botLeft + (viewportV * ubo.camUp * screenY) + (viewportU * camRight * screenX);
 
     rayDir = normalize(pixelCenter - ubo.camPos);

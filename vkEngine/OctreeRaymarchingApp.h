@@ -592,12 +592,34 @@ private:
         p_ComputeCommandBuffers->create();
     }
 
+    VkEvent depthComputeFinishedEvent{};
+
     void initSyncObjects() {
         p_SyncObjects = std::make_shared<SyncObjects>(
             p_LogicalDevice->device,
             config
         );
         p_SyncObjects->create();
+
+        VkEventCreateInfo depthComputeFinishedEventCreateInfo{};
+        depthComputeFinishedEventCreateInfo.sType = VK_STRUCTURE_TYPE_EVENT_CREATE_INFO;
+        //depthComputeFinishedEventCreateInfo.flags = VK_EVENT_CREATE_DEVICE_ONLY_BIT;
+
+        if (vkCreateEvent(
+            p_LogicalDevice->device,
+            &depthComputeFinishedEventCreateInfo,
+            nullptr,
+            &depthComputeFinishedEvent
+        ) != VK_SUCCESS) {
+            throw std::runtime_error("failed to set compute sync event!");
+        }
+
+        if (vkGetEventStatus(p_LogicalDevice->device, depthComputeFinishedEvent) == VK_EVENT_SET) {
+            std::cout << "Event Set 01" << std::endl;
+        }
+        else {
+            std::cout << "Event Reset 01" << std::endl;
+        }
     }
 
     void mainLoop() {
@@ -614,53 +636,123 @@ private:
     void drawFrame() {
         updateComputeUniformBuffer(currentFrame);
 
+        p_SyncObjects->waitForComputeFence(currentFrame, VK_TRUE, UINT64_MAX);
+
+        vkResetCommandBuffer(
+            p_ComputeCommandBuffers->commandBuffers[currentFrame],
+            0
+        );
+
+        VkCommandBufferBeginInfo beginInfo{};
+        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+
+        if (vkBeginCommandBuffer(p_ComputeCommandBuffers->commandBuffers[currentFrame], &beginInfo) != VK_SUCCESS) {
+            throw std::runtime_error("failed to begin recording compute command buffer!");
+        }
 
         // Depth Compute submission
-                p_SyncObjects->waitForDepthComputeFence(currentFrame, VK_TRUE, UINT64_MAX);
+        
+            //p_SyncObjects->waitForDepthComputeFence(currentFrame, VK_TRUE, UINT64_MAX);
 
 
-                p_DepthComputeCommandBuffers->recordBuffer(
-                    p_DepthComputeCommandBuffers->commandBuffers[currentFrame],
-                    currentFrame
-                );
-
-                queuesubmit.submit(
-                    p_LogicalDevice->computeQueue,
-                    p_SyncObjects->depthComputeInFlightFences[currentFrame],
-                    &p_DepthComputeCommandBuffers->commandBuffers[currentFrame],
-                    &p_SyncObjects->depthComputeFinishedSemaphores[currentFrame]
-                );
-            
+            p_DepthComputeCommandBuffers->recordBuffer(
+                p_ComputeCommandBuffers->commandBuffers[currentFrame],
+                currentFrame,
+                depthComputeFinishedEvent,
+                false,
+                p_PhysicalDevice->graphicsAndComputeFamily,
+                p_DepthImage->storageImages[currentFrame],
+                p_CanvasImage->storageImages[currentFrame]
+            );
+            vkCmdSetEvent(p_ComputeCommandBuffers->commandBuffers[currentFrame], depthComputeFinishedEvent, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
+            /*
+            queuesubmit.submit(
+                p_LogicalDevice->computeQueue,
+                p_SyncObjects->depthComputeInFlightFences[currentFrame],
+                &p_DepthComputeCommandBuffers->commandBuffers[currentFrame],
+                &p_SyncObjects->depthComputeFinishedSemaphores[currentFrame]
+            );
+            */
+        
                     
         // Compute submission  
+            
+                //p_SyncObjects->waitForComputeFence(currentFrame, VK_TRUE, UINT64_MAX);
+            /*
+                vkCmdWaitEvents(
+                    p_ComputeCommandBuffers->commandBuffers[currentFrame],
+                    1,
+                    &depthComputeFinishedEvent,
+                    VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+                    VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+                    0,
+                    nullptr,
+                    0,
+                    nullptr,
+                    0,
+                    nullptr
+                );
+                vkCmdResetEvent(p_ComputeCommandBuffers->commandBuffers[currentFrame], depthComputeFinishedEvent, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
+                */
+                p_ComputeCommandBuffers->recordBuffer(
+                    p_ComputeCommandBuffers->commandBuffers[currentFrame],
+                    currentFrame,
+                    depthComputeFinishedEvent,
+                    true,
+                    p_PhysicalDevice->graphicsAndComputeFamily,
+                    p_DepthImage->storageImages[currentFrame],
+                    p_CanvasImage->storageImages[currentFrame]
+                );
+                /*
+                VkSemaphore waitSemaphores[] = {
+                    p_SyncObjects->depthComputeFinishedSemaphores[currentFrame],
+                };
+                VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT};
+
+           
+                queuesubmit.submit(
+                    p_LogicalDevice->computeQueue,
+                    p_SyncObjects->computeInFlightFences[currentFrame],
+                    &p_ComputeCommandBuffers->commandBuffers[currentFrame],
+                    &p_SyncObjects->computeFinishedSemaphores[currentFrame],
+                    1,
+                    waitSemaphores,
+                    waitStages
+                );
+                */
+            
                 
-                {
-                    p_SyncObjects->waitForComputeFence(currentFrame, VK_TRUE, UINT64_MAX);
+            if (vkEndCommandBuffer(p_ComputeCommandBuffers->commandBuffers[currentFrame]) != VK_SUCCESS) {
+                throw std::runtime_error("failed to record compute command buffer!");
+            }
 
-                    p_ComputeCommandBuffers->recordBuffer(
-                        p_ComputeCommandBuffers->commandBuffers[currentFrame],
-                        currentFrame
-                    );
-
-                    VkSemaphore waitSemaphores[] = {
-                        p_SyncObjects->depthComputeFinishedSemaphores[currentFrame],
-                    };
-                    VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT };
-                    queuesubmit.submit(
-                        p_LogicalDevice->computeQueue,
-                        p_SyncObjects->computeInFlightFences[currentFrame],
-                        &p_ComputeCommandBuffers->commandBuffers[currentFrame],
-                        &p_SyncObjects->computeFinishedSemaphores[currentFrame],
-                        1,
-                        waitSemaphores,
-                        waitStages
-                    );
-                }
-                
-
+                /*
+                VkSemaphore waitSemaphores[] = {
+                       p_SyncObjects->renderFinishedSemaphores[currentFrame]
+                };
+                VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT };
+                */
+                queuesubmit.submit(
+                    p_LogicalDevice->computeQueue,
+                    p_SyncObjects->computeInFlightFences[currentFrame],
+                    &p_ComputeCommandBuffers->commandBuffers[currentFrame],
+                    &p_SyncObjects->computeFinishedSemaphores[currentFrame]
+                    //,
+                    //1,
+                    //waitSemaphores,
+                   // waitStages
+                );
+           
+        
         // Graphics submission
+                
                 p_SyncObjects->waitForGraphicsFence(currentFrame, VK_TRUE, UINT64_MAX);
-
+                p_CanvasImage->transitionImageLayout(
+                    p_CanvasImage->storageImages[currentFrame],
+                    p_CanvasImage->imageFormat,
+                    VK_IMAGE_LAYOUT_GENERAL,
+                    VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+                );
                 uint32_t imageIndex;
                 VkResult result = vkAcquireNextImageKHR(
                     p_LogicalDevice->device, 
@@ -686,7 +778,12 @@ private:
                     p_SyncObjects->imageAvailableSemaphores[currentFrame]
                 };
                 VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_VERTEX_INPUT_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-
+                p_CanvasImage->transitionImageLayout(
+                    p_CanvasImage->storageImages[currentFrame],
+                    p_CanvasImage->imageFormat,
+                    VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+                    VK_IMAGE_LAYOUT_GENERAL
+                );
                 queuesubmit.submit(
                     p_LogicalDevice->graphicsQueue,
                     p_SyncObjects->inFlightFences[currentFrame],
@@ -696,6 +793,7 @@ private:
                     waitSemaphores,
                     waitStages
                 );
+
 
         VkPresentInfoKHR presentInfo{};
         presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -720,8 +818,9 @@ private:
         else if (result != VK_SUCCESS) {
             throw std::runtime_error("failed to present swap chain image!");
         }
-      
+    
         currentFrame = (currentFrame + 1) % config->maxFramesInFlight;
+
     }
 
     void updateComputeUniformBuffer(uint32_t currentImage) {
@@ -993,16 +1092,23 @@ private:
         p_Instance->destroy();
     }
 
+    std::vector<unsigned int> chunkHashTable;
+
+
     void createOctree() {
+
+        chunkHashTable.resize(128 * 16 * 128, -1);
+
+
 
         int numChunks = 0;
         int chunkIndex = 0;
         int minX = 0;
-        int maxX = 8;
+        int maxX = 4;
         int minY = 0;
         int maxY = 2;
         int minZ = 0;
-        int maxZ = 8;
+        int maxZ = 4;
         for (int y = minY; y < maxY; y++) {
             for (int x = minX; x < maxX; x++) {
                 for (int z = minZ; z < maxZ; z++) {
@@ -1027,6 +1133,12 @@ private:
                             bitmaskOctree.bitMaskArray.begin(), 
                             bitmaskOctree.bitMaskArray.end()
                         );
+
+                        unsigned int chunkHash = (x % 128) * (16 * 128) + 
+                                                 (y % 16) * (128) + 
+                                                 (z % 128);
+
+                        chunkHashTable[chunkHash] = chunkIndex;
 
                         ChunkInfo chunkInfo{};
                         chunkInfo.x = x * config->octreeWidth;

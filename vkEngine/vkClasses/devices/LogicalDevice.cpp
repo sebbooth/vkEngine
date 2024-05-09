@@ -31,6 +31,7 @@ void LogicalDevice::create()
     if (m_Config->msaaEnabled) deviceFeatures.sampleRateShading = VK_TRUE;
     if (wireFrameEnabled) deviceFeatures.fillModeNonSolid = VK_TRUE;
 
+
     VkDeviceCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
     createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());

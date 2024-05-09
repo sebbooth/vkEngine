@@ -52,7 +52,7 @@ struct VkConfig {
 	std::vector<const char*> deviceExtensions;
 	bool enableValidationLayers = false;
 
-	const int maxFramesInFlight = 2;
+	const int maxFramesInFlight = 3;
 	const uint32_t screenWidth = 800;
 	const uint32_t screenHeight = 600;
 	int downScaleFactor = 2;

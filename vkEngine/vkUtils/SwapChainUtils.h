@@ -1,9 +1,17 @@
 #pragma once
 
+
+
+
 #ifndef SWAPCHAINUTILS_H
 #define SWAPCHAINUTILS_H
 
+#define VK_EXT_debug_utils
+#define GLFW_INCLUDE_VULKAN
+
+#include <GLFW/glfw3.h>
 #include <algorithm>
+#include <vector>
 
 static VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats) {
     for (const auto& availableFormat : availableFormats) {

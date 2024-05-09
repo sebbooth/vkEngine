@@ -8,6 +8,7 @@
 #include <memory>
 #include <cmath>
 #include <stdexcept>
+#include <iostream>
 
 #include "initialization/VkConfig.h"
 
@@ -15,6 +16,9 @@ class ComputeCommandBuffers
 {
 	public:
 		std::vector<VkCommandBuffer> commandBuffers;
+
+		std::vector<VkCommandBuffer> commandBuffers1;
+		std::vector<VkCommandBuffer> commandBuffers2;
 
 	private:
 		VkDevice m_Device;
@@ -42,7 +46,17 @@ public:
 	void setExtent(unsigned int width, unsigned int height);
 	void setGroupSize(unsigned int size);
 
-	void recordBuffer(VkCommandBuffer commandBuffer, uint32_t currentFrame);
+	void recordBuffer(
+		VkCommandBuffer commandBuffer, 
+		uint32_t currentFrame, 
+		VkEvent syncEvent, 
+		bool barrier, 
+		uint32_t queue, 
+		VkImage depthImage, 
+		VkImage canvasImage
+	);
+
+	//void recordBuffer(VkCommandBuffer commandBuffer, uint32_t currentFrame, VkEvent syncEvent, bool barrier = false);
 };
 
 #endif
