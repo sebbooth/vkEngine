@@ -36,7 +36,7 @@ struct ChunkCoord {
 };
 
 
-void updateChunk(
+void updateChunkThread(
     ChunkCoord addChunk,
     ChunkCoord cullChunk,
     int chunkWidth,
@@ -68,7 +68,6 @@ void updateChunk(
         std::copy(bitmaskOctree.bitMaskArray.data(), bitmaskOctree.bitMaskArray.data() + bitmaskOctree.bitMaskArray.size(),
             octreeReplaceBegin);
     }
-    
 
     int chunkHash = abs((addChunk.x / chunkWidth) % 128) * (16 * 128) +
         abs(0 % 16) * (128) +
@@ -680,7 +679,7 @@ private:
             updateComputeUniformBuffer(currentFrame);
          
             
-            updateOctree();
+            //updateOctree();
                 
 
 
@@ -1153,6 +1152,9 @@ private:
         p_Instance->destroy();
     }
 
+
+    // Messy stuff below:
+
     std::vector<int> chunkHashTable;
     std::vector<unsigned int> octreeArray;
     
@@ -1169,7 +1171,7 @@ private:
     std::vector<ChunkCoord> chunksToCull;
     std::vector<ChunkCoord> chunksToAdd;
 
-    int chunkLoadDistance = 3;
+    int chunkLoadDistance = 4;
 
     void printAdjacentChunks(int maxDistanceInChunks) {
         int curChunkX = config->curChunk.x;
@@ -1394,7 +1396,7 @@ private:
                 activeThreads[threadIndex] = true;
 
                 workerThreads[threadIndex] = std::thread(
-                    updateChunk,
+                    updateChunkThread,
                     chunksToAdd[i],
                     chunksToCull[i],
                     config->octreeWidth,

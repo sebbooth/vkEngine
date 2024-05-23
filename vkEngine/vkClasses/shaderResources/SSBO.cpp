@@ -18,8 +18,7 @@ void SSBO::uploadData(VkDeviceSize bufferSize, const void* uploadData)
     
 
     // Create a staging buffer used to upload data to the gpu
-    VkBuffer stagingBuffer;
-    VkDeviceMemory stagingBufferMemory;
+
     m_LogicalDevice->createBuffer(
         bufferSize, 
         VK_BUFFER_USAGE_TRANSFER_SRC_BIT, 
@@ -28,10 +27,9 @@ void SSBO::uploadData(VkDeviceSize bufferSize, const void* uploadData)
         stagingBufferMemory
     );
 
-    void* data;
-    vkMapMemory(m_LogicalDevice->device, stagingBufferMemory, 0, bufferSize, 0, &data);
-    memcpy(data, uploadData, (size_t)bufferSize);
-    vkUnmapMemory(m_LogicalDevice->device, stagingBufferMemory);
+    vkMapMemory(m_LogicalDevice->device, stagingBufferMemory, 0, bufferSize, 0, &stagingBufferMapped);
+    memcpy(stagingBufferMapped, uploadData, (size_t)bufferSize);
+    //vkUnmapMemory(m_LogicalDevice->device, stagingBufferMemory);
 
     m_LogicalDevice->createBuffer(
         bufferSize, 
@@ -43,8 +41,7 @@ void SSBO::uploadData(VkDeviceSize bufferSize, const void* uploadData)
     // Copy data from the staging buffer (host) to the shader storage buffer (GPU)
     m_CommandPool->copyBuffer(stagingBuffer, shaderStorageBuffer, bufferSize);
     
-    vkDestroyBuffer(m_LogicalDevice->device, stagingBuffer, nullptr);
-    vkFreeMemory(m_LogicalDevice->device, stagingBufferMemory, nullptr);
+    
     
     /*
     m_BufferSize = bufferSize;
@@ -101,6 +98,10 @@ void SSBO::uploadData1(VkDeviceSize bufferSize, const void* uploadData)
 
 void SSBO::destroy()
 {
+    vkUnmapMemory(m_LogicalDevice->device, stagingBufferMemory);
+
+    vkDestroyBuffer(m_LogicalDevice->device, stagingBuffer, nullptr);
+    vkFreeMemory(m_LogicalDevice->device, stagingBufferMemory, nullptr);
     vkDestroyBuffer(m_LogicalDevice->device, shaderStorageBuffer, nullptr);
     vkFreeMemory(m_LogicalDevice->device, shaderStorageBufferMemory, nullptr);
 }
@@ -115,27 +116,14 @@ void SSBO::destroy1()
 
 void SSBO::update(const void* updateData) {
     // Create a staging buffer used to upload data to the gpu
-    
-    VkBuffer stagingBuffer;
-    VkDeviceMemory stagingBufferMemory;
-    m_LogicalDevice->createBuffer(
-        m_BufferSize,
-        VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-        stagingBuffer,
-        stagingBufferMemory
-    );
 
-    void* data;
-    vkMapMemory(m_LogicalDevice->device, stagingBufferMemory, 0, m_BufferSize, 0, &data);
-    memcpy(data, updateData, (size_t)m_BufferSize);
-    vkUnmapMemory(m_LogicalDevice->device, stagingBufferMemory);
+    //vkMapMemory(m_LogicalDevice->device, stagingBufferMemory, 0, m_BufferSize, 0, &data);
+    memcpy(stagingBufferMapped, updateData, (size_t)m_BufferSize);
 
     // Copy data from the staging buffer (host) to the shader storage buffer (GPU)
     m_CommandPool->copyBuffer(stagingBuffer, shaderStorageBuffer, m_BufferSize);
     
-    vkDestroyBuffer(m_LogicalDevice->device, stagingBuffer, nullptr);
-    vkFreeMemory(m_LogicalDevice->device, stagingBufferMemory, nullptr);
+    
 
 
     //memcpy(shaderStorageBufferMemoryMapped, updateData, (size_t)m_BufferSize);

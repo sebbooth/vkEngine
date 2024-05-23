@@ -1,6 +1,26 @@
 #include "BitmaskOctree.h"
 
 
+void genTerrainZThread(
+    int x,
+    int z,
+    unsigned int octreeWidth,
+    unsigned int voxelWidth,
+    int xCoord,
+    int yCoord,
+    int zCoord,
+    Perlin perlinGenerator,
+    unsigned int maxDepth,
+    unsigned int LODLevel,
+    unsigned int* sliceIndices,
+    std::vector<unsigned int>& bitMaskArray
+)
+{
+    
+    
+}
+
+
 void genTerrainXThread(
     int x,
     unsigned int octreeWidth,
@@ -15,9 +35,9 @@ void genTerrainXThread(
     std::vector<unsigned int>& bitMaskArray
 )
 {
-    std::random_device rd;  // Seed for random number engine
-    std::mt19937 gen(rd()); // Mersenne Twister random number engine
-    std::uniform_int_distribution<> distribution(-int(octreeWidth) / 20, octreeWidth / 20); // Range from 1 to 100
+    std::vector<std::thread> workerThreads;
+
+    workerThreads.resize(octreeWidth);
 
     for (int z = 0; z < octreeWidth; z += voxelWidth) {
         float perlinVal = perlinGenerator.perlin2D(x + xCoord, z + zCoord);
@@ -25,7 +45,6 @@ void genTerrainXThread(
 
         for (int y = 0; y < octreeWidth; y += voxelWidth) {
             //float simplex = simplexNoiseGenerator.fractal(5, (float)x / octreeWidth, (float)y / octreeWidth, (float)z / octreeWidth);
-
 
             if (y + yCoord < yThreshold) {
                 unsigned int voxelIndex = 0b000;
@@ -51,6 +70,10 @@ void genTerrainXThread(
 
                 unsigned int finalIndex = sliceIndices[maxDepth - LODLevel] + voxelIndex;
 
+                std::random_device rd;  // Seed for random number engine
+                std::mt19937 gen(rd()); // Mersenne Twister random number engine
+                std::uniform_int_distribution<> distribution(-int(octreeWidth) / 20, octreeWidth / 20); // Range from 1 to 100
+
                 //std::cout << "X: " << x << " Y: " << y << " Z: " << z << " index: " << voxelIndex << std::endl;
                 unsigned int mat = 1; // grass
                 int randomDist = distribution(gen);
@@ -69,9 +92,30 @@ void genTerrainXThread(
                 //std::cout << "Depth: " << maxDepth << " voxel = " << std::bitset<24>(bitMaskArray[finalIndex]) << std::endl;
             }
         }
+        /*
+        workerThreads[z] = std::thread(
+            genTerrainZThread,
+            x,
+            z,
+            octreeWidth,
+            voxelWidth,
+            xCoord,
+            yCoord,
+            zCoord,
+            perlinGenerator,
+            maxDepth,
+            LODLevel,
+            sliceIndices,
+            std::ref(bitMaskArray)
+        );
+        */
     }
+    /*
+    for (int z = 0; z < octreeWidth; z += voxelWidth) {
+        workerThreads[z].join();
+    }
+    */
 }
-
 
 BitmaskOctree::BitmaskOctree(int xCoord, int yCoord, int zCoord, unsigned int maxDepth, unsigned int LODLevel)
 {
@@ -236,6 +280,7 @@ BitmaskOctree::BitmaskOctree(int xCoord, int yCoord, int zCoord, unsigned int ma
     perlinGenerator.grid_size = octreeWidth * 4;
 
     
+
     std::vector<std::thread> workerThreads;
 
     workerThreads.resize(octreeWidth);

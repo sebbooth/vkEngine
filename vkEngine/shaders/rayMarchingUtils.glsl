@@ -82,6 +82,12 @@ vec3 pixelCenter;
 vec3 rayDir;
 vec3 curPos;
 
+float random (vec2 st) {
+    return fract(sin(dot(st.xy,
+        vec2(12.9898,78.233)))*
+        43758.5453123);
+}
+
 bool pointInIVoxel(vec3 point, ivec3 iVoxel, int iVoxelSize) {
     vec3 fIVoxel = vec3(iVoxel);
     return (point.x >= fIVoxel.x && point.x <= (fIVoxel.x + iVoxelSize) &&
@@ -196,8 +202,8 @@ vec4 findNextIntersect(vec3 position, vec3 rayDir, int voxelLength) {
     return vec4(vec3(position + (minDelta * rayDir)), intersectionType);
 }
 
-// returns ivec2(material index, intersection type, depth)
-vec3 traverseOctree(vec3 curPos, vec3 rayDir, int intersectionType, ivec3 octreePosition, int chunkIndex) {
+// returns ivec2(material index, intersection type, depth, randFloat)
+vec4 traverseOctree(vec3 curPos, vec3 rayDir, int intersectionType, ivec3 octreePosition, int chunkIndex) {
     ivec3 parentVoxels[8];
     parentVoxels[0] = octreePosition;
     
@@ -211,7 +217,7 @@ vec3 traverseOctree(vec3 curPos, vec3 rayDir, int intersectionType, ivec3 octree
     while (maxLoops-- > 0) {
         // check if position is in parent voxel
         if (!pointInIVoxel(curPos, octreePosition, CHUNK_SIZE)) {
-            return vec3(-1,-1,-1);
+            return vec4(-1,-1,-1, 1);
         }
 
    
@@ -220,13 +226,18 @@ vec3 traverseOctree(vec3 curPos, vec3 rayDir, int intersectionType, ivec3 octree
 
         if ((curNode & uint(255)) == 0) {
             if ((curNode >> 8) == 0) {
-                return vec3(-1,-1,-1);
+                return vec4(-1,-1,-1, 1);
             }
-            return vec3(
+            ivec3 curVoxel = roundVoxel(curPos, 1);
+            float randFloat = 0.33 * (random(vec2(curVoxel.xy)) + random(vec2(curVoxel.yz)) + random(vec2(curVoxel.xz)));
+
+            return vec4(
                         (curNode >> 8), 
                         intersectionType, 
-                        dot((ubo.camPos-curPos), (ubo.camPos-curPos)) 
+                        dot((ubo.camPos-curPos), (ubo.camPos-curPos)),
+                        randFloat
             );
+
         }
 
         // else check deeper
@@ -294,7 +305,7 @@ vec3 traverseOctree(vec3 curPos, vec3 rayDir, int intersectionType, ivec3 octree
             }
         }
     }
-    return vec3(-1,-2,-1);
+    return vec4(-1,-2,-1, 1);
 }
 
 bool rayHasLeftBounds(vec3 rayDir, vec3 rayPosition) {
@@ -319,10 +330,10 @@ bool pointInBounds(vec3 point) {
     );
 }
 
-vec3 findChunk(vec3 rayOrigin, vec3 rayDir, int maxChecks) {
+vec4 findChunk(vec3 rayOrigin, vec3 rayDir, int maxChecks) {
     
     if (rayHasLeftBounds(rayDir, rayOrigin)){
-            return vec3(0,-1,0);
+            return vec4(0,-1,0, 1);
     } 
     
     ivec3 curVoxel = roundVoxel(rayOrigin, CHUNK_SIZE);
@@ -337,7 +348,7 @@ vec3 findChunk(vec3 rayOrigin, vec3 rayDir, int maxChecks) {
         debugPrintfEXT("z is %i", curVoxel.z);
 
         if (chunkIndex > -1) {
-            vec3 traversal = traverseOctree(rayOrigin, rayDir, 0, curVoxel, chunkIndex);
+            vec4 traversal = traverseOctree(rayOrigin, rayDir, 0, curVoxel, chunkIndex);
             if (traversal.y > -1) {
                 return traversal;
             }        
@@ -443,21 +454,21 @@ vec3 findChunk(vec3 rayOrigin, vec3 rayDir, int maxChecks) {
             debugPrintfEXT("z is %i", curVoxel.z);
 
             if (chunkIndex > -1) {
-                vec3 traversal = traverseOctree(curPos, rayDir, intersectionType, curVoxel, chunkIndex);
+                vec4 traversal = traverseOctree(curPos, rayDir, intersectionType, curVoxel, chunkIndex);
                 if (traversal.y > -1) {
                     return traversal;
                 }        
             }
         }
         else if (rayHasLeftBounds(rayDir, curPos)){
-            return vec3(0,-1,0);
+            return vec4(0,-1,0, 1);
         }
         curPos -= curEpsilon;
     }
-    return vec3(0,-1,0);
+    return vec4(0,-1, 0, 1);
 }
 
-vec3 outputColor(vec3 intersection, float lightings[6]) {
+vec3 outputColor(vec4 intersection, float lightings[6]) {
     vec3 color;
     float fogFactor;
 
@@ -472,6 +483,7 @@ vec3 outputColor(vec3 intersection, float lightings[6]) {
         } 
         else {
             color = materials[int(intersection.x) - 1] * lightings[int(intersection.y)];
+            color -= intersection.a * vec3(0.2, 0.2, 0.2);
             color *= (1 - fogFactor);
             color += ubo.fogColor * fogFactor;
         }
@@ -495,7 +507,7 @@ vec3 outputColor(vec3 intersection, float lightings[6]) {
     return color;
 }
 
-vec3 depthColor(vec3 intersection) {
+vec3 depthColor(vec4 intersection) {
     vec3 depthColor;
 
     if (intersection.y >= 0) {

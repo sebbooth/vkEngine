@@ -38,7 +38,7 @@ void main() {
     rayDir = normalize(pixelCenter - ubo.camPos);
 
 
-    vec3 intersection = findChunk(ubo.camPos, rayDir, 100);
+    vec4 intersection = findChunk(ubo.camPos, rayDir, 100);
     vec3 outputColor = outputColor(intersection, lightings);
     vec3 depthColor = depthColor(intersection);
 

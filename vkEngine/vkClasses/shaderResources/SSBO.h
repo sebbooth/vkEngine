@@ -21,6 +21,10 @@ class SSBO
 		VkDeviceMemory shaderStorageBufferMemory;
 		void* shaderStorageBufferMemoryMapped;
 
+		VkBuffer stagingBuffer;
+		VkDeviceMemory stagingBufferMemory;
+		void* stagingBufferMapped;
+
 	private:
 		std::shared_ptr<LogicalDevice> m_LogicalDevice;
 		std::shared_ptr<CommandPool> m_CommandPool;
