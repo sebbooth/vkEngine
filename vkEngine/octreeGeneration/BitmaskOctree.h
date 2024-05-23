@@ -11,6 +11,7 @@
 #include <bitset>
 #include <unordered_map>
 #include <algorithm>
+#include <thread>
 
 #include "OctreeStructs.h"
 #include "SimplexNoise.h"
@@ -95,6 +96,15 @@ public:
 		int zCoord, 
 		unsigned int maxDepth, 
 		unsigned int LODLevel
+	);
+	
+	BitmaskOctree(
+		int xCoord,
+		int yCoord,
+		int zCoord,
+		unsigned int maxDepth,
+		unsigned int LODLevel,
+		bool threaded
 	);
 
 	BitmaskOctree() = default;

@@ -71,6 +71,7 @@ void Gui::draw(VkCommandBuffer commandBuffer)
     }
     
     if (ImGui::CollapsingHeader("Camera")) {
+        ImGui::Text("%s: (%i, %i, %i)", "Current Chunk", m_Config->curChunk.x, m_Config->curChunk.y, m_Config->curChunk.z);
         ImGui::Text("%s: (%.3f, %.3f, %.3f)", "Cam Position", m_Config->ubo.camPos.x, m_Config->ubo.camPos.y, m_Config->ubo.camPos.z);
         ImGui::Text("%s: (%.3f, %.3f, %.3f)", "Cam Direction", m_Config->ubo.camDir.x, m_Config->ubo.camDir.y, m_Config->ubo.camDir.z);
         ImGui::Text("%s: (%.3f, %.3f, %.3f)", "Cam Up", m_Config->ubo.camUp.x, m_Config->ubo.camUp.y, m_Config->ubo.camUp.z);

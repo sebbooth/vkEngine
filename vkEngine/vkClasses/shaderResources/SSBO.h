@@ -17,10 +17,15 @@ class SSBO
 		std::vector<VkBuffer> shaderStorageBuffers;
 		std::vector<VkDeviceMemory> shaderStorageBuffersMemory;
 
+		VkBuffer shaderStorageBuffer;
+		VkDeviceMemory shaderStorageBufferMemory;
+		void* shaderStorageBufferMemoryMapped;
+
 	private:
 		std::shared_ptr<LogicalDevice> m_LogicalDevice;
 		std::shared_ptr<CommandPool> m_CommandPool;
 		std::shared_ptr<VkConfig> m_Config;
+		VkDeviceSize m_BufferSize;
 
 	public:
 		SSBO(
@@ -34,7 +39,15 @@ class SSBO
 			const void* uploadData
 		);
 
+		void uploadData1(
+			VkDeviceSize bufferSize,
+			const void* uploadData
+		);
+		void update1(const void* updateData);
+
 		void destroy();
+		void destroy1();
+		void update(const void* updateData);
 };
 
 #endif // !SSBO_H

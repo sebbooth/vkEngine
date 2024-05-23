@@ -8,6 +8,9 @@
 #define STB_IMAGE_IMPLEMENTATION
 #define TINYOBJLOADER_IMPLEMENTATION
 
+#include <thread>
+#include <functional>
+
 #include "VkClassesIndex.h"
 #include "BitmaskOctree.h"
 
@@ -26,6 +29,55 @@ struct ChunkInfo {
     int z;
     int index;
 };
+
+struct ChunkCoord {
+    int x;
+    int z;
+};
+
+
+void updateChunk(
+    ChunkCoord addChunk,
+    ChunkCoord cullChunk,
+    int chunkWidth,
+    std::vector<int>& chunkHashTable,
+    std::vector<unsigned int>& octreeArray,
+    std::vector<bool>& threadSignals,
+    int threadIndex
+) {
+    int cullHash = abs((cullChunk.x / chunkWidth) % 128) * (16 * 128) +
+        abs(0 % 16) * (128) +
+        abs((cullChunk.z / chunkWidth) % 128);
+
+    int cullIndex = chunkHashTable[cullHash];
+    chunkHashTable[cullHash] = -1;
+
+    BitmaskOctree bitmaskOctree(
+        addChunk.x,
+        0 * chunkWidth,
+        addChunk.z,
+        7,
+        0,
+        true
+    );
+
+    auto octreeReplaceBegin = octreeArray.begin() + cullIndex;
+    auto octreeReplaceEnd = octreeReplaceBegin + bitmaskOctree.bitMaskArray.size();
+
+    if (octreeReplaceEnd <= octreeArray.end()) {
+        std::copy(bitmaskOctree.bitMaskArray.data(), bitmaskOctree.bitMaskArray.data() + bitmaskOctree.bitMaskArray.size(),
+            octreeReplaceBegin);
+    }
+    
+
+    int chunkHash = abs((addChunk.x / chunkWidth) % 128) * (16 * 128) +
+        abs(0 % 16) * (128) +
+        abs((addChunk.z / chunkWidth) % 128);
+
+    chunkHashTable[chunkHash] = cullIndex;
+    threadSignals[threadIndex] = true;
+}
+
 
 std::vector<uint32_t> quadIndices = {
     0,1,2,
@@ -120,9 +172,8 @@ private:
     std::shared_ptr<SyncObjects> p_SyncObjects;
 
     QueueSubmitter queuesubmit;
-
-    std::vector<unsigned int> octreeArray;
-    std::vector<ChunkInfo> chunkInfos;
+        
+ 
 
     void initSettings() {
         config = std::make_shared<VkConfig>();
@@ -327,8 +378,8 @@ private:
             config
         );
         p_ChunkInfoSSBO->uploadData(
-            sizeof(ChunkInfo) * config->ubo.numChunks,
-            chunkInfos.data()
+            sizeof(int) * chunkHashTable.size(),
+            chunkHashTable.data()
         );
 
         p_CanvasImage = std::make_shared<StorageImage>(
@@ -398,13 +449,13 @@ private:
         );
         p_DepthComputeDescriptorSets->bindStorageBuffer(
             depthComputeSSBOBinding,
-            p_OctreeSSBO->shaderStorageBuffers,
+            p_OctreeSSBO->shaderStorageBuffer,
             sizeof(unsigned int) * octreeArray.size()
         );
         p_DepthComputeDescriptorSets->bindStorageBuffer(
             depthComputeChunkInfoSSBOBinding,
-            p_ChunkInfoSSBO->shaderStorageBuffers,
-            sizeof(ChunkInfo) * config->ubo.numChunks
+            p_ChunkInfoSSBO->shaderStorageBuffer,
+            sizeof(int) * chunkHashTable.size()
         );
         p_DepthComputeDescriptorSets->bindStorageImage(
             computeDepthImageBinding,
@@ -441,13 +492,13 @@ private:
         );
         p_ComputeDescriptorSets->bindStorageBuffer(
             computeSSBOBinding,
-            p_OctreeSSBO->shaderStorageBuffers,
+            p_OctreeSSBO->shaderStorageBuffer,
             sizeof(unsigned int) * octreeArray.size()
         );
         p_ComputeDescriptorSets->bindStorageBuffer(
             computeChunkInfoSSBOBinding,
-            p_ChunkInfoSSBO->shaderStorageBuffers,
-            sizeof(ChunkInfo) * config->ubo.numChunks
+            p_ChunkInfoSSBO->shaderStorageBuffer,
+            sizeof(int) * chunkHashTable.size()
         );
         p_ComputeDescriptorSets->bindStorageImage(
             computeDepthImageBinding,
@@ -593,6 +644,7 @@ private:
     }
 
     VkEvent depthComputeFinishedEvent{};
+    bool needUpdateSSBO = false;
 
     void initSyncObjects() {
         p_SyncObjects = std::make_shared<SyncObjects>(
@@ -625,16 +677,25 @@ private:
     void mainLoop() {
         while (!glfwWindowShouldClose(window)) {
             glfwPollEvents();
+            updateComputeUniformBuffer(currentFrame);
+         
+            
+            updateOctree();
+                
+
+
             drawFrame();
             double currentTime = glfwGetTime();
+            
             config->lastFrameTime = (currentTime - config->lastTime) * 1000.0;
             config->lastTime = currentTime;
+            
+            
         }
         p_LogicalDevice->waitIdle();
     }
 
     void drawFrame() {
-        updateComputeUniformBuffer(currentFrame);
 
         p_SyncObjects->waitForComputeFence(currentFrame, VK_TRUE, UINT64_MAX);
 
@@ -953,13 +1014,13 @@ private:
         );
         p_DepthComputeDescriptorSets->bindStorageBuffer(
             depthComputeSSBOBinding,
-            p_OctreeSSBO->shaderStorageBuffers,
+            p_OctreeSSBO->shaderStorageBuffer,
             sizeof(unsigned int) * octreeArray.size()
         );
         p_DepthComputeDescriptorSets->bindStorageBuffer(
             depthComputeChunkInfoSSBOBinding,
-            p_ChunkInfoSSBO->shaderStorageBuffers,
-            sizeof(ChunkInfo) * chunkInfos.size()
+            p_ChunkInfoSSBO->shaderStorageBuffer,
+            sizeof(int) * chunkHashTable.size()
         );
         p_DepthComputeDescriptorSets->bindStorageImage(
             depthComputeDepthImageBinding,
@@ -979,13 +1040,13 @@ private:
         );
         p_ComputeDescriptorSets->bindStorageBuffer(
             computeSSBOBinding,
-            p_OctreeSSBO->shaderStorageBuffers,
+            p_OctreeSSBO->shaderStorageBuffer,
             sizeof(unsigned int) * octreeArray.size()
         );
         p_ComputeDescriptorSets->bindStorageBuffer(
             computeChunkInfoSSBOBinding,
-            p_ChunkInfoSSBO->shaderStorageBuffers,
-            sizeof(ChunkInfo) * chunkInfos.size()
+            p_ChunkInfoSSBO->shaderStorageBuffer,
+            sizeof(int) * chunkHashTable.size()
         );
         p_ComputeDescriptorSets->bindStorageImage(
             computeDepthImageBinding,
@@ -1092,39 +1153,149 @@ private:
         p_Instance->destroy();
     }
 
-    std::vector<unsigned int> chunkHashTable;
+    std::vector<int> chunkHashTable;
+    std::vector<unsigned int> octreeArray;
+    
 
+    glm::ivec3 chunkCoord(glm::vec3 position, int chunkSize) {
+        glm::ivec3 chunkCoord;
+        chunkCoord.x = floor(position.x / chunkSize) * chunkSize;
+        chunkCoord.y = floor(position.y / chunkSize) * chunkSize;
+        chunkCoord.z = floor(position.z / chunkSize) * chunkSize;
+        return chunkCoord;
+    }
+
+
+    std::vector<ChunkCoord> chunksToCull;
+    std::vector<ChunkCoord> chunksToAdd;
+
+    int chunkLoadDistance = 3;
+
+    void printAdjacentChunks(int maxDistanceInChunks) {
+        int curChunkX = config->curChunk.x;
+        int curChunkZ = config->curChunk.z;
+        int prevChunkX = config->prevChunk.x;
+        int prevChunkZ = config->prevChunk.z;
+
+        int distanceInVoxels = maxDistanceInChunks * config->octreeWidth;
+
+
+        chunksToAdd.resize(0);
+        chunksToCull.resize(0);
+
+        if (curChunkX != prevChunkX) {
+            int cullX;
+            int addX;
+
+            config->ubo.minX = ((curChunkX/ config->octreeWidth) - maxDistanceInChunks) * config->octreeWidth;
+            config->ubo.maxX = (1 + (curChunkX / config->octreeWidth) + maxDistanceInChunks) * config->octreeWidth;
+        
+
+            if (curChunkX > prevChunkX) {
+                addX = curChunkX + distanceInVoxels;
+                cullX = prevChunkX - distanceInVoxels;
+            }
+            else if (curChunkX < prevChunkX) {
+                addX = curChunkX - distanceInVoxels;
+                cullX = prevChunkX + distanceInVoxels;
+            }
+
+            std::cout << "Chunks to Add:\n";
+            for (int z = curChunkZ - distanceInVoxels; z <= curChunkZ + distanceInVoxels; z += config->octreeWidth) {
+                ChunkCoord addChunk{};
+                addChunk.x = addX;
+                addChunk.z = z;
+                chunksToAdd.push_back(addChunk);
+            }
+            std::cout << "Chunks to Cull:\n";
+            for (int z = prevChunkZ - distanceInVoxels; z <= prevChunkZ + distanceInVoxels; z += config->octreeWidth) {
+                ChunkCoord cullChunk{};
+                cullChunk.x = cullX;
+                cullChunk.z = z;
+                chunksToCull.push_back(cullChunk);
+            }
+        }
+        
+
+        if (curChunkZ != prevChunkZ) {
+            int cullZ;
+            int addZ;
+
+            config->ubo.minZ = ((curChunkZ / config->octreeWidth) - maxDistanceInChunks) * config->octreeWidth;
+            config->ubo.maxZ = (1 + (curChunkZ / config->octreeWidth) + maxDistanceInChunks) * config->octreeWidth;
+
+            if (curChunkZ > prevChunkZ) {
+                addZ = curChunkZ + distanceInVoxels;
+                cullZ = prevChunkZ - distanceInVoxels;
+            }
+            else if (curChunkZ < prevChunkZ) {
+                addZ = curChunkZ - distanceInVoxels;
+                cullZ = prevChunkZ + distanceInVoxels;
+            }
+
+            std::cout << "Chunks to Add:\n";
+            for (int x = curChunkX - distanceInVoxels; x <= curChunkX + distanceInVoxels; x += config->octreeWidth) {
+                ChunkCoord addChunk{};
+                addChunk.x = x;
+                addChunk.z = addZ;
+                chunksToAdd.push_back(addChunk);
+            }
+            std::cout << "Chunks to Cull:\n";
+            for (int x = prevChunkX - distanceInVoxels; x <= prevChunkX + distanceInVoxels; x += config->octreeWidth) {
+                ChunkCoord cullChunk{};
+                cullChunk.x = x;
+                cullChunk.z = cullZ;
+                chunksToCull.push_back(cullChunk);
+            }
+        }
+
+        std::cout << "chunks to add\n";
+        for (auto chunk : chunksToAdd) {
+            int chunkX = chunk.x;
+            int chunkZ = chunk.z;
+            std::cout << chunkX << " " << chunkZ << "\n";
+        }
+        std::cout << "chunks to cull\n";
+        for (auto chunk : chunksToCull) {
+            int chunkX = chunk.x;
+            int chunkZ = chunk.z;
+            std::cout << chunkX << " " << chunkZ << "\n";
+        }
+        std::cout << "\n";
+
+    }
 
     void createOctree() {
+        threadSignals.resize(1 + (2 * chunkLoadDistance), false);
+        workerThreads.resize(1 + (2 * chunkLoadDistance));
+
+        config->curChunk = chunkCoord(config->ubo.camPos, config->octreeWidth);
+        config->prevChunk = config->curChunk;
+        printAdjacentChunks(chunkLoadDistance);
 
         chunkHashTable.resize(128 * 16 * 128, -1);
 
-
-
         int numChunks = 0;
         int chunkIndex = 0;
-        int minX = 0;
-        int maxX = 4;
+        int minX = (config->curChunk.x / config->octreeWidth) - chunkLoadDistance;
+        int maxX = 1 + (config->curChunk.x / config->octreeWidth) + chunkLoadDistance;
         int minY = 0;
-        int maxY = 2;
-        int minZ = 0;
-        int maxZ = 4;
+        int maxY = 1;
+        int minZ = (config->curChunk.z / config->octreeWidth) - chunkLoadDistance;
+        int maxZ = 1 + (config->curChunk.z / config->octreeWidth) + chunkLoadDistance;
+
         for (int y = minY; y < maxY; y++) {
             for (int x = minX; x < maxX; x++) {
                 for (int z = minZ; z < maxZ; z++) {
+                    std::cout << "X: " << x << " Y: " << y << " Z: " << z << "\n";
                     int LOD = 0;
-                    if (x > 6 || z > 6) {
-                        LOD = 1;
-                    }
-                    if (x > 10 || z > 10) {
-                        LOD = 2;
-                    }
                     BitmaskOctree bitmaskOctree(
                         x * config->octreeWidth, 
                         y * config->octreeWidth, 
                         z * config->octreeWidth, 
                         config->octreeDepth, 
-                        LOD
+                        LOD,
+                        true
                     );
 
                     if (bitmaskOctree.bitMaskArray[0] != 0) {
@@ -1134,19 +1305,19 @@ private:
                             bitmaskOctree.bitMaskArray.end()
                         );
 
-                        unsigned int chunkHash = (x % 128) * (16 * 128) + 
-                                                 (y % 16) * (128) + 
-                                                 (z % 128);
+                        int chunkHash = abs(x % 128) * (16 * 128) + 
+                                                 abs(y % 16) * (128) + 
+                                                 abs(z % 128);
 
                         chunkHashTable[chunkHash] = chunkIndex;
-
+                        /*
                         ChunkInfo chunkInfo{};
                         chunkInfo.x = x * config->octreeWidth;
                         chunkInfo.y = y * config->octreeWidth;
                         chunkInfo.z = z * config->octreeWidth;
                         chunkInfo.index = chunkIndex;
                         chunkInfos.push_back(chunkInfo);
-
+                        */
                         numChunks++;
                         chunkIndex += bitmaskOctree.bitMaskArray.size();
                     }
@@ -1163,4 +1334,81 @@ private:
         config->ubo.maxY = (maxY + 1) * config->octreeWidth;
         config->ubo.maxZ = (maxZ + 1) * config->octreeWidth;
     }
+
+    std::vector<bool> threadSignals;
+    std::vector<bool> activeThreads;
+    std::vector<std::thread> workerThreads;
+    std::vector<std::shared_ptr<SSBO>> stagingOctreeSSBOs;
+    std::vector<std::shared_ptr<SSBO>> stagingChunkHashSSBOs;
+
+    std::thread SSBOupdater;
+    bool threadSignal = false;
+    int chunksUpdated = 0;
+
+    void updateOctree() {
+        
+        config->curChunk = chunkCoord(config->ubo.camPos, config->octreeWidth);
+
+
+        for (int i = 0; i < threadSignals.size(); i++) {
+
+            if (threadSignals[i]) {
+                std::cout << "Thread " << i << " finished\n";
+                threadSignals[i] = false;
+                activeThreads[i] = false;
+                workerThreads[i].join();
+                chunksUpdated++;
+                
+            }
+        }
+
+        if (chunksUpdated == threadSignals.size()) {
+            p_OctreeSSBO->update(octreeArray.data());
+            p_ChunkInfoSSBO->update(chunkHashTable.data());
+            recreateSwapChain();
+            chunksUpdated = 0;
+        }
+
+        if (config->prevChunk.x != config->curChunk.x || config->prevChunk.z != config->curChunk.z) {
+            printAdjacentChunks(chunkLoadDistance);
+
+            for (int i = 0; i < chunksToAdd.size(); i++) {
+                int threadIndex = 0;
+                while (threadIndex < activeThreads.size()) {
+                    if (activeThreads[threadIndex] == false) {
+                        break;
+                    }
+                    threadIndex++;
+                }
+
+                if (threadIndex >= activeThreads.size()) {
+                    activeThreads.push_back(false);
+                    if (threadIndex >= threadSignals.size()) {
+                        threadSignals.push_back(false);
+                        workerThreads.push_back(std::thread());
+                    }
+ 
+                    threadIndex = activeThreads.size() - 1;
+                }
+
+                activeThreads[threadIndex] = true;
+
+                workerThreads[threadIndex] = std::thread(
+                    updateChunk,
+                    chunksToAdd[i],
+                    chunksToCull[i],
+                    config->octreeWidth,
+                    std::ref(chunkHashTable),
+                    std::ref(octreeArray),
+                    std::ref(threadSignals),
+                    threadIndex
+                );
+            }
+        }
+
+        config->prevChunk = config->curChunk;
+    }
+
+        
 };
+

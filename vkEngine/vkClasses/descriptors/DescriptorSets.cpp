@@ -84,7 +84,7 @@ void DescriptorSets::bindUniformBuffer(uint32_t binding, std::vector<VkBuffer> u
 
 }
 
-void DescriptorSets::bindStorageBuffer(uint32_t binding, std::vector<VkBuffer> storageBuffers, VkDeviceSize size)
+void DescriptorSets::bindStorageBuffers(uint32_t binding, std::vector<VkBuffer> storageBuffers, VkDeviceSize size)
 {
 	size_t j = m_StorageBufferInfoSets.size();
 	m_StorageBufferInfoSets.resize(j + 1);
@@ -96,6 +96,31 @@ void DescriptorSets::bindStorageBuffer(uint32_t binding, std::vector<VkBuffer> s
 		}
 
 		m_StorageBufferInfoSets[j][i].buffer = storageBuffers[i];
+		m_StorageBufferInfoSets[j][i].offset = 0;
+		m_StorageBufferInfoSets[j][i].range = size;
+
+		m_DescriptorWrites[i][binding].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		m_DescriptorWrites[i][binding].dstSet = descriptorSets[i];
+		m_DescriptorWrites[i][binding].dstBinding = binding;
+		m_DescriptorWrites[i][binding].dstArrayElement = 0;
+		m_DescriptorWrites[i][binding].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+		m_DescriptorWrites[i][binding].descriptorCount = 1;
+		m_DescriptorWrites[i][binding].pBufferInfo = &m_StorageBufferInfoSets[j][i];
+	}
+}
+
+void DescriptorSets::bindStorageBuffer(uint32_t binding, VkBuffer storageBuffer, VkDeviceSize size)
+{
+	size_t j = m_StorageBufferInfoSets.size();
+	m_StorageBufferInfoSets.resize(j + 1);
+	m_StorageBufferInfoSets[j].resize(m_Config->maxFramesInFlight);
+
+	for (size_t i = 0; i < m_Config->maxFramesInFlight; i++) {
+		if (binding >= m_DescriptorWrites[i].size()) {
+			m_DescriptorWrites[i].resize(static_cast<size_t>(binding) + 1);
+		}
+
+		m_StorageBufferInfoSets[j][i].buffer = storageBuffer;
 		m_StorageBufferInfoSets[j][i].offset = 0;
 		m_StorageBufferInfoSets[j][i].range = size;
 

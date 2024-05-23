@@ -1,6 +1,49 @@
-# vkEngine
+# C++ Vulkan Voxel Octree Ray Marcher
 
-(name for now cause naming things is hard)
+This is an ongoing project where I'm trying to make a performant voxel rendering engine using C++ and Vulkan.
+
+Current pipeline is as follows:
+
+- Main Resources:
+  - SSBOs:
+    - Bitmask Voxel Octree Array:
+      - Buffer containing all voxel data in bitmask octrees
+    - Octree Chunk Hash Table:
+      - Hash table which maps chunk coordinates to indices in the Bitmask Voxel Octree Array
+  - Images:
+    - Depth Image:
+      - R32 format image used in initial depth pass
+    - Canvas Image:
+      - RGB image written to by compute shaders and sampled by fragment shader
+- Shader Stages:
+  - Initial Depth Pass Compute Shader:
+    - Compute shader which runs at half screen resolution.
+    - Marches rays through octree chunks
+    - Writes depth values to depth image, and colour values to canvas image
+  - Full Ray March Compute Shader:
+    - Runs at full screen resolution minus resolution of initial depth pass
+    - Marches rays through octree chunks, but using starting point based on depth values sampled from depth image
+    - Writes colour values to canvas image
+  - Vertex Shader & Fragment Shader:
+    - A quad is drawn which spans the screen, and the canvas image is sampled as a texture.
+
+If you want to run this project on your machine, the repo contains all of the vendor libraries/code needed and the VS 2022 solution should configure everything properly (haven't tested), but if you're using anything else, sorry. I do intend on switching the build system to CMake at some point.
+
+Having started this project with no knowledge of Vulkan, I've wasted many hours implementing features that OpenGL would have given me out of the box and as my reward, I will likely end up with slightly worse performance than if I were to just let OpenGL do all of that work for me. I chose Vulkan because I just looove learning new things 🙃.
+
+The rest of this readme is a devlog detailing all of this learning.
+
+## 2024-05-22
+
+Busy few weeks, less to update on. The low res depth pass optimization is now pretty stable and provides a solid increase in framerate (often 50% higher fps) with neglibible loss in image quality.
+
+Have mostly been trying different ways to dynamically load/unload chunks. I've been incorporating multithreading into chunk generation which is pretty straightforward, and then working on updating the SSBOs in worker threads as well.
+
+Chunks can now be generated on CPU quite quickly without interupting the render, but getting the chunk buffers onto the GPU has been tricky. Just need to figure out how to update buffers in background threads without running into any sort of access issues or halting shaders.
+
+In the gif below, chunks are generated in worker threads (5 128x128x128 chunks per update), but when the generation is finished, the upload to GPU is still interrupting the render. You can see the frametime spikes in the plot on the GUI.
+
+![New Debug Gui](readme/chunkLoading1.gif)
 
 ## 2024-05-01
 

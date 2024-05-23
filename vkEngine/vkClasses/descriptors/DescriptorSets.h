@@ -48,9 +48,15 @@ public:
 		VkDeviceSize size
 	);
 
-	void bindStorageBuffer(
+	void bindStorageBuffers(
 		uint32_t binding,
 		std::vector<VkBuffer> storageBuffers,
+		VkDeviceSize size
+	);
+
+	void bindStorageBuffer(
+		uint32_t binding,
+		VkBuffer storageBuffer,
 		VkDeviceSize size
 	);
 

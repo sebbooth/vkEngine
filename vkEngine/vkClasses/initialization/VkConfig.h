@@ -11,9 +11,9 @@
 #include <array>
 
 struct ComputeUniformBufferObject {
-	alignas(16) glm::vec3 camPos = glm::vec3(-865, 1231, -933);
-	alignas(16) glm::vec3 camDir = glm::vec3(0.703, -0.408, 0.582);
-	alignas(16) glm::vec3 camUp = glm::vec3(0.314, 0.913, 0.260);
+	alignas(16) glm::vec3 camPos = glm::vec3(2048, 256, 2048);
+	alignas(16) glm::vec3 camDir = glm::vec3(0, -1, 0);
+	alignas(16) glm::vec3 camUp = glm::vec3(0, 0, 1);
 	alignas(16) glm::vec3 sunDir = glm::vec3(-1, -2, -3);
 	alignas(16) glm::vec3 fogColor = glm::vec3(0, 0, 0);
 
@@ -100,7 +100,8 @@ struct VkConfig {
 	// Compute UBO
 	ComputeUniformBufferObject ubo{};
 
-
+	glm::ivec3 curChunk;
+	glm::ivec3 prevChunk;
 };
 
 #endif // !VKCONFIG_H

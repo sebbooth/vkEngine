@@ -13,8 +13,9 @@ SSBO::SSBO(
 
 void SSBO::uploadData(VkDeviceSize bufferSize, const void* uploadData)
 {
-    shaderStorageBuffers.resize(m_Config->maxFramesInFlight);
-    shaderStorageBuffersMemory.resize(m_Config->maxFramesInFlight);
+    
+    m_BufferSize = bufferSize;
+    
 
     // Create a staging buffer used to upload data to the gpu
     VkBuffer stagingBuffer;
@@ -32,12 +33,63 @@ void SSBO::uploadData(VkDeviceSize bufferSize, const void* uploadData)
     memcpy(data, uploadData, (size_t)bufferSize);
     vkUnmapMemory(m_LogicalDevice->device, stagingBufferMemory);
 
+    m_LogicalDevice->createBuffer(
+        bufferSize, 
+        VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, 
+        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, 
+        shaderStorageBuffer, 
+        shaderStorageBufferMemory
+    );
+    // Copy data from the staging buffer (host) to the shader storage buffer (GPU)
+    m_CommandPool->copyBuffer(stagingBuffer, shaderStorageBuffer, bufferSize);
+    
+    vkDestroyBuffer(m_LogicalDevice->device, stagingBuffer, nullptr);
+    vkFreeMemory(m_LogicalDevice->device, stagingBufferMemory, nullptr);
+    
+    /*
+    m_BufferSize = bufferSize;
+
+    m_LogicalDevice->createBuffer(
+        bufferSize,
+        VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+        shaderStorageBuffer,
+        shaderStorageBufferMemory
+    );
+    vkMapMemory(m_LogicalDevice->device, shaderStorageBufferMemory, 0, bufferSize, 0, &shaderStorageBufferMemoryMapped);
+    memcpy(shaderStorageBufferMemoryMapped, uploadData, (size_t)m_BufferSize);
+    */
+
+}
+
+void SSBO::uploadData1(VkDeviceSize bufferSize, const void* uploadData)
+{
+    m_BufferSize = bufferSize;
+    shaderStorageBuffers.resize(m_Config->maxFramesInFlight);
+    shaderStorageBuffersMemory.resize(m_Config->maxFramesInFlight);
+
+    // Create a staging buffer used to upload data to the gpu
+    VkBuffer stagingBuffer;
+    VkDeviceMemory stagingBufferMemory;
+    m_LogicalDevice->createBuffer(
+        bufferSize,
+        VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+        stagingBuffer,
+        stagingBufferMemory
+    );
+
+    void* data;
+    vkMapMemory(m_LogicalDevice->device, stagingBufferMemory, 0, bufferSize, 0, &data);
+    memcpy(data, uploadData, (size_t)bufferSize);
+    vkUnmapMemory(m_LogicalDevice->device, stagingBufferMemory);
+
     for (size_t i = 0; i < m_Config->maxFramesInFlight; i++) {
         m_LogicalDevice->createBuffer(
-            bufferSize, 
-            VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, 
-            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, 
-            shaderStorageBuffers[i], 
+            bufferSize,
+            VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+            shaderStorageBuffers[i],
             shaderStorageBuffersMemory[i]
         );
         // Copy data from the staging buffer (host) to the shader storage buffer (GPU)
@@ -49,8 +101,74 @@ void SSBO::uploadData(VkDeviceSize bufferSize, const void* uploadData)
 
 void SSBO::destroy()
 {
+    vkDestroyBuffer(m_LogicalDevice->device, shaderStorageBuffer, nullptr);
+    vkFreeMemory(m_LogicalDevice->device, shaderStorageBufferMemory, nullptr);
+}
+
+void SSBO::destroy1()
+{
     for (size_t i = 0; i < m_Config->maxFramesInFlight; i++) {
         vkDestroyBuffer(m_LogicalDevice->device, shaderStorageBuffers[i], nullptr);
         vkFreeMemory(m_LogicalDevice->device, shaderStorageBuffersMemory[i], nullptr);
     }
+}
+
+void SSBO::update(const void* updateData) {
+    // Create a staging buffer used to upload data to the gpu
+    
+    VkBuffer stagingBuffer;
+    VkDeviceMemory stagingBufferMemory;
+    m_LogicalDevice->createBuffer(
+        m_BufferSize,
+        VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+        stagingBuffer,
+        stagingBufferMemory
+    );
+
+    void* data;
+    vkMapMemory(m_LogicalDevice->device, stagingBufferMemory, 0, m_BufferSize, 0, &data);
+    memcpy(data, updateData, (size_t)m_BufferSize);
+    vkUnmapMemory(m_LogicalDevice->device, stagingBufferMemory);
+
+    // Copy data from the staging buffer (host) to the shader storage buffer (GPU)
+    m_CommandPool->copyBuffer(stagingBuffer, shaderStorageBuffer, m_BufferSize);
+    
+    vkDestroyBuffer(m_LogicalDevice->device, stagingBuffer, nullptr);
+    vkFreeMemory(m_LogicalDevice->device, stagingBufferMemory, nullptr);
+
+
+    //memcpy(shaderStorageBufferMemoryMapped, updateData, (size_t)m_BufferSize);
+}
+
+void SSBO::update1(const void* updateData) {
+    // Create a staging buffer used to upload data to the gpu
+    VkBuffer stagingBuffer;
+    VkDeviceMemory stagingBufferMemory;
+    m_LogicalDevice->createBuffer(
+        m_BufferSize,
+        VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+        stagingBuffer,
+        stagingBufferMemory
+    );
+
+    void* data;
+    vkMapMemory(m_LogicalDevice->device, stagingBufferMemory, 0, m_BufferSize, 0, &data);
+    memcpy(data, updateData, (size_t)m_BufferSize);
+    vkUnmapMemory(m_LogicalDevice->device, stagingBufferMemory);
+
+    for (size_t i = 0; i < m_Config->maxFramesInFlight; i++) {
+        m_LogicalDevice->createBuffer(
+            m_BufferSize,
+            VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+            shaderStorageBuffers[i],
+            shaderStorageBuffersMemory[i]
+        );
+        // Copy data from the staging buffer (host) to the shader storage buffer (GPU)
+        m_CommandPool->copyBuffer(stagingBuffer, shaderStorageBuffers[i], m_BufferSize);
+    }
+    vkDestroyBuffer(m_LogicalDevice->device, stagingBuffer, nullptr);
+    vkFreeMemory(m_LogicalDevice->device, stagingBufferMemory, nullptr);
 }
